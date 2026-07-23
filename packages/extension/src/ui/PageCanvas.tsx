@@ -1,8 +1,20 @@
 import type { CSSProperties, ReactNode } from "react"
-import type { HomeDocument, Page, PageId, StyleTokens, WidgetInstanceId } from "@yindex/domain"
+import type {
+  HomeDocument,
+  Page,
+  PageId,
+  StyleTokens,
+  WidgetInstanceId,
+} from "@yindex/domain"
 import { resolvePageTokens } from "@yindex/domain"
 import { getStylePack, CALIPER } from "@yindex/style-packs"
 import { WidgetMount } from "./WidgetMount"
+
+export type LayoutDraftEvent = {
+  readonly widgetId: WidgetInstanceId
+  readonly rect: { x: number; y: number; w: number; h: number }
+  readonly altKey: boolean
+}
 
 export type PageCanvasProps = {
   readonly doc: HomeDocument
@@ -11,10 +23,7 @@ export type PageCanvasProps = {
   readonly selectedWidgetId: WidgetInstanceId | null
   readonly onSelectWidget: (id: WidgetInstanceId | null) => void
   readonly onWidgetConfig: (widgetId: string, config: unknown) => void
-  readonly onWidgetLayoutDraft?: (
-    widgetId: WidgetInstanceId,
-    rect: { x: number; y: number; w: number; h: number },
-  ) => void | undefined
+  readonly onWidgetLayoutDraft?: (event: LayoutDraftEvent) => void
 }
 
 export function pageTokensOf(page: Page): StyleTokens {
@@ -37,7 +46,14 @@ export function PageCanvas(props: PageCanvasProps) {
   }
 
   return (
-    <section style={rootStyle} data-page-id={props.page.id} aria-label={props.page.name}>
+    <section
+      style={rootStyle}
+      data-page-id={props.page.id}
+      aria-label={props.page.name}
+      onMouseDown={() => {
+        if (props.editMode) props.onSelectWidget(null)
+      }}
+    >
       <div
         aria-hidden
         style={{
@@ -86,7 +102,13 @@ export function PageCanvas(props: PageCanvasProps) {
                   ? { onDraft: props.onWidgetLayoutDraft }
                   : {})}
               >
-                <div style={{ width: "100%", height: "100%", pointerEvents: "none" }}>
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    pointerEvents: "none",
+                  }}
+                >
                   <WidgetMount
                     doc={props.doc}
                     pageId={props.page.id as PageId}
@@ -125,7 +147,7 @@ export function PageCanvas(props: PageCanvasProps) {
             backdropFilter: "blur(8px)",
           }}
         >
-          编辑 · {props.page.name}
+          编辑 · {props.page.name} · 拖拽移动 · 角点缩放 · Alt 关闭吸附
         </div>
       ) : null}
     </section>
@@ -139,16 +161,19 @@ function EditDragShell(props: {
   readonly w: number
   readonly h: number
   readonly children: ReactNode
-  readonly onDraft?: (
-    widgetId: WidgetInstanceId,
-    rect: { x: number; y: number; w: number; h: number },
-  ) => void | undefined
+  readonly onDraft?: (event: LayoutDraftEvent) => void
 }) {
   return (
     <div
-      style={{ width: "100%", height: "100%", position: "relative", cursor: "move" }}
+      style={{
+        width: "100%",
+        height: "100%",
+        position: "relative",
+        cursor: "move",
+      }}
       onPointerDown={(e) => {
         if (!props.onDraft) return
+        if ((e.target as HTMLElement).dataset["resizeHandle"] === "true") return
         e.preventDefault()
         const startX = e.clientX
         const startY = e.clientY
@@ -156,11 +181,15 @@ function EditDragShell(props: {
         const onMove = (ev: PointerEvent) => {
           const dx = ((ev.clientX - startX) / window.innerWidth) * 100
           const dy = ((ev.clientY - startY) / window.innerHeight) * 100
-          props.onDraft?.(props.widgetId, {
-            x: orig.x + dx,
-            y: orig.y + dy,
-            w: orig.w,
-            h: orig.h,
+          props.onDraft?.({
+            widgetId: props.widgetId,
+            rect: {
+              x: orig.x + dx,
+              y: orig.y + dy,
+              w: orig.w,
+              h: orig.h,
+            },
+            altKey: ev.altKey,
           })
         }
         const onUp = () => {
@@ -174,6 +203,7 @@ function EditDragShell(props: {
       {props.children}
       <div
         aria-hidden
+        data-resize-handle="true"
         style={{
           position: "absolute",
           right: 0,
@@ -183,6 +213,7 @@ function EditDragShell(props: {
           cursor: "nwse-resize",
           background: "color-mix(in oklch, white 50%, transparent)",
           borderTopLeftRadius: 4,
+          zIndex: 2,
         }}
         onPointerDown={(e) => {
           if (!props.onDraft) return
@@ -194,11 +225,15 @@ function EditDragShell(props: {
           const onMove = (ev: PointerEvent) => {
             const dw = ((ev.clientX - startX) / window.innerWidth) * 100
             const dh = ((ev.clientY - startY) / window.innerHeight) * 100
-            props.onDraft?.(props.widgetId, {
-              x: orig.x,
-              y: orig.y,
-              w: Math.max(8, orig.w + dw),
-              h: Math.max(8, orig.h + dh),
+            props.onDraft?.({
+              widgetId: props.widgetId,
+              rect: {
+                x: orig.x,
+                y: orig.y,
+                w: Math.max(8, orig.w + dw),
+                h: Math.max(8, orig.h + dh),
+              },
+              altKey: ev.altKey,
             })
           }
           const onUp = () => {

@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test"
 import {
-  alignRects,
   buildSnapGuides,
   clampRect,
   snapRect,
   validateRect,
   withZ,
 } from "./layout"
+import { alignRects } from "./align"
 import { DEFAULT_LAYOUT_CONSTRAINTS } from "./types"
 
 describe("Layout", () => {

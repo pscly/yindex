@@ -4,16 +4,17 @@ import { withZ } from "../layout/layout"
 import {
   addPageToHome,
   addWidget,
+  deletePageFromHome,
+  removeWidget,
+  setWidgetLayout,
+} from "./document"
+import {
   buildHomeDocument,
   createBlankPage,
   createWidgetInstance,
-  deletePageFromHome,
-  markPackageMissing,
-  removeWidget,
-  restorePackageInstances,
-  setWidgetLayout,
   builtinSource,
-} from "./document"
+} from "./factory"
+import { markPackageMissing, restorePackageInstances } from "./packageLifecycle"
 
 function blank(name: string) {
   return createBlankPage({

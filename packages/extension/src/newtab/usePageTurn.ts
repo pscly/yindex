@@ -13,79 +13,129 @@ export type PageTurnApi = {
   readonly isTurning: boolean
   readonly goToIndex: (index: number) => void
   readonly goBy: (delta: number) => void
+  /** Percent of the multi-page strip height (0, -100/n, -200/n, …) */
   readonly offsetY: number
+  readonly reducedMotion: boolean
 }
 
 const WHEEL_THRESHOLD = 80
 const COOLDOWN_MS = 520
+const TURN_MS = 480
+
+function prefersReducedMotion(
+  setting: HomeDocument["settings"]["reducedMotion"],
+): boolean {
+  if (setting === "force") return true
+  if (setting === "never") return false
+  if (typeof window === "undefined" || !window.matchMedia) return false
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+}
 
 export function usePageTurn(
   doc: HomeDocument | null,
   options: {
     readonly editMode: boolean
+    readonly settingsOpen: boolean
     readonly onPageChange?: (pageId: PageId) => void
   },
 ): PageTurnApi {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTurning, setIsTurning] = useState(false)
-  const [offsetY, setOffsetY] = useState(0)
   const wheelAcc = useRef(0)
   const cooldownUntil = useRef(0)
   const initialized = useRef(false)
+  const onPageChangeRef = useRef(options.onPageChange)
+  onPageChangeRef.current = options.onPageChange
+  const indexRef = useRef(0)
+  indexRef.current = currentIndex
 
   const pageCount = doc?.sequence.pageIds.length ?? 0
+  const reducedMotion = doc
+    ? prefersReducedMotion(doc.settings.reducedMotion)
+    : false
 
+  // Initial open page + keep index valid when sequence shrinks
   useEffect(() => {
-    if (!doc || initialized.current) return
-    const openId = resolveOpenPageId(doc.sequence, {
-      rememberLastPage: doc.settings.rememberLastPage,
-      lastPageId: doc.lastPageId,
-    })
-    const idxR = indexOfPage(doc.sequence, openId)
-    if (idxR.ok) setCurrentIndex(idxR.value)
-    initialized.current = true
-  }, [doc])
+    if (!doc || pageCount === 0) return
+    if (!initialized.current) {
+      const openId = resolveOpenPageId(doc.sequence, {
+        rememberLastPage: doc.settings.rememberLastPage,
+        lastPageId: doc.lastPageId,
+      })
+      const idxR = indexOfPage(doc.sequence, openId)
+      if (idxR.ok) {
+        setCurrentIndex(idxR.value)
+        indexRef.current = idxR.value
+      }
+      initialized.current = true
+      return
+    }
+    if (currentIndex >= pageCount) {
+      const next = pageCount - 1
+      setCurrentIndex(next)
+      indexRef.current = next
+    }
+  }, [doc, pageCount, currentIndex])
 
   const currentPageId = useMemo(() => {
     if (!doc) return null
     return doc.sequence.pageIds[currentIndex] ?? null
   }, [doc, currentIndex])
 
+  // Strip has n pages each 100/n % of strip → move by i * (100/n) of strip
+  const rawOffset = pageCount > 0 ? -currentIndex * (100 / pageCount) : 0
+  const offsetY = rawOffset === 0 ? 0 : rawOffset
+
   const goToIndex = useCallback(
     (index: number) => {
       if (!doc || pageCount === 0) return
       if (index < 0 || index >= pageCount) return
-      if (index === currentIndex) return
+      if (index === indexRef.current) return
       setIsTurning(true)
       setCurrentIndex(index)
+      indexRef.current = index
       const id = doc.sequence.pageIds[index]
-      if (id) options.onPageChange?.(id)
-      window.setTimeout(() => setIsTurning(false), 480)
+      if (id) onPageChangeRef.current?.(id)
+      const ms = reducedMotion ? 0 : TURN_MS
+      window.setTimeout(() => setIsTurning(false), ms)
     },
-    [doc, pageCount, currentIndex, options],
+    [doc, pageCount, reducedMotion],
   )
 
   const goBy = useCallback(
     (delta: number) => {
       if (!doc || pageCount === 0) return
-      const nextR = adjacentIndex(doc.sequence, currentIndex, delta)
+      const nextR = adjacentIndex(doc.sequence, indexRef.current, delta)
       if (nextR.ok) goToIndex(nextR.value)
     },
-    [doc, pageCount, currentIndex, goToIndex],
+    [doc, pageCount, goToIndex],
   )
 
   useEffect(() => {
-    if (!doc || options.editMode) return
+    if (!doc || options.editMode || options.settingsOpen) return
 
     function onWheel(e: WheelEvent) {
       const target = e.target as HTMLElement | null
-      if (target?.closest("[data-scrollable='true']")) {
-        const el = target.closest("[data-scrollable='true']") as HTMLElement
+      const scrollable = target?.closest(
+        "[data-scrollable='true']",
+      ) as HTMLElement | null
+      if (scrollable) {
         const canScroll =
-          el.scrollHeight > el.clientHeight &&
-          ((e.deltaY > 0 && el.scrollTop + el.clientHeight < el.scrollHeight - 1) ||
-            (e.deltaY < 0 && el.scrollTop > 0))
+          scrollable.scrollHeight > scrollable.clientHeight &&
+          ((e.deltaY > 0 &&
+            scrollable.scrollTop + scrollable.clientHeight <
+              scrollable.scrollHeight - 1) ||
+            (e.deltaY < 0 && scrollable.scrollTop > 0))
         if (canScroll) return
+      }
+
+      // Don't steal wheel from form controls
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement
+      ) {
+        return
       }
 
       e.preventDefault()
@@ -104,7 +154,11 @@ export function usePageTurn(
     }
 
     function onKey(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      ) {
         return
       }
       if (e.key === "ArrowDown" || e.key === "PageDown") {
@@ -125,12 +179,7 @@ export function usePageTurn(
       window.removeEventListener("wheel", onWheel)
       window.removeEventListener("keydown", onKey)
     }
-  }, [doc, options.editMode, goBy, goToIndex])
-
-  // visual offset for CSS transform strip
-  useEffect(() => {
-    setOffsetY(-currentIndex * 100)
-  }, [currentIndex])
+  }, [doc, options.editMode, options.settingsOpen, goBy, goToIndex])
 
   return {
     currentIndex,
@@ -139,5 +188,6 @@ export function usePageTurn(
     goToIndex,
     goBy,
     offsetY,
+    reducedMotion,
   }
 }

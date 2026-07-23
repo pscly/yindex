@@ -1,11 +1,17 @@
 import type { HomeDocument, PageId, WidgetInstanceId } from "@yindex/domain"
 import {
+  addPageToHome,
   addWidget,
   builtinSource,
+  createBlankPage,
   createWidgetInstance,
+  deletePageFromHome,
   removeWidget,
+  reorderPageInHome,
+  setLandingPage,
   setPageMeta,
   setPageStyle,
+  stylePackId,
   withZ,
 } from "@yindex/domain"
 import { STYLE_PACKS } from "@yindex/style-packs"
@@ -22,24 +28,6 @@ export function EditChrome(props: {
   const page = props.doc.pages[props.pageId]
   if (!page) return null
 
-  const panel: CSSProperties = {
-    position: "fixed",
-    right: 20,
-    bottom: 72,
-    width: 300,
-    maxHeight: "min(70vh, 520px)",
-    overflow: "auto",
-    zIndex: 3200,
-    borderRadius: 12,
-    padding: 14,
-    background: "color-mix(in oklch, oklch(0.22 0.01 260) 92%, transparent)",
-    color: "oklch(0.94 0.01 260)",
-    border: "1px solid color-mix(in oklch, white 12%, transparent)",
-    backdropFilter: "blur(14px)",
-    boxShadow: "0 12px 40px color-mix(in oklch, black 35%, transparent)",
-    fontSize: 13,
-  }
-
   return (
     <aside style={panel} aria-label="编辑面板">
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
@@ -55,6 +43,19 @@ export function EditChrome(props: {
           value={page.name}
           onChange={(e) => {
             const r = setPageMeta(props.doc, props.pageId, { name: e.target.value })
+            if (r.ok) props.onDoc(r.value)
+          }}
+          style={inputStyle}
+        />
+      </label>
+
+      <label style={{ ...labelStyle, marginTop: 10 }}>
+        图标
+        <input
+          value={page.icon}
+          maxLength={2}
+          onChange={(e) => {
+            const r = setPageMeta(props.doc, props.pageId, { icon: e.target.value })
             if (r.ok) props.onDoc(r.value)
           }}
           style={inputStyle}
@@ -86,6 +87,78 @@ export function EditChrome(props: {
             {pack.name}
           </button>
         ))}
+      </div>
+
+      <div style={{ marginTop: 14, marginBottom: 6, opacity: 0.75 }}>页面序列</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        <button
+          type="button"
+          style={ghostBtn}
+          onClick={() => {
+            const blank = createBlankPage({
+              name: "新页面",
+              icon: "页",
+              style: { packId: stylePackId("caliper"), overrides: {} },
+            })
+            const r = addPageToHome(props.doc, blank)
+            if (r.ok) props.onDoc(r.value)
+          }}
+        >
+          添加空白页
+        </button>
+        <button
+          type="button"
+          style={ghostBtn}
+          onClick={() => {
+            const idx = props.doc.sequence.pageIds.indexOf(props.pageId)
+            if (idx <= 0) return
+            const r = reorderPageInHome(props.doc, props.pageId, idx - 1)
+            if (r.ok) props.onDoc(r.value)
+          }}
+        >
+          上移
+        </button>
+        <button
+          type="button"
+          style={ghostBtn}
+          onClick={() => {
+            const idx = props.doc.sequence.pageIds.indexOf(props.pageId)
+            if (idx < 0 || idx >= props.doc.sequence.pageIds.length - 1) return
+            const r = reorderPageInHome(props.doc, props.pageId, idx + 1)
+            if (r.ok) props.onDoc(r.value)
+          }}
+        >
+          下移
+        </button>
+        <button
+          type="button"
+          style={ghostBtn}
+          onClick={() => {
+            const r = setLandingPage(props.doc, props.pageId)
+            if (r.ok) props.onDoc(r.value)
+          }}
+        >
+          设为 Landing
+        </button>
+        <button
+          type="button"
+          style={{ ...ghostBtn, color: "oklch(0.75 0.14 25)" }}
+          onClick={() => {
+            if (props.doc.sequence.pageIds.length <= 1) {
+              alert("至少保留一页")
+              return
+            }
+            if (!confirm(`删除页面「${page.name}」？`)) return
+            const r = deletePageFromHome(props.doc, props.pageId)
+            if (r.ok) props.onDoc(r.value)
+          }}
+        >
+          删除本页
+        </button>
+      </div>
+      <div style={{ fontSize: 11, opacity: 0.55, marginTop: 6 }}>
+        共 {props.doc.sequence.pageIds.length} 页 · Landing：
+        {props.doc.pages[props.doc.sequence.landingPageId]?.name ?? "—"}
       </div>
 
       <div style={{ marginTop: 14, marginBottom: 6, opacity: 0.75 }}>添加小组件</div>
@@ -136,7 +209,7 @@ export function EditChrome(props: {
         </div>
       ) : (
         <div style={{ marginTop: 14, opacity: 0.6, fontSize: 12 }}>
-          点击小组件可选中；拖拽移动，右下角缩放。滚轮翻页已禁用。
+          点击选中 · 拖拽移动 · 右下角缩放 · Alt 临时关闭吸附 · Esc 退出编辑
         </div>
       )}
     </aside>
@@ -158,6 +231,24 @@ function defaultConfigFor(typeId: string): unknown {
     default:
       return {}
   }
+}
+
+const panel: CSSProperties = {
+  position: "fixed",
+  right: 20,
+  bottom: 72,
+  width: 300,
+  maxHeight: "min(70vh, 560px)",
+  overflow: "auto",
+  zIndex: 3200,
+  borderRadius: 12,
+  padding: 14,
+  background: "color-mix(in oklch, oklch(0.22 0.01 260) 92%, transparent)",
+  color: "oklch(0.94 0.01 260)",
+  border: "1px solid color-mix(in oklch, white 12%, transparent)",
+  backdropFilter: "blur(14px)",
+  boxShadow: "0 12px 40px color-mix(in oklch, black 35%, transparent)",
+  fontSize: 13,
 }
 
 const ghostBtn: CSSProperties = {

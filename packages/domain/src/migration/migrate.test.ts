@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { migrateHomeDocument, serializeHomeDocument } from "./migrate"
-import { buildHomeDocument, createBlankPage } from "../home/document"
+import { buildHomeDocument, createBlankPage } from "../home/factory"
 import { stylePackId } from "../ids/ids"
 
 describe("migrateHomeDocument", () => {

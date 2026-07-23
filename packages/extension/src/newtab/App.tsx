@@ -1,18 +1,32 @@
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import type { PageId, WidgetInstanceId } from "@yindex/domain"
-import { setWidgetLayout, updatePage } from "@yindex/domain"
+import { applyLayoutDraft, updatePage } from "@yindex/domain"
 import { useHomeState } from "./useHomeState"
 import { usePageTurn } from "./usePageTurn"
-import { PageCanvas } from "../ui/PageCanvas"
+import { PageCanvas, type LayoutDraftEvent } from "../ui/PageCanvas"
 import { PageDots } from "../ui/PageDots"
 import { EditChrome } from "../ui/EditChrome"
 import { SettingsPanel } from "../ui/SettingsPanel"
+import { ChromeFab } from "../ui/ChromeFab"
 
 export function App() {
-  const { doc, loading, error, setDoc, rememberPage } = useHomeState()
+  const {
+    doc,
+    loading,
+    error,
+    setDoc,
+    patchDoc,
+    replaceDoc,
+    rememberPage,
+    canUndo,
+    canRedo,
+    undo,
+    redo,
+  } = useHomeState()
   const [editMode, setEditMode] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [selectedWidgetId, setSelectedWidgetId] = useState<WidgetInstanceId | null>(null)
+  const [selectedWidgetId, setSelectedWidgetId] =
+    useState<WidgetInstanceId | null>(null)
 
   const onPageChange = useCallback(
     (pageId: PageId) => {
@@ -21,7 +35,11 @@ export function App() {
     [rememberPage],
   )
 
-  const turn = usePageTurn(doc, { editMode, onPageChange })
+  const turn = usePageTurn(doc, {
+    editMode,
+    settingsOpen,
+    onPageChange,
+  })
 
   const orderedPages = useMemo(() => {
     if (!doc) return []
@@ -31,6 +49,49 @@ export function App() {
   }, [doc])
 
   const currentPageId = turn.currentPageId
+  const turnMs = turn.reducedMotion ? 0 : 480
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        if (settingsOpen) {
+          setSettingsOpen(false)
+          return
+        }
+        if (editMode) {
+          setEditMode(false)
+          setSelectedWidgetId(null)
+        }
+      }
+      const meta = e.metaKey || e.ctrlKey
+      if (meta && e.key.toLowerCase() === "z" && !e.shiftKey) {
+        if (
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement
+        ) {
+          return
+        }
+        e.preventDefault()
+        undo()
+      }
+      if (
+        meta &&
+        (e.key.toLowerCase() === "y" ||
+          (e.key.toLowerCase() === "z" && e.shiftKey))
+      ) {
+        if (
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement
+        ) {
+          return
+        }
+        e.preventDefault()
+        redo()
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [settingsOpen, editMode, undo, redo])
 
   function onWidgetConfig(widgetId: string, config: unknown) {
     if (!doc || !currentPageId) return
@@ -43,13 +104,29 @@ export function App() {
     if (r.ok) setDoc(r.value)
   }
 
-  function onWidgetLayoutDraft(
-    widgetId: WidgetInstanceId,
-    rect: { x: number; y: number; w: number; h: number },
-  ) {
+  function onWidgetLayoutDraft(event: LayoutDraftEvent) {
     if (!doc || !currentPageId) return
-    const r = setWidgetLayout(doc, currentPageId, widgetId, rect)
-    if (r.ok) setDoc(r.value)
+    const page = doc.pages[currentPageId]
+    if (!page) return
+    const widget = page.widgets.find((w) => w.id === event.widgetId)
+    if (!widget) return
+    const others = page.widgets
+      .filter((w) => w.id !== event.widgetId)
+      .map((w) => w.layout)
+    const applied = applyLayoutDraft({
+      draft: event.rect,
+      z: widget.layout.z,
+      others,
+      snapEnabled: doc.settings.snapEnabled,
+      altKeyDisablesSnap: event.altKey,
+    })
+    const nextR = updatePage(doc, currentPageId, (pg) => ({
+      ...pg,
+      widgets: pg.widgets.map((w) =>
+        w.id === event.widgetId ? { ...w, layout: applied.layout } : w,
+      ),
+    }))
+    if (nextR.ok) patchDoc(nextR.value)
   }
 
   if (loading) {
@@ -69,20 +146,34 @@ export function App() {
   }
 
   return (
-    <div style={{ width: "100%", height: "100%", position: "relative", overflow: "hidden" }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
       <div
         style={{
-          height: `${orderedPages.length * 100}%`,
+          height: `${Math.max(orderedPages.length, 1) * 100}%`,
           width: "100%",
           transform: `translate3d(0, ${turn.offsetY}%, 0)`,
-          transition: turn.isTurning
-            ? "transform 480ms cubic-bezier(0.22, 1, 0.36, 1)"
-            : "transform 480ms cubic-bezier(0.22, 1, 0.36, 1)",
+          transition:
+            turnMs > 0
+              ? `transform ${turnMs}ms cubic-bezier(0.22, 1, 0.36, 1)`
+              : "none",
           willChange: "transform",
         }}
       >
         {orderedPages.map((page) => (
-          <div key={page.id} style={{ height: `${100 / orderedPages.length}%`, width: "100%" }}>
+          <div
+            key={page.id}
+            style={{
+              height: `${100 / Math.max(orderedPages.length, 1)}%`,
+              width: "100%",
+            }}
+          >
             <div style={{ height: "100vh", width: "100%" }}>
               <PageCanvas
                 doc={doc}
@@ -100,43 +191,24 @@ export function App() {
         ))}
       </div>
 
-      <PageDots doc={doc} currentIndex={turn.currentIndex} onSelect={turn.goToIndex} />
+      <PageDots
+        doc={doc}
+        currentIndex={turn.currentIndex}
+        onSelect={turn.goToIndex}
+      />
 
-      <div
-        style={{
-          position: "fixed",
-          right: 18,
-          bottom: 18,
-          display: "flex",
-          gap: 8,
-          zIndex: 3100,
+      <ChromeFab
+        editMode={editMode}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={undo}
+        onRedo={redo}
+        onSettings={() => setSettingsOpen(true)}
+        onToggleEdit={() => {
+          setEditMode((v) => !v)
+          setSelectedWidgetId(null)
         }}
-      >
-        <button
-          type="button"
-          onClick={() => setSettingsOpen(true)}
-          style={fab}
-          aria-label="设置"
-        >
-          设置
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setEditMode((v) => !v)
-            setSelectedWidgetId(null)
-          }}
-          style={{
-            ...fab,
-            background: editMode
-              ? "oklch(0.55 0.12 250)"
-              : "color-mix(in oklch, oklch(0.22 0.01 260) 88%, transparent)",
-          }}
-          aria-label={editMode ? "完成编辑" : "编辑"}
-        >
-          {editMode ? "完成" : "编辑"}
-        </button>
-      </div>
+      />
 
       {editMode && currentPageId ? (
         <EditChrome
@@ -157,6 +229,7 @@ export function App() {
         pageId={currentPageId}
         onClose={() => setSettingsOpen(false)}
         onDoc={setDoc}
+        onReplaceDoc={replaceDoc}
       />
     </div>
   )
@@ -171,13 +244,3 @@ const centerMsg = {
   background: "#111",
 } as const
 
-const fab = {
-  border: "1px solid color-mix(in oklch, white 14%, transparent)",
-  background: "color-mix(in oklch, oklch(0.22 0.01 260) 88%, transparent)",
-  color: "oklch(0.94 0.01 260)",
-  borderRadius: 999,
-  padding: "10px 16px",
-  backdropFilter: "blur(12px)",
-  fontSize: 13,
-  cursor: "pointer",
-} as const

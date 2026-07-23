@@ -59,6 +59,15 @@ export type HomeSettings = {
   readonly locale: "zh-CN"
 }
 
+
+export const DEFAULT_HOME_SETTINGS: HomeSettings = {
+  rememberLastPage: false,
+  allowHexagramRedraw: false,
+  snapEnabled: true,
+  reducedMotion: "system",
+  locale: "zh-CN",
+}
+
 export type HomeDocument = {
   readonly schemaVersion: typeof HOME_SCHEMA_VERSION
   readonly sequence: PageSequence

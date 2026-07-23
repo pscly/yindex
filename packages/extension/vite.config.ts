@@ -4,6 +4,8 @@ import { resolve } from "node:path"
 import { viteStaticCopy } from "vite-plugin-static-copy"
 
 export default defineConfig({
+  // Relative URLs required for chrome-extension:// origin
+  base: "./",
   plugins: [
     react(),
     viteStaticCopy({
