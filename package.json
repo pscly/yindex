@@ -1,0 +1,22 @@
+{
+  "name": "yindex",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "packages/examples/*"
+  ],
+  "scripts": {
+    "dev": "bun run --filter @yindex/extension dev",
+    "build": "bun run --filter @yindex/extension build",
+    "test": "bun test packages/domain packages/widget-sdk packages/style-packs packages/widgets",
+    "typecheck": "bun run --filter @yindex/domain typecheck && bun run --filter @yindex/widget-sdk typecheck && bun run --filter @yindex/extension typecheck",
+    "lint": "biome check .",
+    "format": "biome check --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/bun": "^1.2.0",
+    "typescript": "^5.8.2"
+  }
+}
