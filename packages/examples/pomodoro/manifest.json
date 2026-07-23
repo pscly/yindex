@@ -1,0 +1,19 @@
+{
+  "packageId": "com.example.pomodoro",
+  "name": "番茄钟",
+  "version": "1.0.0",
+  "description": "专注计时示例包",
+  "engines": { "yindex": ">=1 <2" },
+  "yindexApiVersion": 1,
+  "types": [
+    {
+      "typeId": "pomodoro.timer",
+      "name": "专注计时",
+      "description": "25 分钟番茄钟",
+      "entry": "timer.html",
+      "defaultSize": { "w": 24, "h": 30 }
+    }
+  ],
+  "permissions": ["storage.instance"],
+  "hostPermissions": []
+}

@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>番茄钟</title>
+    <style>
+      :root {
+        color-scheme: dark light;
+        font-family: "Noto Sans SC", system-ui, sans-serif;
+      }
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: transparent;
+        color: inherit;
+      }
+      .wrap {
+        height: 100%;
+        box-sizing: border-box;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+      }
+      .time {
+        font-size: 2.4rem;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.06em;
+        font-weight: 300;
+      }
+      .label { opacity: 0.7; font-size: 12px; }
+      .row { display: flex; gap: 8px; }
+      button {
+        border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+        background: color-mix(in srgb, currentColor 8%, transparent);
+        color: inherit;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="label">番茄钟 · 专注</div>
+      <div class="time" id="time">25:00</div>
+      <div class="row">
+        <button type="button" id="start">开始</button>
+        <button type="button" id="pause">暂停</button>
+        <button type="button" id="reset">重置</button>
+      </div>
+    </div>
+    <script>
+      const TOTAL = 25 * 60
+      let remaining = TOTAL
+      let timer = null
+      const el = document.getElementById("time")
+
+      function render() {
+        const m = String(Math.floor(remaining / 60)).padStart(2, "0")
+        const s = String(remaining % 60).padStart(2, "0")
+        el.textContent = m + ":" + s
+      }
+
+      function bridge(method, params) {
+        const id = Math.random().toString(36).slice(2)
+        return new Promise((resolve) => {
+          function onMsg(ev) {
+            const d = ev.data
+            if (!d || d.channel !== "yindex-bridge" || d.id !== id) return
+            window.removeEventListener("message", onMsg)
+            resolve(d)
+          }
+          window.addEventListener("message", onMsg)
+          parent.postMessage({ channel: "yindex-bridge", id, method, params }, "*")
+          setTimeout(() => {
+            window.removeEventListener("message", onMsg)
+            resolve({ ok: false })
+          }, 5000)
+        })
+      }
+
+      async function persist() {
+        await bridge("storage.set", { key: "remaining", value: remaining })
+      }
+
+      async function restore() {
+        const res = await bridge("storage.get", { key: "remaining" })
+        if (res && res.ok && typeof res.result === "number") {
+          remaining = res.result
+          render()
+        }
+      }
+
+      document.getElementById("start").onclick = () => {
+        if (timer) return
+        timer = setInterval(() => {
+          if (remaining <= 0) {
+            clearInterval(timer)
+            timer = null
+            bridge("host.log", { event: "pomodoro-done" })
+            return
+          }
+          remaining -= 1
+          render()
+          if (remaining % 5 === 0) persist()
+        }, 1000)
+      }
+      document.getElementById("pause").onclick = () => {
+        if (timer) clearInterval(timer)
+        timer = null
+        persist()
+      }
+      document.getElementById("reset").onclick = () => {
+        if (timer) clearInterval(timer)
+        timer = null
+        remaining = TOTAL
+        render()
+        persist()
+      }
+      render()
+      restore()
+    </script>
+  </body>
+</html>

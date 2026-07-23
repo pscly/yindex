@@ -1,0 +1,6 @@
+{
+  "name": "@yindex/example-pomodoro",
+  "version": "1.0.0",
+  "private": true,
+  "description": "yindex sample third-party Widget Package"
+}
