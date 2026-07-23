@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@yindex/domain": ["../domain/src/index.ts"],
+      "@yindex/style-packs": ["../style-packs/src/index.ts"],
+      "@yindex/widget-sdk": ["../widget-sdk/src/index.ts"],
+      "@yindex/widgets": ["../widgets/src/index.ts"]
+    },
+    "types": ["chrome", "vite/client"]
+  },
+  "include": ["src/**/*"]
+}
