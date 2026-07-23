@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Landing · Caliper</title>
+<style>
+  html,body{margin:0;height:100%;font-family:"Noto Sans SC",system-ui,sans-serif;}
+  *{box-sizing:border-box;}
+  .frame{position:relative;width:min(1200px,100vw);aspect-ratio:16/9;margin:0 auto;overflow:hidden;}
+  .dots{position:absolute;right:14px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;}
+  .dot{width:6px;height:6px;border-radius:50%;border:1px solid currentColor;opacity:.45;}
+  .dot.on{opacity:1;background:currentColor;}
+  
+  .frame{background:oklch(0.97 0.005 250);color:oklch(0.22 0.02 250);}
+  .search{position:absolute;left:50%;top:28%;transform:translateX(-50%);width:48%;height:9%;
+    border:1px solid oklch(0.75 0.02 250);background:#fff;border-radius:10px;
+    display:flex;align-items:center;padding:0 18px;font-size:15px;color:oklch(0.48 0.02 250);}
+  .grid{position:absolute;left:50%;top:44%;transform:translateX(-50%);width:52%;
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .tile{aspect-ratio:1;background:#fff;border:1px solid oklch(0.85 0.01 250);border-radius:10px;
+    display:flex;align-items:end;padding:8px;font-size:11px;}
+  .weather{position:absolute;right:8%;top:8%;width:14%;padding:10px 12px;background:#fff;
+    border:1px solid oklch(0.85 0.01 250);border-radius:10px;font-size:12px;}
+  .accent{{color:oklch(0.52 0.12 250)}}
+  .dots{color:oklch(0.52 0.12 250)}
+
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <div class="weather"><div class="accent">18°</div><div>多云 · 上海</div></div>
+  <div class="search">搜索或输入网址</div>
+  <div class="grid">
+    <div class="tile">GitHub</div><div class="tile">Docs</div><div class="tile">Mail</div><div class="tile">Drive</div>
+    <div class="tile">Calendar</div><div class="tile">Notes</div><div class="tile">Chat</div><div class="tile">+</div>
+  </div>
+  <div class="dots"><span class="dot"></span><span class="dot on"></span><span class="dot"></span></div>
+
+</div>
+</body>
+</html>

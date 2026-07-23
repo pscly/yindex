@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Knowledge · Inkstone</title>
+<style>
+  html,body{margin:0;height:100%;font-family:"Noto Sans SC",system-ui,sans-serif;}
+  *{box-sizing:border-box;}
+  .frame{position:relative;width:min(1200px,100vw);aspect-ratio:16/9;margin:0 auto;overflow:hidden;}
+  .dots{position:absolute;right:14px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;}
+  .dot{width:6px;height:6px;border-radius:50%;border:1px solid currentColor;opacity:.45;}
+  .dot.on{opacity:1;background:currentColor;}
+  
+  .frame{background:oklch(0.18 0.02 70);color:oklch(0.93 0.02 80);}
+  .quote{position:absolute;left:8%;top:8%;width:36%;font-family:"Noto Serif SC",serif;font-size:15px;line-height:1.6;
+    border-left:2px solid oklch(0.55 0.18 28);padding-left:14px;}
+  .quote small{display:block;margin-top:8px;color:oklch(0.72 0.03 75);font-family:"Noto Sans SC",sans-serif;font-size:12px;}
+  .board{position:absolute;left:8%;top:28%;width:58%;height:58%;
+    background:oklch(0.24 0.025 65);border:1px solid oklch(0.78 0.08 85 / 0.35);border-radius:6px;padding:10px;
+    display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);gap:3px;}
+  .cell{background:oklch(0.20 0.02 70);border-radius:2px;font-size:9px;display:flex;align-items:center;justify-content:center;
+    color:oklch(0.85 0.02 80);}
+  .cell.focus{outline:1px solid oklch(0.55 0.18 28);color:oklch(0.55 0.18 28);}
+  .draw{position:absolute;right:10%;top:30%;width:22%;padding:16px;background:oklch(0.24 0.025 65);
+    border-top:2px solid oklch(0.55 0.18 28);border-radius:6px;}
+  .draw h2{font-family:"Noto Serif SC",serif;font-size:22px;margin:0 0 8px;font-weight:600;}
+  .draw button{margin-top:12px;background:oklch(0.55 0.18 28);color:#fff;border:0;border-radius:6px;padding:8px 12px;width:100%;}
+  .dots{color:oklch(0.78 0.08 85)}
+
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <div class="quote">「潜龙勿用。」<small>每日一句 · 示例</small></div>
+  <div class="board"><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell focus">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div><div class="cell">卦</div></div>
+  <div class="draw"><h2>今日一卦</h2><div style="opacity:.75;font-size:13px">尚未抽取</div><button>抽取本卦</button></div>
+  <div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div>
+
+</div>
+</body>
+</html>
