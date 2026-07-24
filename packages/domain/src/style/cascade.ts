@@ -101,24 +101,13 @@ export function applyOverride(
   base: StyleTokens,
   override: StyleOverride,
 ): StyleTokens {
-  const glassPatch = override.glass
   return {
     color: mergePartial(base.color, override.color),
     typography: mergePartial(base.typography, override.typography),
     space: mergePartial(base.space, override.space),
     radius: mergePartial(base.radius, override.radius),
     elevation: mergePartial(base.elevation, override.elevation),
-    glass: glassPatch
-      ? {
-          ...base.glass,
-          blurPx: glassPatch.blurPx ?? base.glass.blurPx,
-          opacity: glassPatch.opacity ?? base.glass.opacity,
-          highlight: glassPatch.highlight ?? base.glass.highlight,
-          saturation: glassPatch.saturation ?? base.glass.saturation,
-          // Adaptive material stays system-owned; overrides cannot drop the floor.
-          adaptive: base.glass.adaptive,
-        }
-      : base.glass,
+    glass: base.glass,
     wallpaper: base.wallpaper,
     motion: mergePartial(base.motion, override.motion),
   }

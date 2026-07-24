@@ -21,10 +21,10 @@ const styleOverrideSchema = z
     space: z.record(z.number()).optional(),
     radius: z.record(z.string()).optional(),
     elevation: z.record(z.string()).optional(),
-    glass: z.record(z.union([z.number(), z.boolean()])).optional(),
     motion: z.record(z.union([z.string(), z.number()])).optional(),
   })
   .partial()
+  .strict()
 
 const widgetSourceSchema = z.discriminatedUnion("kind", [
   z.object({

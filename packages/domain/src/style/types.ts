@@ -65,12 +65,6 @@ export type StyleOverride = {
   readonly space?: Partial<StyleTokens["space"]>
   readonly radius?: Partial<StyleTokens["radius"]>
   readonly elevation?: Partial<StyleTokens["elevation"]>
-  readonly glass?: Partial<{
-    readonly blurPx: number
-    readonly opacity: number
-    readonly highlight: number
-    readonly saturation: number
-  }>
   readonly motion?: Partial<StyleTokens["motion"]>
 }
 

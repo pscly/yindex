@@ -1,5 +1,5 @@
 import { type Result, err, ok } from "../result/result"
-import { MIN_TEXT_CONTRAST, clamp, oklch } from "./adaptiveContrast"
+import { clamp, oklch } from "./adaptiveContrast"
 import {
   type AdaptivePolarity,
   type AdaptiveSurfaceKind,
@@ -7,14 +7,19 @@ import {
   candidatesFor,
   pickPolarity,
   preferredPolarity,
-  scorePolarityCandidate,
 } from "./adaptivePolarity"
 import {
+  type AdaptiveScoringContext,
+  scorePolarityCandidate,
+} from "./adaptiveScoring"
+import {
+  GLASS_PROFILE_BANDS,
   type GlassProfile,
   type GlassTuning,
   type ResolvedGlass,
-  resolveGlass,
+  clampGlassProfileTokens,
 } from "./glass"
+import { composeGlassBeforeProfileClamp } from "./glassInternals"
 
 export { MIN_TEXT_CONTRAST, contrastRatio } from "./adaptiveContrast"
 export type { AdaptivePolarity, AdaptiveSurfaceKind } from "./adaptivePolarity"
@@ -104,28 +109,31 @@ export function parseAdaptiveGlassInput(raw: {
   readonly chroma: number
   readonly detail: number
 }): Result<AdaptiveGlassInput, AdaptiveGlassParseError> {
-  if (!inUnit(raw.luminance)) {
+  const luminance = raw.luminance
+  const chroma = raw.chroma
+  const detail = raw.detail
+  if (!inUnit(luminance)) {
     return err({
       code: "invalid_luminance",
       message: `luminance must be in [${UNIT_MIN}, ${UNIT_MAX}]`,
     })
   }
-  if (!inUnit(raw.chroma)) {
+  if (!inUnit(chroma)) {
     return err({
       code: "invalid_chroma",
       message: `chroma must be in [${UNIT_MIN}, ${UNIT_MAX}]`,
     })
   }
-  if (!inUnit(raw.detail)) {
+  if (!inUnit(detail)) {
     return err({
       code: "invalid_detail",
       message: `detail must be in [${UNIT_MIN}, ${UNIT_MAX}]`,
     })
   }
   return ok({
-    luminance: raw.luminance,
-    chroma: raw.chroma,
-    detail: raw.detail,
+    luminance,
+    chroma,
+    detail,
   })
 }
 
@@ -167,13 +175,15 @@ function toSurfaceTokens(chosen: ScoredPolarity): AdaptiveSurfaceTokens {
 
 function solveSurface(
   kind: AdaptiveSurfaceKind,
-  input: AdaptiveGlassInput,
-  tintBase: number,
-  detailBoost: number,
+  context: AdaptiveScoringContext,
 ): AdaptiveSurfaceTokens {
-  const preferred = preferredPolarity(kind, input.luminance, POLARITY_THRESHOLD)
+  const preferred = preferredPolarity(
+    kind,
+    context.wallpaperL,
+    POLARITY_THRESHOLD,
+  )
   const scored = candidatesFor(kind).map((c) =>
-    scorePolarityCandidate(c, input.luminance, tintBase, detailBoost, kind),
+    scorePolarityCandidate(c, kind, context),
   )
   return toSurfaceTokens(pickPolarity(preferred, scored))
 }
@@ -185,31 +195,42 @@ function solveSurface(
 export function solveAdaptiveGlass(
   args: SolveAdaptiveGlassArgs,
 ): AdaptiveResolvedGlass {
-  const base = resolveGlass(args.profile, args.tuning)
+  const composition = composeGlassBeforeProfileClamp(args.profile, args.tuning)
   const { input, usedFallback } = resolveAnalysis(args.analysis)
+  const band = GLASS_PROFILE_BANDS[args.profile]
 
   const detailBoost = input.detail
   const chromaBoost = input.chroma * 0.25
-  const blurPx = Math.max(0, base.blurPx + detailBoost * 10)
+  const adaptiveBlurPx = composition.blurPxBeforeProfileClamp + detailBoost * 10
   const tintBase = clamp(
-    base.opacity + detailBoost * 0.1 + chromaBoost * 0.05,
+    composition.tintOpacityBeforeProfileClamp +
+      detailBoost * 0.1 +
+      chromaBoost * 0.05,
     0.08,
     0.55,
   )
-
-  const lens = solveSurface("lens", input, tintBase, detailBoost)
-  const contentDirect = solveSurface(
-    "content-direct",
-    input,
+  const scoringContext: AdaptiveScoringContext = {
+    wallpaperL: input.luminance,
     tintBase,
     detailBoost,
-  )
+    lensTintOpacity: band.tintOpacity,
+  }
+
+  const lens = solveSurface("lens", scoringContext)
+  const contentDirect = solveSurface("content-direct", scoringContext)
 
   const surfaceOpacity = clamp(
-    Math.max(base.opacity, lens.tintOpacity + detailBoost * 0.08),
+    Math.max(
+      composition.tintOpacityBeforeProfileClamp,
+      lens.tintOpacity + detailBoost * 0.08,
+    ),
     0.05,
     0.7,
   )
+  const bounded = clampGlassProfileTokens(args.profile, {
+    blurPx: adaptiveBlurPx,
+    tintOpacity: surfaceOpacity,
+  })
 
   const adaptive: AdaptiveGlassMaterial = {
     analysis: input,
@@ -229,9 +250,13 @@ export function solveAdaptiveGlass(
   }
 
   return {
-    ...base,
-    blurPx,
-    opacity: surfaceOpacity,
+    profile: composition.profile,
+    blurPx: bounded.blurPx,
+    opacity: bounded.tintOpacity,
+    highlight: composition.highlight,
+    saturation: composition.saturation,
+    enabled: true,
+    tuning: composition.tuning,
     adaptive,
   }
 }
