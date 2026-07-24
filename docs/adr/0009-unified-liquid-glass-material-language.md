@@ -1,0 +1,3 @@
+# Unified liquid glass as the product material language
+
+2026-07-24 user direction: yindex's visual identity moves from the approved 「三材质三联画」 (inkstone / caliper / dew-glass material systems, liquid glass only on the atmosphere page) to a **single Apple-style Liquid Glass language across the whole product**. Pages differentiate through Wallpaper, tint/accent, and typography mood — not through separate material systems. Supersedes DESIGN.md rules 「Glass-Is-Atmosphere」 and 「Don't: 三页共用同一玻璃卡片皮肤只换壁纸」; DESIGN.md is rewritten accordingly. Rationale: user found the triptych visually incoherent and explicitly asked for Apple's latest liquid glass + fluid feel everywhere, with comfortable transparency.

@@ -41,8 +41,16 @@ _Avoid_: 皮肤、主题（Theme 若与 Style 合并需再决议）、外观
 _Avoid_: 皮肤包、主题市场（若未做市场则不要用）
 
 **Liquid Glass（液态玻璃）**:
-一种强调半透明、折射/模糊、高光与流体感的视觉/动效气质；可作为某 Page Style 的材质语言，不是独立业务实体。
-_Avoid_: 毛玻璃（仅指 blur 子集）、Glassmorphism（实现标签，产品语言优先用液态玻璃）
+产品的视觉母语：一套统一的半透明、折射/模糊、高光与流体感的材质语言，贯穿所有 Page 与编辑器；页与页靠 Wallpaper、色调与字体气质区分，不靠材质系统区分。
+_Avoid_: 毛玻璃（仅指 blur 子集）、Glassmorphism（实现标签，产品语言优先用液态玻璃）、每页独立材质系统（已由统一液态玻璃取代）
+
+**Adaptive Glass（自适应玻璃）**:
+液态玻璃根据当前 Wallpaper 的明暗、色彩与细节变化，自动调整材质与前景对比以保持舒适和可读；它是默认行为，不是一套独立 Style。
+_Avoid_: 固定透明度玻璃、自动换主题
+
+**Glass Profile（玻璃档位）**:
+用户选择的液态玻璃基础气质，首发为「清透、均衡、沉静」；高级微调在所选档位上叠加，但不能破坏最低可读性。
+_Avoid_: Theme、Style Pack、无保护的自由参数集合
 
 **Browse Mode（浏览态）**:
 日常使用态：滚轮/手势翻页、与 Widget 交互；不以布局编辑为目的。
@@ -71,6 +79,18 @@ _Avoid_: 把 yindex 整体称为易经应用、把经典原文展示称为个性
 **Wallpaper（壁纸）**:
 某一 Page Style 的底层视觉背景（图/视频/生成纹理等）；全页铺底，不是可拖拽的普通 Widget。
 _Avoid_: 背景 Widget（除非未来单独做覆盖层）、全局唯一壁纸（与「每页独立 Style」冲突时勿默认）
+
+**Dynamic Wallpaper（动态壁纸）**:
+随时间变化的 Wallpaper 总称，包含 Video Wallpaper 与 Generative Wallpaper；它描述背景本身的变化，不指 Page Turn 或 Widget 动画。
+_Avoid_: 仅把视频壁纸称为动态壁纸、把翻页动画称为动态壁纸
+
+**Generative Wallpaper（生成式壁纸）**:
+由 Extension 在本机持续生成的动态视觉背景，不依赖预制图片或视频素材；作为默认 Home 的主要 Wallpaper 形态。
+_Avoid_: 视频壁纸、普通渐变图
+
+**Video Wallpaper（视频壁纸）**:
+用户导入并作为某一 Page 背景循环播放的本地视频 Wallpaper；它不是可拖拽的 Widget。
+_Avoid_: 远程视频流、背景视频 Widget
 
 **Widget Type（小组件类型）**:
 可安装/内置的一种 Widget 能力定义（如 Clock、Search、Hexagram Board）；描述它能做什么与可配置项 schema。
