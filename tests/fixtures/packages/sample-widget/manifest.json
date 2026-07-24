@@ -1,0 +1,19 @@
+{
+  "packageId": "com.yindex.fixture.sample",
+  "name": "Fixture Widget",
+  "version": "1.0.0",
+  "description": "Deterministic E2E package fixture",
+  "engines": { "yindex": ">=1 <2" },
+  "yindexApiVersion": 1,
+  "types": [
+    {
+      "typeId": "fixture.sample",
+      "name": "Fixture Sample",
+      "description": "Minimal package fixture",
+      "entry": "widget.html",
+      "defaultSize": { "w": 20, "h": 20 }
+    }
+  ],
+  "permissions": [],
+  "hostPermissions": []
+}

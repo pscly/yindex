@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    "types": ["bun"]
+  },
+  "include": ["playwright.config.ts", "tests/e2e/**/*.ts"]
+}

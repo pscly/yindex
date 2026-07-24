@@ -27,7 +27,9 @@
       ".omo",
       ".omx",
       ".playwright-mcp",
+      "playwright-report",
       ".serena",
+      "test-results",
       "coverage"
     ]
   }

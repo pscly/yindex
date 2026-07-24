@@ -7,7 +7,7 @@
     "dev": "bun run --filter @yindex/extension dev",
     "build": "bun run --filter @yindex/extension build",
     "test": "bun test packages/domain packages/widget-sdk packages/style-packs packages/widgets packages/extension",
-    "typecheck": "bun run --filter @yindex/domain typecheck && bun run --filter @yindex/widget-sdk typecheck && bun run --filter @yindex/style-packs typecheck && bun run --filter @yindex/widgets typecheck && bun run --filter @yindex/extension typecheck",
+    "typecheck": "bun run --filter @yindex/domain typecheck && bun run --filter @yindex/widget-sdk typecheck && bun run --filter @yindex/style-packs typecheck && bun run --filter @yindex/widgets typecheck && bun run --filter @yindex/extension typecheck && bunx tsc -p tsconfig.e2e.json --noEmit",
     "lint": "biome check .",
     "format": "biome check --write .",
     "test:e2e": "playwright test",

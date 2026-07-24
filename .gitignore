@@ -14,3 +14,5 @@ packages/extension/dist/
 .turbo/
 .vite/
 release/
+playwright-report/
+test-results/
