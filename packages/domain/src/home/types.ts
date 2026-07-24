@@ -55,15 +55,17 @@ export type HomeSettings = {
   readonly rememberLastPage: boolean
   readonly allowHexagramRedraw: boolean
   readonly snapEnabled: boolean
+  /** When false, hide all builtin widget corner titles */
+  readonly showWidgetTitles: boolean
   readonly reducedMotion: "system" | "force" | "never"
   readonly locale: "zh-CN"
 }
-
 
 export const DEFAULT_HOME_SETTINGS: HomeSettings = {
   rememberLastPage: false,
   allowHexagramRedraw: false,
   snapEnabled: true,
+  showWidgetTitles: true,
   reducedMotion: "system",
   locale: "zh-CN",
 }

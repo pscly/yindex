@@ -82,6 +82,7 @@ const homeV1Schema = z.object({
     rememberLastPage: z.boolean(),
     allowHexagramRedraw: z.boolean(),
     snapEnabled: z.boolean(),
+    showWidgetTitles: z.boolean().default(true),
     reducedMotion: z.enum(["system", "force", "never"]),
     locale: z.literal("zh-CN"),
   }),
@@ -115,7 +116,10 @@ function brandDocument(raw: z.infer<typeof homeV1Schema>): HomeDocument {
       landingPageId: pageId(raw.sequence.landingPageId),
     },
     pages: pages,
-    settings: raw.settings,
+    settings: {
+      ...raw.settings,
+      showWidgetTitles: raw.settings.showWidgetTitles ?? true,
+    },
     lastPageId: raw.lastPageId ? pageId(raw.lastPageId) : null,
   }
 }

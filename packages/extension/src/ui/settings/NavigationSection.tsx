@@ -42,6 +42,14 @@ export function NavigationSection(props: {
         />
         编辑时启用吸附
       </label>
+      <label style={row}>
+        <input
+          type="checkbox"
+          checked={props.doc.settings.showWidgetTitles !== false}
+          onChange={(e) => patchSettings({ showWidgetTitles: e.target.checked })}
+        />
+        显示小组件标题（左上角名称，全局）
+      </label>
       <div style={{ marginTop: 8 }}>
         <div style={{ opacity: 0.7, marginBottom: 6, fontSize: 12 }}>
           减少动态效果

@@ -16,7 +16,7 @@ import {
   withZ,
 } from "@yindex/domain"
 import { STYLE_PACKS } from "@yindex/style-packs"
-import { BUILTIN_CATALOG, faviconForUrl, readShowTitle } from "@yindex/widgets"
+import { BUILTIN_CATALOG, faviconForUrl } from "@yindex/widgets"
 import type { CSSProperties, ChangeEvent } from "react"
 
 export function EditChrome(props: {
@@ -218,26 +218,6 @@ export function EditChrome(props: {
                 ? selected.source.typeId
                 : "缺失"}
           </div>
-          <label style={rowCheck}>
-            <input
-              type="checkbox"
-              checked={readShowTitle(
-                selected.config,
-                !(
-                  selected.source.kind === "builtin" &&
-                  selected.source.typeId === "builtin.clock"
-                ),
-              )}
-              onChange={(e) => {
-                const base =
-                  typeof selected.config === "object" && selected.config !== null
-                    ? (selected.config as Record<string, unknown>)
-                    : {}
-                patchSelectedConfig({ ...base, showTitle: e.target.checked })
-              }}
-            />
-            显示标题（左上角名称）
-          </label>
           <div style={{ marginTop: 10 }}>
             <SelectedWidgetEditor
               sourceKind={selected.source.kind}

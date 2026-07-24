@@ -7,7 +7,6 @@ import {
   SearchWidget,
   ShortcutsWidget,
   WeatherWidget,
-  readShowTitle,
   type SearchWidgetConfig,
   type ShortcutsWidgetConfig,
   type WeatherWidgetConfig,
@@ -38,9 +37,7 @@ export function WidgetMount(props: WidgetMountProps) {
   const src = props.widget.source
   const allowRedraw = props.doc.settings.allowHexagramRedraw
   const cfg = asObject(props.widget.config)
-  // Default: show titles for labeled widgets; clock defaults off (clean display)
-  const showTitleDefault = src.kind === "builtin" && src.typeId === "builtin.clock" ? false : true
-  const showTitle = readShowTitle(props.widget.config, showTitleDefault)
+  const showTitle = props.doc.settings.showWidgetTitles !== false
 
   if (src.kind === "missing") {
     return (
@@ -119,12 +116,7 @@ export function WidgetMount(props: WidgetMountProps) {
             config={(props.widget.config as HexagramBoardConfig) ?? {}}
             allowRedraw={allowRedraw}
             showTitle={showTitle}
-            onConfigChange={(next) =>
-              props.onWidgetConfig(props.widget.id, {
-                ...asObject(next),
-                showTitle,
-              })
-            }
+            onConfigChange={(next) => props.onWidgetConfig(props.widget.id, next)}
           />
         </div>
       )
