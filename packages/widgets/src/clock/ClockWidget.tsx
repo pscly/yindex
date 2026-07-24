@@ -28,9 +28,25 @@ export function ClockWidget(props: ClockWidgetProps) {
   const date = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`
   const week = `星期${WEEKDAYS[now.getDay()] ?? ""}`
   const time = props.showSeconds === false ? `${h}:${m}` : `${h}:${m}:${s}`
+  const glass = props.tokens.glass.enabled
+
+  const surfaceProps = !glass
+    ? {
+        style: {
+          background: "transparent",
+          border: "none",
+          boxShadow: "none" as const,
+        },
+      }
+    : {}
 
   return (
-    <WidgetSurface tokens={props.tokens} title="时钟" showTitle={props.showTitle === true}>
+    <WidgetSurface
+      tokens={props.tokens}
+      title="时钟"
+      showTitle={props.showTitle === true}
+      {...surfaceProps}
+    >
       <div
         style={{
           height: "100%",
@@ -38,7 +54,7 @@ export function ClockWidget(props: ClockWidgetProps) {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          gap: 8,
+          gap: 14,
           textAlign: "center",
           userSelect: "none",
         }}
@@ -47,17 +63,27 @@ export function ClockWidget(props: ClockWidgetProps) {
           style={{
             fontFamily: props.tokens.typography.displayFamily,
             fontWeight: props.tokens.typography.displayWeight,
-            fontSize: "clamp(2.4rem, 8vw, 5.5rem)",
-            letterSpacing: "0.04em",
-            lineHeight: 1,
+            fontSize: "clamp(3rem, 11vw, 7rem)",
+            letterSpacing: "-0.03em",
+            lineHeight: 0.95,
             fontVariantNumeric: "tabular-nums",
+            textShadow: glass
+              ? "0 0 40px color-mix(in oklch, white 18%, transparent)"
+              : undefined,
           }}
           aria-live="polite"
           aria-label={`当前时间 ${time}`}
         >
           {time}
         </div>
-        <div style={{ color: props.tokens.color.muted, fontSize: 14 }}>
+        <div
+          style={{
+            color: props.tokens.color.muted,
+            fontSize: "clamp(13px, 1.4vw, 16px)",
+            letterSpacing: "0.06em",
+            fontWeight: 400,
+          }}
+        >
           {date} · {week}
         </div>
       </div>

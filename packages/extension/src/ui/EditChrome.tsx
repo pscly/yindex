@@ -45,9 +45,12 @@ export function EditChrome(props: {
 
   return (
     <aside style={panel} aria-label="编辑面板">
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
-        <strong>编辑当前页</strong>
-        <button type="button" onClick={props.onClose} style={ghostBtn}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <div>
+          <div style={{ fontSize: 11, letterSpacing: "0.08em", opacity: 0.55, fontWeight: 600 }}>EDIT</div>
+          <strong style={{ fontSize: 15 }}>当前页</strong>
+        </div>
+        <button type="button" onClick={props.onClose} style={{ ...ghostBtn, background: "oklch(0.62 0.14 36)", borderColor: "transparent", fontWeight: 600 }}>
           完成
         </button>
       </div>
@@ -556,51 +559,55 @@ function defaultConfigFor(typeId: string): unknown {
 const panel: CSSProperties = {
   position: "fixed",
   right: 20,
-  bottom: 72,
-  width: 300,
-  maxHeight: "min(70vh, 560px)",
+  bottom: 84,
+  width: 312,
+  maxHeight: "min(72vh, 620px)",
   overflow: "auto",
   zIndex: 3200,
-  borderRadius: 12,
-  padding: 14,
-  background: "color-mix(in oklch, oklch(0.22 0.01 260) 92%, transparent)",
+  borderRadius: 16,
+  padding: 16,
+  background: "color-mix(in oklch, oklch(0.16 0.008 260) 92%, transparent)",
   color: "oklch(0.94 0.01 260)",
-  border: "1px solid color-mix(in oklch, white 12%, transparent)",
-  backdropFilter: "blur(14px)",
-  boxShadow: "0 12px 40px color-mix(in oklch, black 35%, transparent)",
+  border: "1px solid color-mix(in oklch, white 11%, transparent)",
+  backdropFilter: "blur(18px) saturate(1.15)",
+  WebkitBackdropFilter: "blur(18px) saturate(1.15)",
+  boxShadow: "0 18px 50px color-mix(in oklch, black 42%, transparent)",
   fontSize: 13,
 }
 
 const ghostBtn: CSSProperties = {
-  border: "1px solid color-mix(in oklch, white 14%, transparent)",
-  background: "color-mix(in oklch, white 6%, transparent)",
+  border: "1px solid color-mix(in oklch, white 12%, transparent)",
+  background: "color-mix(in oklch, white 5%, transparent)",
   color: "inherit",
-  borderRadius: 8,
-  padding: "6px 10px",
+  borderRadius: 10,
+  padding: "7px 11px",
   cursor: "pointer",
   fontSize: 12,
+  fontWeight: 500,
 }
 
 const inputStyle: CSSProperties = {
   width: "100%",
-  marginTop: 4,
-  borderRadius: 8,
-  border: "1px solid color-mix(in oklch, white 14%, transparent)",
-  background: "color-mix(in oklch, black 25%, transparent)",
+  marginTop: 5,
+  borderRadius: 10,
+  border: "1px solid color-mix(in oklch, white 12%, transparent)",
+  background: "color-mix(in oklch, black 28%, transparent)",
   color: "inherit",
-  padding: "8px 10px",
+  padding: "9px 11px",
   boxSizing: "border-box",
 }
 
 const labelStyle: CSSProperties = {
   display: "block",
-  fontSize: 12,
-  opacity: 0.9,
+  fontSize: 11,
+  letterSpacing: "0.06em",
+  opacity: 0.75,
+  fontWeight: 600,
 }
 
 const rowCheck: CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: 8,
-  fontSize: 12,
+  fontSize: 12.5,
 }

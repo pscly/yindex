@@ -3,7 +3,7 @@ import type { PageId, WidgetInstanceId } from "@yindex/domain"
 import { applyLayoutDraft, removeWidget, updatePage } from "@yindex/domain"
 import { useHomeState } from "./useHomeState"
 import { usePageTurn } from "./usePageTurn"
-import { PageCanvas, type LayoutDraftEvent } from "../ui/PageCanvas"
+import { PageCanvas, pageTokensOf, type LayoutDraftEvent } from "../ui/PageCanvas"
 import { PageDots } from "../ui/PageDots"
 import { EditChrome } from "../ui/EditChrome"
 import { SettingsPanel } from "../ui/SettingsPanel"
@@ -204,6 +204,9 @@ export function App() {
         doc={doc}
         currentIndex={turn.currentIndex}
         onSelect={turn.goToIndex}
+        {...(currentPageId && doc.pages[currentPageId]
+          ? { accent: pageTokensOf(doc.pages[currentPageId]).color.accent }
+          : {})}
       />
 
       <ChromeFab

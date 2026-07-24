@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react"
+import { useState, type FormEvent, type CSSProperties } from "react"
 import type { StyleTokens } from "@yindex/domain"
 import { WidgetSurface } from "../shell/surface"
 
@@ -48,6 +48,18 @@ export function SearchWidget(props: SearchWidgetProps) {
   const [q, setQ] = useState("")
   const canSubmit = q.trim().length > 0
   const engineLabel = ENGINE_LABEL[props.config.engine] ?? "搜索"
+  const field: CSSProperties = {
+    flex: 1,
+    height: "100%",
+    minHeight: 40,
+    borderRadius: props.tokens.radius.sm,
+    border: `1px solid color-mix(in oklch, ${props.tokens.color.ink} 12%, transparent)`,
+    background: `color-mix(in oklch, ${props.tokens.color.bg} 35%, transparent)`,
+    color: props.tokens.color.ink,
+    padding: "0 16px",
+    fontSize: 15,
+    outline: "none",
+  }
 
   function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -57,48 +69,49 @@ export function SearchWidget(props: SearchWidgetProps) {
   }
 
   return (
-    <WidgetSurface tokens={props.tokens} title={`搜索 · ${engineLabel}`} showTitle={props.showTitle}>
+    <WidgetSurface
+      tokens={props.tokens}
+      title={`搜索 · ${engineLabel}`}
+      showTitle={props.showTitle}
+      style={{ background: props.tokens.color.surface }}
+    >
       <form
         onSubmit={onSubmit}
         style={{
           height: "100%",
           display: "flex",
           alignItems: "center",
-          gap: 8,
+          gap: 10,
         }}
       >
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="搜索网页…"
+          placeholder="搜索或输入关键词…"
           aria-label="搜索"
           autoComplete="off"
           spellCheck={false}
-          style={{
-            flex: 1,
-            height: 44,
-            borderRadius: props.tokens.radius.sm,
-            border: `1px solid color-mix(in oklch, ${props.tokens.color.ink} 16%, transparent)`,
-            background: "transparent",
-            color: props.tokens.color.ink,
-            padding: "0 14px",
-            fontSize: 15,
-            outline: "none",
-          }}
+          style={field}
         />
         <button
           type="submit"
           disabled={!canSubmit}
           style={{
-            height: 44,
-            padding: "0 16px",
+            height: "100%",
+            minHeight: 40,
+            minWidth: 72,
+            padding: "0 18px",
             borderRadius: props.tokens.radius.sm,
             border: "none",
             background: props.tokens.color.accent,
-            color: props.tokens.color.bg,
+            color:
+              props.tokens.elevation.mode === "flat"
+                ? "oklch(0.99 0 0)"
+                : props.tokens.color.bg,
             fontWeight: 600,
             cursor: canSubmit ? "pointer" : "not-allowed",
-            opacity: canSubmit ? 1 : 0.5,
+            opacity: canSubmit ? 1 : 0.45,
+            letterSpacing: "0.02em",
           }}
         >
           搜索

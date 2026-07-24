@@ -15,6 +15,7 @@ body,
   color: #f2f2f4;
   font-family: "Noto Sans SC", "PingFang SC", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button,
@@ -28,9 +29,23 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+}
+
 :focus-visible {
   outline: 2px solid oklch(0.65 0.12 250);
   outline-offset: 2px;
+}
+
+/* Quiet chrome transitions */
+button {
+  transition: background 140ms ease, border-color 140ms ease, opacity 140ms ease,
+    box-shadow 160ms ease, transform 140ms ease;
+}
+
+a {
+  transition: opacity 140ms ease;
 }
 
 @media (prefers-reduced-motion: reduce) {

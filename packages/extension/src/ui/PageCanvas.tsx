@@ -85,10 +85,10 @@ export function PageCanvas(props: PageCanvasProps) {
               outline: selected
                 ? `2px solid ${tokens.color.accent}`
                 : props.editMode
-                  ? `1px dashed color-mix(in oklch, ${tokens.color.ink} 25%, transparent)`
+                  ? `1px dashed color-mix(in oklch, ${tokens.color.ink} 18%, transparent)`
                   : "none",
-              outlineOffset: 2,
-              borderRadius: 4,
+              outlineOffset: 3,
+              borderRadius: 10,
               pointerEvents: "auto",
             }}
           >
@@ -130,7 +130,7 @@ export function PageCanvas(props: PageCanvasProps) {
                 onWidgetConfig={props.onWidgetConfig}
               />
             )}
-            {props.editMode && props.onDeleteWidget ? (
+            {props.editMode && props.onDeleteWidget && selected ? (
               <button
                 type="button"
                 aria-label="删除小组件"
@@ -141,27 +141,26 @@ export function PageCanvas(props: PageCanvasProps) {
                   e.stopPropagation()
                   if (!confirm("删除该小组件？")) return
                   props.onDeleteWidget?.(w.id)
-                  if (selected) props.onSelectWidget(null)
+                  props.onSelectWidget(null)
                 }}
                 style={{
                   position: "absolute",
-                  top: -10,
-                  right: -10,
-                  width: 24,
-                  height: 24,
+                  top: -11,
+                  right: -11,
+                  width: 26,
+                  height: 26,
                   borderRadius: 999,
-                  border: `1px solid color-mix(in oklch, ${tokens.color.ink} 20%, transparent)`,
-                  background: "color-mix(in oklch, black 55%, transparent)",
+                  border: "1px solid color-mix(in oklch, white 18%, transparent)",
+                  background: "oklch(0.42 0.14 25)",
                   color: "white",
-                  fontSize: 14,
-                  lineHeight: "22px",
+                  fontSize: 15,
+                  lineHeight: "24px",
                   padding: 0,
                   cursor: "pointer",
                   zIndex: 5,
                   display: "grid",
                   placeItems: "center",
-                  backdropFilter: "blur(6px)",
-                  boxShadow: "0 2px 8px color-mix(in oklch, black 30%, transparent)",
+                  boxShadow: "0 4px 14px color-mix(in oklch, black 35%, transparent)",
                 }}
               >
                 ×
@@ -174,18 +173,23 @@ export function PageCanvas(props: PageCanvasProps) {
         <div
           style={{
             position: "absolute",
-            left: 16,
-            top: 16,
-            padding: "6px 10px",
-            borderRadius: 8,
-            background: "color-mix(in oklch, black 45%, transparent)",
-            color: "white",
+            left: "50%",
+            top: 18,
+            transform: "translateX(-50%)",
+            padding: "8px 14px",
+            borderRadius: 999,
+            background: "color-mix(in oklch, oklch(0.16 0.008 260) 82%, transparent)",
+            color: "oklch(0.94 0.01 260)",
             fontSize: 12,
+            letterSpacing: "0.02em",
             zIndex: 2000,
-            backdropFilter: "blur(8px)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid color-mix(in oklch, white 12%, transparent)",
+            boxShadow: "0 8px 24px color-mix(in oklch, black 25%, transparent)",
+            whiteSpace: "nowrap",
           }}
         >
-          编辑 · {props.page.name} · 拖拽 · 缩放 · ×删除 · Alt 关吸附
+          编辑 · {props.page.name} · 拖拽移动 · 角点缩放 · 选中后 × 删除 · Alt 关吸附
         </div>
       ) : null}
     </section>
@@ -244,14 +248,16 @@ function EditDragShell(props: {
         data-resize-handle="true"
         style={{
           position: "absolute",
-          right: 0,
-          bottom: 0,
+          right: 2,
+          bottom: 2,
           width: 14,
           height: 14,
           cursor: "nwse-resize",
-          background: "color-mix(in oklch, white 50%, transparent)",
-          borderTopLeftRadius: 4,
+          background: "color-mix(in oklch, white 70%, transparent)",
+          border: "1px solid color-mix(in oklch, black 20%, transparent)",
+          borderRadius: 4,
           zIndex: 2,
+          boxShadow: "0 1px 4px color-mix(in oklch, black 20%, transparent)",
         }}
         onPointerDown={(e) => {
           if (!props.onDraft) return

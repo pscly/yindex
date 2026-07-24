@@ -4,48 +4,66 @@ export const overlay: CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 4000,
-  background: "color-mix(in oklch, black 45%, transparent)",
+  background: "color-mix(in oklch, black 52%, transparent)",
   display: "grid",
   placeItems: "center",
   padding: 24,
+  backdropFilter: "blur(6px)",
 }
 
 export const sheet: CSSProperties = {
-  width: "min(480px, 100%)",
-  maxHeight: "min(80vh, 720px)",
+  width: "min(460px, 100%)",
+  maxHeight: "min(82vh, 740px)",
   overflow: "auto",
-  borderRadius: 16,
-  padding: 20,
-  background: "oklch(0.22 0.01 260)",
+  borderRadius: 18,
+  padding: "22px 22px 26px",
+  background: "oklch(0.18 0.01 260)",
   color: "oklch(0.94 0.01 260)",
-  border: "1px solid color-mix(in oklch, white 12%, transparent)",
-  boxShadow: "0 20px 60px color-mix(in oklch, black 40%, transparent)",
+  border: "1px solid color-mix(in oklch, white 10%, transparent)",
+  boxShadow: "0 28px 80px color-mix(in oklch, black 48%, transparent)",
 }
 
-export const section: CSSProperties = { marginTop: 18 }
-export const h3: CSSProperties = { margin: "0 0 8px", fontSize: 14, fontWeight: 600 }
+export const section: CSSProperties = {
+  marginTop: 20,
+  paddingTop: 16,
+  borderTop: "1px solid color-mix(in oklch, white 8%, transparent)",
+}
+
+export const h3: CSSProperties = {
+  margin: "0 0 12px",
+  fontSize: 12,
+  fontWeight: 600,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  opacity: 0.72,
+}
+
 export const row: CSSProperties = {
   display: "flex",
-  gap: 8,
+  gap: 10,
   alignItems: "flex-start",
-  marginBottom: 8,
-  fontSize: 13,
-  lineHeight: 1.4,
+  marginBottom: 10,
+  fontSize: 13.5,
+  lineHeight: 1.45,
 }
+
 export const ghostBtn: CSSProperties = {
-  border: "1px solid color-mix(in oklch, white 14%, transparent)",
-  background: "color-mix(in oklch, white 6%, transparent)",
+  border: "1px solid color-mix(in oklch, white 12%, transparent)",
+  background: "color-mix(in oklch, white 5%, transparent)",
   color: "inherit",
-  borderRadius: 8,
-  padding: "6px 10px",
+  borderRadius: 10,
+  padding: "8px 12px",
   cursor: "pointer",
-  fontSize: 12,
+  fontSize: 12.5,
+  fontWeight: 500,
 }
+
 export const selectStyle: CSSProperties = {
   width: "100%",
-  borderRadius: 8,
-  border: "1px solid color-mix(in oklch, white 14%, transparent)",
-  background: "color-mix(in oklch, black 25%, transparent)",
+  borderRadius: 10,
+  border: "1px solid color-mix(in oklch, white 12%, transparent)",
+  background: "color-mix(in oklch, black 28%, transparent)",
   color: "inherit",
-  padding: "8px 10px",
+  padding: "10px 12px",
+  fontSize: 13,
 }

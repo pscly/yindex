@@ -102,8 +102,10 @@ export function QuoteWidget(props: QuoteWidgetProps) {
           style={{
             margin: 0,
             fontFamily: props.tokens.typography.displayFamily,
-            fontSize: "clamp(1rem, 2.2vw, 1.35rem)",
-            lineHeight: 1.6,
+            fontSize: "clamp(1.05rem, 2.4vw, 1.4rem)",
+            lineHeight: 1.65,
+            letterSpacing: "0.01em",
+            fontWeight: 500,
           }}
         >
           {body.text}

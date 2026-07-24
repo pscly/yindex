@@ -19,7 +19,6 @@ export type ShortcutsWidgetProps = {
   readonly onOpen?: (url: string) => void
 }
 
-/** Best-effort favicon URL for a site */
 export function faviconForUrl(url: string): string | undefined {
   try {
     const u = new URL(url)
@@ -36,7 +35,7 @@ export function ShortcutsWidget(props: ShortcutsWidgetProps) {
     <WidgetSurface tokens={props.tokens} title="快捷方式" showTitle={props.showTitle}>
       {items.length === 0 ? (
         <div style={{ color: props.tokens.color.muted, fontSize: 13 }}>
-          暂无快捷方式。进入编辑态选中本组件后可添加链接。
+          暂无快捷方式。进入编辑态选中后可添加链接。
         </div>
       ) : (
         <div
@@ -45,10 +44,11 @@ export function ShortcutsWidget(props: ShortcutsWidgetProps) {
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(72px, 1fr))",
-            gap: 12,
+            gap: 14,
             alignContent: "start",
             height: "100%",
             overflow: "auto",
+            paddingTop: 2,
           }}
         >
           {items.map((item) => {
@@ -69,7 +69,7 @@ export function ShortcutsWidget(props: ShortcutsWidgetProps) {
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
-                  gap: 6,
+                  gap: 8,
                   textDecoration: "none",
                   color: props.tokens.color.ink,
                   fontSize: 12,
@@ -78,23 +78,26 @@ export function ShortcutsWidget(props: ShortcutsWidgetProps) {
               >
                 <span
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 10,
+                    width: 48,
+                    height: 48,
+                    borderRadius: 12,
                     display: "grid",
                     placeItems: "center",
-                    background: `color-mix(in oklch, ${props.tokens.color.accent} 18%, ${props.tokens.color.surface})`,
-                    fontWeight: 600,
+                    background: props.tokens.color.bg,
+                    border: `1px solid color-mix(in oklch, ${props.tokens.color.ink} 10%, transparent)`,
+                    boxShadow: `0 1px 0 color-mix(in oklch, ${props.tokens.color.ink} 4%, transparent)`,
                     overflow: "hidden",
                     flex: "0 0 auto",
+                    fontWeight: 600,
+                    fontSize: 15,
                   }}
                 >
                   {icon ? (
                     <img
                       src={icon}
                       alt=""
-                      width={20}
-                      height={20}
+                      width={22}
+                      height={22}
                       style={{ objectFit: "contain" }}
                       onError={(e) => {
                         const img = e.currentTarget
@@ -116,6 +119,7 @@ export function ShortcutsWidget(props: ShortcutsWidgetProps) {
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
+                    opacity: 0.88,
                   }}
                 >
                   {item.title}

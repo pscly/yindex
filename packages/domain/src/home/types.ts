@@ -65,7 +65,7 @@ export const DEFAULT_HOME_SETTINGS: HomeSettings = {
   rememberLastPage: false,
   allowHexagramRedraw: false,
   snapEnabled: true,
-  showWidgetTitles: true,
+  showWidgetTitles: false,
   reducedMotion: "system",
   locale: "zh-CN",
 }
