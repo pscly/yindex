@@ -1,4 +1,4 @@
-import { err, ok, type Result } from "../result/result"
+import { type Result, err, ok } from "../result/result"
 import {
   DEFAULT_LAYOUT_CONSTRAINTS,
   type LayoutConstraints,
@@ -51,7 +51,10 @@ export function validateRect(
       (n) => typeof n === "number" && Number.isFinite(n),
     )
   ) {
-    return err({ code: "invalid", message: "rect values must be finite numbers" })
+    return err({
+      code: "invalid",
+      message: "rect values must be finite numbers",
+    })
   }
   if (rect.w < constraints.minW || rect.h < constraints.minH) {
     return err({
@@ -100,7 +103,7 @@ export function buildSnapGuides(
   }
 
   // Thirds
-  for (const v of [100 / 3, (200) / 3]) {
+  for (const v of [100 / 3, 200 / 3]) {
     guides.push({ kind: "thirds", axis: "x", value: v })
     guides.push({ kind: "thirds", axis: "y", value: v })
   }
@@ -191,15 +194,24 @@ export function snapRect(
   const snapR = nearest(right, guides, "x", thr)
 
   // Prefer edge snaps over center when distances equal (nearest already does)
-  if (snapL && (!snapC || Math.abs(snapL.value - left) <= Math.abs(snapC.value - cx))) {
-    if (!snapR || Math.abs(snapL.value - left) <= Math.abs(snapR.value - right)) {
+  if (
+    snapL &&
+    (!snapC || Math.abs(snapL.value - left) <= Math.abs(snapC.value - cx))
+  ) {
+    if (
+      !snapR ||
+      Math.abs(snapL.value - left) <= Math.abs(snapR.value - right)
+    ) {
       x = snapL.value
       active.push(snapL.guide)
     } else if (snapR) {
       x = snapR.value - w
       active.push(snapR.guide)
     }
-  } else if (snapR && (!snapC || Math.abs(snapR.value - right) <= Math.abs(snapC.value - cx))) {
+  } else if (
+    snapR &&
+    (!snapC || Math.abs(snapR.value - right) <= Math.abs(snapC.value - cx))
+  ) {
     x = snapR.value - w
     active.push(snapR.guide)
   } else if (snapC) {
@@ -211,15 +223,24 @@ export function snapRect(
   const snapM = nearest(cy, guides, "y", thr)
   const snapB = nearest(bottom, guides, "y", thr)
 
-  if (snapT && (!snapM || Math.abs(snapT.value - top) <= Math.abs(snapM.value - cy))) {
-    if (!snapB || Math.abs(snapT.value - top) <= Math.abs(snapB.value - bottom)) {
+  if (
+    snapT &&
+    (!snapM || Math.abs(snapT.value - top) <= Math.abs(snapM.value - cy))
+  ) {
+    if (
+      !snapB ||
+      Math.abs(snapT.value - top) <= Math.abs(snapB.value - bottom)
+    ) {
       y = snapT.value
       active.push(snapT.guide)
     } else if (snapB) {
       y = snapB.value - h
       active.push(snapB.guide)
     }
-  } else if (snapB && (!snapM || Math.abs(snapB.value - bottom) <= Math.abs(snapM.value - cy))) {
+  } else if (
+    snapB &&
+    (!snapM || Math.abs(snapB.value - bottom) <= Math.abs(snapM.value - cy))
+  ) {
     y = snapB.value - h
     active.push(snapB.guide)
   } else if (snapM) {

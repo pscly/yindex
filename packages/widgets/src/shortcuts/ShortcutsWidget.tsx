@@ -32,7 +32,11 @@ export function ShortcutsWidget(props: ShortcutsWidgetProps) {
   const items = props.config.items
 
   return (
-    <WidgetSurface tokens={props.tokens} title="快捷方式" showTitle={props.showTitle}>
+    <WidgetSurface
+      tokens={props.tokens}
+      title="快捷方式"
+      showTitle={props.showTitle}
+    >
       {items.length === 0 ? (
         <div style={{ color: props.tokens.color.muted, fontSize: 13 }}>
           暂无快捷方式。进入编辑态选中后可添加链接。
@@ -103,8 +107,8 @@ export function ShortcutsWidget(props: ShortcutsWidgetProps) {
                         const img = e.currentTarget
                         img.style.display = "none"
                         const parent = img.parentElement
-                        if (parent && !parent.dataset["fallback"]) {
-                          parent.dataset["fallback"] = "1"
+                        if (parent && !parent.hasAttribute("data-fallback")) {
+                          parent.setAttribute("data-fallback", "1")
                           parent.textContent = item.title.slice(0, 1)
                         }
                       }}

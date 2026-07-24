@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import { packageId, stylePackId, widgetTypeId } from "../ids/ids"
+import { packageId, widgetTypeId } from "../ids/ids"
 import { withZ } from "../layout/layout"
+import { defaultPageStyle } from "../style/pageStyle"
 import {
   addPageToHome,
   addWidget,
@@ -10,23 +11,34 @@ import {
 } from "./document"
 import {
   buildHomeDocument,
+  builtinSource,
   createBlankPage,
   createWidgetInstance,
-  builtinSource,
 } from "./factory"
 import { markPackageMissing, restorePackageInstances } from "./packageLifecycle"
+import { HOME_SCHEMA_VERSION } from "./types"
 
 function blank(name: string) {
   return createBlankPage({
     name,
-    style: { packId: stylePackId("caliper"), overrides: {} },
+    style: defaultPageStyle(),
   })
 }
 
 describe("HomeDocument", () => {
-  test("build requires pages", () => {
-    const r = buildHomeDocument({ pages: [] })
-    expect(r.ok).toBe(false)
+  test("build requires pages and emits schema v2", () => {
+    // Given / When
+    const empty = buildHomeDocument({ pages: [] })
+    const page = blank("启动")
+    const okDoc = buildHomeDocument({ pages: [page] })
+    // Then
+    expect(empty.ok).toBe(false)
+    expect(okDoc.ok).toBe(true)
+    if (okDoc.ok) {
+      expect(okDoc.value.schemaVersion).toBe(HOME_SCHEMA_VERSION)
+      expect(okDoc.value.schemaVersion).toBe(2)
+      expect(okDoc.value.settings.motionProfile).toBe("balanced")
+    }
   })
 
   test("add widget and move layout", () => {
@@ -77,7 +89,11 @@ describe("HomeDocument", () => {
     const missing = markPackageMissing(docR.value, "com.example.pomodoro")
     const src = missing.pages[p.id]?.widgets[0]?.source
     expect(src?.kind).toBe("missing")
-    const restored = restorePackageInstances(missing, "com.example.pomodoro", "1.0.1")
+    const restored = restorePackageInstances(
+      missing,
+      "com.example.pomodoro",
+      "1.0.1",
+    )
     const src2 = restored.pages[p.id]?.widgets[0]?.source
     expect(src2?.kind).toBe("package")
     if (src2?.kind === "package") {

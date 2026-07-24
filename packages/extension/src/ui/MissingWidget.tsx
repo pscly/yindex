@@ -13,12 +13,26 @@ export function MissingWidget(props: {
       title="缺失小组件"
       showTitle={props.showTitle !== false}
     >
-      <div style={{ fontSize: 13, lineHeight: 1.5, color: props.tokens.color.muted }}>
+      <div
+        style={{
+          fontSize: 13,
+          lineHeight: 1.5,
+          color: props.tokens.color.muted,
+        }}
+      >
         <div>Package 未安装或类型不可用。</div>
-        <div style={{ marginTop: 8, fontFamily: props.tokens.typography.monoFamily, fontSize: 11 }}>
+        <div
+          style={{
+            marginTop: 8,
+            fontFamily: props.tokens.typography.monoFamily,
+            fontSize: 11,
+          }}
+        >
           {props.packageId} / {props.typeId}
         </div>
-        <div style={{ marginTop: 8 }}>重装同一 Package 后可恢复配置与布局。</div>
+        <div style={{ marginTop: 8 }}>
+          重装同一 Package 后可恢复配置与布局。
+        </div>
       </div>
     </WidgetSurface>
   )

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react"
 import type { HomeDocument, PageId } from "@yindex/domain"
 import { setLastPageId } from "@yindex/domain"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { loadHomeDocument, saveHomeDocument } from "../storage/homeStorage"
 import { useHistory } from "./useHistory"
 
@@ -54,9 +54,7 @@ export function useHomeState(): HomeState {
     return () => {
       cancelled = true
     }
-    // mount-only load
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [history.reset])
 
   const scheduleSave = useCallback((next: HomeDocument) => {
     if (saveTimer.current) clearTimeout(saveTimer.current)

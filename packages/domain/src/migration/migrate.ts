@@ -1,7 +1,20 @@
-import { z } from "zod"
-import { pageId } from "../ids/ids"
-import { HOME_SCHEMA_VERSION, type HomeDocument } from "../home/types"
-import { err, ok, type Result } from "../result/result"
+import {
+  HOME_SCHEMA_VERSION,
+  type HomeDocument,
+  type WidgetSource,
+} from "../home/types"
+import { brandAs } from "../ids/brand"
+import { packageId, pageId, widgetInstanceId, widgetTypeId } from "../ids/ids"
+import { type Result, err, ok } from "../result/result"
+import { assertNever } from "../result/result"
+import type { SeedPalette, WidgetStyleOverride } from "../style/types"
+import type { Wallpaper } from "../style/wallpaper"
+import {
+  type HomeV2Raw,
+  type SeedPaletteRaw,
+  type WallpaperRaw,
+  homeV2Schema,
+} from "./homeV2Schema"
 
 export type MigrationError = {
   readonly code: "unsupported" | "parse" | "corrupt"
@@ -9,87 +22,78 @@ export type MigrationError = {
   readonly raw?: unknown
 }
 
-const layoutRectSchema = z.object({
-  x: z.number(),
-  y: z.number(),
-  w: z.number(),
-  h: z.number(),
-  z: z.number(),
-})
+function brandWallpaper(raw: WallpaperRaw): Wallpaper {
+  const dim = brandAs<number, "WallpaperDim">(raw.dim)
+  switch (raw.kind) {
+    case "generative":
+      return {
+        kind: "generative",
+        generativePreset: raw.generativePreset,
+        dim,
+      }
+    case "image":
+      return {
+        kind: "image",
+        mediaRef: brandAs<string, "MediaRef">(raw.mediaRef),
+        dim,
+      }
+    case "video":
+      return {
+        kind: "video",
+        mediaRef: brandAs<string, "MediaRef">(raw.mediaRef),
+        dim,
+      }
+    default: {
+      const _exhaustive: never = raw
+      return _exhaustive
+    }
+  }
+}
 
-const styleOverrideSchema = z
-  .object({
-    color: z.record(z.string()).optional(),
-    typography: z.record(z.union([z.string(), z.number()])).optional(),
-    space: z.record(z.number()).optional(),
-    radius: z.record(z.string()).optional(),
-    elevation: z.record(z.string()).optional(),
-    glass: z.record(z.union([z.number(), z.boolean()])).optional(),
-    wallpaper: z.record(z.union([z.string(), z.number()])).optional(),
-    motion: z.record(z.union([z.string(), z.number()])).optional(),
-  })
-  .partial()
+function brandSeedPalette(raw: SeedPaletteRaw): SeedPalette {
+  return raw
+}
 
-const widgetSourceSchema = z.discriminatedUnion("kind", [
-  z.object({
-    kind: z.literal("builtin"),
-    typeId: z.string(),
-  }),
-  z.object({
-    kind: z.literal("package"),
-    packageId: z.string(),
-    typeId: z.string(),
-    packageVersion: z.string(),
-  }),
-  z.object({
-    kind: z.literal("missing"),
-    packageId: z.string(),
-    typeId: z.string(),
-    lastPackageVersion: z.string(),
-    savedConfig: z.unknown(),
-  }),
-])
+function isWidgetStyleOverride(value: unknown): value is WidgetStyleOverride {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
 
-const widgetInstanceSchema = z.object({
-  id: z.string(),
-  source: widgetSourceSchema,
-  layout: layoutRectSchema,
-  config: z.unknown(),
-  styleOverride: styleOverrideSchema.nullable(),
-})
+function brandStyleOverride(
+  raw: HomeV2Raw["pages"][string]["widgets"][number]["styleOverride"],
+): WidgetStyleOverride | null {
+  if (raw === null) return null
+  const cloned: unknown = JSON.parse(JSON.stringify(raw))
+  if (!isWidgetStyleOverride(cloned)) return null
+  return cloned
+}
 
-const pageStyleSchema = z.object({
-  packId: z.string(),
-  overrides: styleOverrideSchema.default({}),
-})
+function brandWidgetSource(
+  raw: HomeV2Raw["pages"][string]["widgets"][number]["source"],
+): WidgetSource {
+  switch (raw.kind) {
+    case "builtin":
+      return { kind: "builtin", typeId: widgetTypeId(raw.typeId) }
+    case "package":
+      return {
+        kind: "package",
+        packageId: packageId(raw.packageId),
+        typeId: widgetTypeId(raw.typeId),
+        packageVersion: raw.packageVersion,
+      }
+    case "missing":
+      return {
+        kind: "missing",
+        packageId: packageId(raw.packageId),
+        typeId: widgetTypeId(raw.typeId),
+        lastPackageVersion: raw.lastPackageVersion,
+        savedConfig: raw.savedConfig,
+      }
+    default:
+      return assertNever(raw)
+  }
+}
 
-const pageSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  icon: z.string(),
-  style: pageStyleSchema,
-  widgets: z.array(widgetInstanceSchema),
-})
-
-const homeV1Schema = z.object({
-  schemaVersion: z.literal(1),
-  sequence: z.object({
-    pageIds: z.array(z.string()).min(1),
-    landingPageId: z.string(),
-  }),
-  pages: z.record(pageSchema),
-  settings: z.object({
-    rememberLastPage: z.boolean(),
-    allowHexagramRedraw: z.boolean(),
-    snapEnabled: z.boolean(),
-    showWidgetTitles: z.boolean().default(true),
-    reducedMotion: z.enum(["system", "force", "never"]),
-    locale: z.literal("zh-CN"),
-  }),
-  lastPageId: z.string().nullable(),
-})
-
-function brandDocument(raw: z.infer<typeof homeV1Schema>): HomeDocument {
+function brandDocument(raw: HomeV2Raw): HomeDocument {
   const pages: Record<string, HomeDocument["pages"][string]> = {}
   for (const [key, page] of Object.entries(raw.pages)) {
     pages[key] = {
@@ -97,15 +101,17 @@ function brandDocument(raw: z.infer<typeof homeV1Schema>): HomeDocument {
       name: page.name,
       icon: page.icon,
       style: {
-        packId: page.style.packId as HomeDocument["pages"][string]["style"]["packId"],
-        overrides: page.style.overrides as HomeDocument["pages"][string]["style"]["overrides"],
+        seedPalette: brandSeedPalette(page.style.seedPalette),
+        wallpaper: brandWallpaper(page.style.wallpaper),
+        glassProfile: page.style.glassProfile,
+        glassTuning: page.style.glassTuning,
       },
       widgets: page.widgets.map((w) => ({
-        id: w.id as HomeDocument["pages"][string]["widgets"][number]["id"],
-        source: w.source as HomeDocument["pages"][string]["widgets"][number]["source"],
+        id: widgetInstanceId(w.id),
+        source: brandWidgetSource(w.source),
         layout: w.layout,
         config: w.config,
-        styleOverride: w.styleOverride as HomeDocument["pages"][string]["widgets"][number]["styleOverride"],
+        styleOverride: brandStyleOverride(w.styleOverride),
       })),
     }
   }
@@ -115,24 +121,30 @@ function brandDocument(raw: z.infer<typeof homeV1Schema>): HomeDocument {
       pageIds: raw.sequence.pageIds.map(pageId),
       landingPageId: pageId(raw.sequence.landingPageId),
     },
-    pages: pages,
+    pages,
     settings: {
       ...raw.settings,
-      showWidgetTitles: raw.settings.showWidgetTitles ?? true,
+      showWidgetTitles: raw.settings.showWidgetTitles ?? false,
+      motionProfile: raw.settings.motionProfile ?? "balanced",
     },
     lastPageId: raw.lastPageId ? pageId(raw.lastPageId) : null,
   }
 }
 
 /**
- * Parse + migrate stored JSON into current HomeDocument.
- * On failure returns raw payload for recovery UI (product rule).
+ * Parse stored JSON into current HomeDocument (schema v2 only).
+ * v1 and unknown versions are unsupported (ADR 0010) — storage layer resets.
+ * Corrupt v2 still returns `corrupt` with raw for recovery UI.
  */
 export function migrateHomeDocument(
   raw: unknown,
 ): Result<HomeDocument, MigrationError> {
   if (raw === null || raw === undefined || typeof raw !== "object") {
-    return err({ code: "parse", message: "home document is not an object", raw })
+    return err({
+      code: "parse",
+      message: "home document is not an object",
+      raw,
+    })
   }
   const version = (raw as { schemaVersion?: unknown }).schemaVersion
   if (version === undefined) {
@@ -148,11 +160,16 @@ export function migrateHomeDocument(
       raw,
     })
   }
-  if (version < 1) {
-    return err({ code: "unsupported", message: `unknown schemaVersion ${version}`, raw })
+  // ADR 0010: no v1 (or pre-v2) migration path — treat as unsupported so storage resets.
+  if (version < HOME_SCHEMA_VERSION) {
+    return err({
+      code: "unsupported",
+      message: `schemaVersion ${version} is no longer supported; reset to default Home (ADR 0010)`,
+      raw,
+    })
   }
-  // v1 only for now; future: chain migrations 1→2→…
-  const parsed = homeV1Schema.safeParse(raw)
+
+  const parsed = homeV2Schema.safeParse(raw)
   if (!parsed.success) {
     return err({
       code: "corrupt",
@@ -160,7 +177,6 @@ export function migrateHomeDocument(
       raw,
     })
   }
-  // Integrity: every sequence id must exist in pages
   for (const id of parsed.data.sequence.pageIds) {
     if (!parsed.data.pages[id]) {
       return err({
@@ -181,6 +197,5 @@ export function migrateHomeDocument(
 }
 
 export function serializeHomeDocument(doc: HomeDocument): unknown {
-  // structured clone via JSON boundary
   return JSON.parse(JSON.stringify(doc)) as unknown
 }

@@ -1,9 +1,9 @@
-import { defineConfig } from "vite"
-import react from "@vitejs/plugin-react"
 import { resolve } from "node:path"
+import react from "@vitejs/plugin-react"
+import { defineConfig } from "vite"
 import { viteStaticCopy } from "vite-plugin-static-copy"
 
-export default defineConfig({
+const config = defineConfig({
   // Relative URLs required for chrome-extension:// origin
   base: "./",
   plugins: [
@@ -52,3 +52,5 @@ export default defineConfig({
     strictPort: true,
   },
 })
+
+module.exports = config

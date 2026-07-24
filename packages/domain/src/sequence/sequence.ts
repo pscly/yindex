@@ -1,5 +1,5 @@
-import { err, ok, type Result } from "../result/result"
 import type { PageId } from "../ids/ids"
+import { type Result, err, ok } from "../result/result"
 
 export type SequenceError =
   | { readonly code: "empty"; readonly message: string }
@@ -17,7 +17,10 @@ export function createSequence(
   landingPageId?: PageId,
 ): Result<PageSequence, SequenceError> {
   if (pageIds.length === 0) {
-    return err({ code: "empty", message: "Page Sequence requires at least 1 Page" })
+    return err({
+      code: "empty",
+      message: "Page Sequence requires at least 1 Page",
+    })
   }
   const seen = new Set<string>()
   for (const id of pageIds) {
@@ -55,9 +58,12 @@ export function adjacentIndex(
     return err({ code: "empty", message: "empty sequence" })
   }
   if (currentIndex < 0 || currentIndex >= n) {
-    return err({ code: "invalid_index", message: `index out of range: ${currentIndex}` })
+    return err({
+      code: "invalid_index",
+      message: `index out of range: ${currentIndex}`,
+    })
   }
-  const next = ((currentIndex + delta) % n + n) % n
+  const next = (((currentIndex + delta) % n) + n) % n
   return ok(next)
 }
 
@@ -83,10 +89,16 @@ export function insertPage(
   atIndex: number,
 ): Result<PageSequence, SequenceError> {
   if (sequence.pageIds.includes(pageId)) {
-    return err({ code: "duplicate", message: `page already in sequence: ${pageId}` })
+    return err({
+      code: "duplicate",
+      message: `page already in sequence: ${pageId}`,
+    })
   }
   if (atIndex < 0 || atIndex > sequence.pageIds.length) {
-    return err({ code: "invalid_index", message: `insert index invalid: ${atIndex}` })
+    return err({
+      code: "invalid_index",
+      message: `insert index invalid: ${atIndex}`,
+    })
   }
   const pageIds = [
     ...sequence.pageIds.slice(0, atIndex),
@@ -129,7 +141,10 @@ export function reorderPage(
     return err({ code: "not_found", message: `page not found: ${pageId}` })
   }
   if (toIndex < 0 || toIndex >= sequence.pageIds.length) {
-    return err({ code: "invalid_index", message: `toIndex invalid: ${toIndex}` })
+    return err({
+      code: "invalid_index",
+      message: `toIndex invalid: ${toIndex}`,
+    })
   }
   if (from === toIndex) return ok(sequence)
   const next = [...sequence.pageIds]
@@ -146,7 +161,10 @@ export function setLanding(
   pageId: PageId,
 ): Result<PageSequence, SequenceError> {
   if (!sequence.pageIds.includes(pageId)) {
-    return err({ code: "not_found", message: `landing not in sequence: ${pageId}` })
+    return err({
+      code: "not_found",
+      message: `landing not in sequence: ${pageId}`,
+    })
   }
   return ok({ ...sequence, landingPageId: pageId })
 }

@@ -1,21 +1,21 @@
 import {
-  createId,
-  pageId,
   type PageId,
   type WidgetInstanceId,
+  createId,
+  pageId,
   widgetInstanceId,
   widgetTypeId,
 } from "../ids/ids"
 import { clampRect, withZ } from "../layout/layout"
 import type { LayoutRect, RectPct } from "../layout/types"
-import { err, ok, type Result } from "../result/result"
+import { type Result, err, ok } from "../result/result"
 import {
+  type PageSequence,
   createSequence,
   insertPage,
   removePage,
   reorderPage,
   setLanding,
-  type PageSequence,
 } from "../sequence/sequence"
 import type { PageStyle, WidgetStyleOverride } from "../style/types"
 import {
@@ -185,15 +185,16 @@ export function setWidgetLayout(
   if (!pageR.ok) return pageR
   const widget = pageR.value.widgets.find((w) => w.id === widgetId)
   if (!widget) {
-    return err({ code: "widget_not_found", message: `widget not found: ${widgetId}` })
+    return err({
+      code: "widget_not_found",
+      message: `widget not found: ${widgetId}`,
+    })
   }
   const clamped = clampRect(rect)
   const layout: LayoutRect = withZ(clamped, z ?? widget.layout.z)
   return updatePage(doc, pageId, (p) => ({
     ...p,
-    widgets: p.widgets.map((w) =>
-      w.id === widgetId ? { ...w, layout } : w,
-    ),
+    widgets: p.widgets.map((w) => (w.id === widgetId ? { ...w, layout } : w)),
   }))
 }
 
@@ -205,7 +206,10 @@ export function removeWidget(
   const pageR = getPage(doc, pageId)
   if (!pageR.ok) return pageR
   if (!pageR.value.widgets.some((w) => w.id === widgetId)) {
-    return err({ code: "widget_not_found", message: `widget not found: ${widgetId}` })
+    return err({
+      code: "widget_not_found",
+      message: `widget not found: ${widgetId}`,
+    })
   }
   return updatePage(doc, pageId, (p) => ({
     ...p,

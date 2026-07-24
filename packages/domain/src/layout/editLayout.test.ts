@@ -12,7 +12,9 @@ describe("applyLayoutDraft", () => {
       snapEnabled: false,
       altKeyDisablesSnap: false,
     })
-    expect(r.layout.x).toBeGreaterThanOrEqual(DEFAULT_LAYOUT_CONSTRAINTS.safePct)
+    expect(r.layout.x).toBeGreaterThanOrEqual(
+      DEFAULT_LAYOUT_CONSTRAINTS.safePct,
+    )
     expect(r.snapped).toBe(false)
   })
 

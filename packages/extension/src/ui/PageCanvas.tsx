@@ -1,4 +1,3 @@
-import type { CSSProperties, ReactNode } from "react"
 import type {
   HomeDocument,
   Page,
@@ -7,7 +6,7 @@ import type {
   WidgetInstanceId,
 } from "@yindex/domain"
 import { resolvePageTokens } from "@yindex/domain"
-import { getStylePack, CALIPER } from "@yindex/style-packs"
+import type { CSSProperties, ReactNode } from "react"
 import { WidgetMount } from "./WidgetMount"
 
 export type LayoutDraftEvent = {
@@ -28,13 +27,12 @@ export type PageCanvasProps = {
 }
 
 export function pageTokensOf(page: Page): StyleTokens {
-  const pack = getStylePack(page.style.packId) ?? CALIPER
-  return resolvePageTokens(pack.tokens, page.style)
+  return resolvePageTokens(null, page.style)
 }
 
 export function PageCanvas(props: PageCanvasProps) {
   const tokens = pageTokensOf(props.page)
-  const wallpaper = tokens.wallpaper.value ?? tokens.color.bg
+  const wallpaper = tokens.wallpaper.cssBackground || tokens.color.bg
 
   const rootStyle: CSSProperties = {
     position: "relative",
@@ -150,7 +148,8 @@ export function PageCanvas(props: PageCanvasProps) {
                   width: 26,
                   height: 26,
                   borderRadius: 999,
-                  border: "1px solid color-mix(in oklch, white 18%, transparent)",
+                  border:
+                    "1px solid color-mix(in oklch, white 18%, transparent)",
                   background: "oklch(0.42 0.14 25)",
                   color: "white",
                   fontSize: 15,
@@ -160,7 +159,8 @@ export function PageCanvas(props: PageCanvasProps) {
                   zIndex: 5,
                   display: "grid",
                   placeItems: "center",
-                  boxShadow: "0 4px 14px color-mix(in oklch, black 35%, transparent)",
+                  boxShadow:
+                    "0 4px 14px color-mix(in oklch, black 35%, transparent)",
                 }}
               >
                 ×
@@ -178,7 +178,8 @@ export function PageCanvas(props: PageCanvasProps) {
             transform: "translateX(-50%)",
             padding: "8px 14px",
             borderRadius: 999,
-            background: "color-mix(in oklch, oklch(0.16 0.008 260) 82%, transparent)",
+            background:
+              "color-mix(in oklch, oklch(0.16 0.008 260) 82%, transparent)",
             color: "oklch(0.94 0.01 260)",
             fontSize: 12,
             letterSpacing: "0.02em",
@@ -189,7 +190,8 @@ export function PageCanvas(props: PageCanvasProps) {
             whiteSpace: "nowrap",
           }}
         >
-          编辑 · {props.page.name} · 拖拽移动 · 角点缩放 · 选中后 × 删除 · Alt 关吸附
+          编辑 · {props.page.name} · 拖拽移动 · 角点缩放 · 选中后 × 删除 · Alt
+          关吸附
         </div>
       ) : null}
     </section>
@@ -215,7 +217,11 @@ function EditDragShell(props: {
       }}
       onPointerDown={(e) => {
         if (!props.onDraft) return
-        if ((e.target as HTMLElement).dataset["resizeHandle"] === "true") return
+        if (
+          (e.target as HTMLElement).getAttribute("data-resize-handle") ===
+          "true"
+        )
+          return
         e.preventDefault()
         const startX = e.clientX
         const startY = e.clientY

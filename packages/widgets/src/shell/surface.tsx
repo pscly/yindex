@@ -1,5 +1,5 @@
-import type { CSSProperties, ReactNode } from "react"
 import type { StyleTokens } from "@yindex/domain"
+import type { CSSProperties, ReactNode } from "react"
 
 export type WidgetSurfaceProps = {
   readonly tokens: StyleTokens
@@ -31,7 +31,9 @@ export function WidgetSurface(props: WidgetSurfaceProps) {
       : `1px solid color-mix(in oklch, ${tokens.color.ink} 10%, transparent)`,
     fontFamily: tokens.typography.bodyFamily,
     fontSize: tokens.typography.bodySizePx,
-    backdropFilter: glass ? `blur(${tokens.glass.blurPx}px) saturate(1.15)` : undefined,
+    backdropFilter: glass
+      ? `blur(${tokens.glass.blurPx}px) saturate(1.15)`
+      : undefined,
     WebkitBackdropFilter: glass
       ? `blur(${tokens.glass.blurPx}px) saturate(1.15)`
       : undefined,

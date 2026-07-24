@@ -1,20 +1,25 @@
-import type { HomeDocument, PageId, StyleTokens, WidgetInstance } from "@yindex/domain"
+import type {
+  HomeDocument,
+  PageId,
+  StyleTokens,
+  WidgetInstance,
+} from "@yindex/domain"
 import { resolveWidgetTokens } from "@yindex/domain"
 import {
   ClockWidget,
   HexagramBoard,
-  QuoteWidget,
-  SearchWidget,
-  ShortcutsWidget,
-  WeatherWidget,
-  type SearchWidgetConfig,
-  type ShortcutsWidgetConfig,
-  type WeatherWidgetConfig,
-  type QuoteWidgetConfig,
   type HexagramBoardConfig,
+  QuoteWidget,
+  type QuoteWidgetConfig,
+  SearchWidget,
+  type SearchWidgetConfig,
+  ShortcutsWidget,
+  type ShortcutsWidgetConfig,
+  WeatherWidget,
+  type WeatherWidgetConfig,
 } from "@yindex/widgets"
-import { PackageWidgetFrame } from "./PackageWidgetFrame"
 import { MissingWidget } from "./MissingWidget"
+import { PackageWidgetFrame } from "./PackageWidgetFrame"
 
 export type WidgetMountProps = {
   readonly doc: HomeDocument
@@ -25,15 +30,23 @@ export type WidgetMountProps = {
   readonly onWidgetConfig: (widgetId: string, config: unknown) => void
 }
 
-function asObject(config: unknown): Record<string, unknown> {
+type WidgetConfigRecord = {
+  readonly showSeconds?: unknown
+  readonly [key: string]: unknown
+}
+
+function asObject(config: unknown): WidgetConfigRecord {
   if (typeof config === "object" && config !== null) {
-    return config as Record<string, unknown>
+    return config as WidgetConfigRecord
   }
   return {}
 }
 
 export function WidgetMount(props: WidgetMountProps) {
-  const tokens = resolveWidgetTokens(props.pageTokens, props.widget.styleOverride)
+  const tokens = resolveWidgetTokens(
+    props.pageTokens,
+    props.widget.styleOverride,
+  )
   const src = props.widget.source
   const allowRedraw = props.doc.settings.allowHexagramRedraw
   const cfg = asObject(props.widget.config)
@@ -63,14 +76,13 @@ export function WidgetMount(props: WidgetMountProps) {
   }
 
   const typeId = src.typeId
+  const hasShowSeconds = "showSeconds" in cfg
   switch (typeId) {
     case "builtin.clock":
       return (
         <ClockWidget
           tokens={tokens}
-          showSeconds={
-            "showSeconds" in cfg ? Boolean(cfg["showSeconds"]) : true
-          }
+          showSeconds={hasShowSeconds ? Boolean(cfg.showSeconds) : true}
           showTitle={showTitle}
         />
       )
@@ -78,7 +90,9 @@ export function WidgetMount(props: WidgetMountProps) {
       return (
         <SearchWidget
           tokens={tokens}
-          config={(props.widget.config as SearchWidgetConfig) ?? { engine: "google" }}
+          config={
+            (props.widget.config as SearchWidgetConfig) ?? { engine: "google" }
+          }
           showTitle={showTitle}
         />
       )
@@ -96,7 +110,9 @@ export function WidgetMount(props: WidgetMountProps) {
       return (
         <WeatherWidget
           tokens={tokens}
-          config={(props.widget.config as WeatherWidgetConfig) ?? { mode: "auto" }}
+          config={
+            (props.widget.config as WeatherWidgetConfig) ?? { mode: "auto" }
+          }
           showTitle={showTitle}
         />
       )
@@ -104,7 +120,9 @@ export function WidgetMount(props: WidgetMountProps) {
       return (
         <QuoteWidget
           tokens={tokens}
-          config={(props.widget.config as QuoteWidgetConfig) ?? { source: "hitokoto" }}
+          config={
+            (props.widget.config as QuoteWidgetConfig) ?? { source: "hitokoto" }
+          }
           showTitle={showTitle}
         />
       )
@@ -116,7 +134,9 @@ export function WidgetMount(props: WidgetMountProps) {
             config={(props.widget.config as HexagramBoardConfig) ?? {}}
             allowRedraw={allowRedraw}
             showTitle={showTitle}
-            onConfigChange={(next) => props.onWidgetConfig(props.widget.id, next)}
+            onConfigChange={(next) =>
+              props.onWidgetConfig(props.widget.id, next)
+            }
           />
         </div>
       )

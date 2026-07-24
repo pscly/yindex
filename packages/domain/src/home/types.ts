@@ -1,15 +1,15 @@
 import type {
-  PageId,
   PackageId,
-  StylePackId,
+  PageId,
   WidgetInstanceId,
   WidgetTypeId,
 } from "../ids/ids"
 import type { LayoutRect } from "../layout/types"
 import type { PageSequence } from "../sequence/sequence"
+import type { MotionProfile } from "../style/glass"
 import type { PageStyle, WidgetStyleOverride } from "../style/types"
 
-export const HOME_SCHEMA_VERSION = 1 as const
+export const HOME_SCHEMA_VERSION = 2 as const
 
 export type BuiltinWidgetTypeId =
   | "builtin.clock"
@@ -59,6 +59,7 @@ export type HomeSettings = {
   readonly showWidgetTitles: boolean
   readonly reducedMotion: "system" | "force" | "never"
   readonly locale: "zh-CN"
+  readonly motionProfile: MotionProfile
 }
 
 export const DEFAULT_HOME_SETTINGS: HomeSettings = {
@@ -68,6 +69,7 @@ export const DEFAULT_HOME_SETTINGS: HomeSettings = {
   showWidgetTitles: false,
   reducedMotion: "system",
   locale: "zh-CN",
+  motionProfile: "balanced",
 }
 
 export type HomeDocument = {
@@ -77,5 +79,3 @@ export type HomeDocument = {
   readonly settings: HomeSettings
   readonly lastPageId: PageId | null
 }
-
-export type StylePackRegistry = Readonly<Record<string, StylePackId>>

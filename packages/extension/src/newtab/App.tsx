@@ -1,13 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
 import type { PageId, WidgetInstanceId } from "@yindex/domain"
 import { applyLayoutDraft, removeWidget, updatePage } from "@yindex/domain"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { ChromeFab } from "../ui/ChromeFab"
+import { EditChrome } from "../ui/EditChrome"
+import {
+  type LayoutDraftEvent,
+  PageCanvas,
+  pageTokensOf,
+} from "../ui/PageCanvas"
+import { PageDots } from "../ui/PageDots"
+import { SettingsPanel } from "../ui/SettingsPanel"
+import { cyclicSlotCount } from "./pageTurnLayout"
 import { useHomeState } from "./useHomeState"
 import { usePageTurn } from "./usePageTurn"
-import { PageCanvas, pageTokensOf, type LayoutDraftEvent } from "../ui/PageCanvas"
-import { PageDots } from "../ui/PageDots"
-import { EditChrome } from "../ui/EditChrome"
-import { SettingsPanel } from "../ui/SettingsPanel"
-import { ChromeFab } from "../ui/ChromeFab"
 
 export function App() {
   const {
@@ -48,8 +53,17 @@ export function App() {
       .filter((p): p is NonNullable<typeof p> => Boolean(p))
   }, [doc])
 
+  // Loop strip: [clone_last, ...pages, clone_first] so boundary turns stay filled.
+  const stripPages = useMemo(() => {
+    if (orderedPages.length <= 1) return orderedPages
+    const first = orderedPages[0]
+    const last = orderedPages[orderedPages.length - 1]
+    if (!first || !last) return orderedPages
+    return [last, ...orderedPages, first]
+  }, [orderedPages])
+
+  const stripSlots = Math.max(cyclicSlotCount(orderedPages.length), 1)
   const currentPageId = turn.currentPageId
-  const turnMs = turn.reducedMotion ? 0 : 480
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -165,21 +179,23 @@ export function App() {
     >
       <div
         style={{
-          height: `${Math.max(orderedPages.length, 1) * 100}%`,
+          height: `${stripSlots * 100}%`,
           width: "100%",
-          transform: `translate3d(0, ${turn.offsetY}%, 0)`,
-          transition:
-            turnMs > 0
-              ? `transform ${turnMs}ms cubic-bezier(0.22, 1, 0.36, 1)`
-              : "none",
-          willChange: "transform",
+          transform: `translate3d(0, calc(${turn.offsetY}% + ${turn.parallaxY * 100}vh), 0)`,
+          transition: "none",
+          // max(from,to) keeps single-layer opacity continuous with settle (1 at ends).
+          opacity:
+            turn.reducedMotion && turn.isTurning
+              ? Math.max(turn.fadeOpacity.from, turn.fadeOpacity.to)
+              : 1,
+          willChange: turn.isAnimating ? "transform, opacity" : "auto",
         }}
       >
-        {orderedPages.map((page) => (
+        {stripPages.map((page, slot) => (
           <div
-            key={page.id}
+            key={`${page.id}#${slot}`}
             style={{
-              height: `${100 / Math.max(orderedPages.length, 1)}%`,
+              height: `${100 / stripSlots}%`,
               width: "100%",
             }}
           >
@@ -187,11 +203,19 @@ export function App() {
               <PageCanvas
                 doc={doc}
                 page={page}
-                editMode={editMode && page.id === currentPageId}
+                editMode={
+                  editMode &&
+                  page.id === currentPageId &&
+                  slot > 0 &&
+                  slot <= orderedPages.length
+                }
                 selectedWidgetId={selectedWidgetId}
                 onSelectWidget={setSelectedWidgetId}
                 onWidgetConfig={onWidgetConfig}
-                {...(editMode && page.id === currentPageId
+                {...(editMode &&
+                page.id === currentPageId &&
+                slot > 0 &&
+                slot <= orderedPages.length
                   ? { onWidgetLayoutDraft, onDeleteWidget }
                   : {})}
               />
@@ -255,4 +279,3 @@ const centerMsg = {
   color: "#ddd",
   background: "#111",
 } as const
-

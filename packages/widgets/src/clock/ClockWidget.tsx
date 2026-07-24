@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
 import type { StyleTokens } from "@yindex/domain"
+import { useEffect, useState } from "react"
 import { WidgetSurface } from "../shell/surface"
 
 export type ClockWidgetProps = {

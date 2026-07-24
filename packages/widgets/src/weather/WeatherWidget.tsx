@@ -1,5 +1,5 @@
-import { useEffect, useState, type CSSProperties } from "react"
 import type { StyleTokens } from "@yindex/domain"
+import { type CSSProperties, useEffect, useState } from "react"
 import { WidgetSurface } from "../shell/surface"
 
 export type WeatherWidgetConfig = {
@@ -82,6 +82,7 @@ export function WeatherWidget(props: WeatherWidgetProps) {
   const [tick, setTick] = useState(0)
 
   useEffect(() => {
+    void tick
     let cancelled = false
 
     async function run() {
@@ -95,13 +96,15 @@ export function WeatherWidget(props: WeatherWidgetProps) {
           lat = 31.23
           lon = 121.47
           if (typeof navigator !== "undefined" && navigator.geolocation) {
-            const pos = await new Promise<GeolocationPosition | null>((resolve) => {
-              navigator.geolocation.getCurrentPosition(
-                (p) => resolve(p),
-                () => resolve(null),
-                { timeout: 5000, maximumAge: 600_000 },
-              )
-            })
+            const pos = await new Promise<GeolocationPosition | null>(
+              (resolve) => {
+                navigator.geolocation.getCurrentPosition(
+                  (p) => resolve(p),
+                  () => resolve(null),
+                  { timeout: 5000, maximumAge: 600_000 },
+                )
+              },
+            )
             if (pos) {
               lat = pos.coords.latitude
               lon = pos.coords.longitude
@@ -127,7 +130,11 @@ export function WeatherWidget(props: WeatherWidgetProps) {
   }, [props.config.latitude, props.config.longitude, props.config.mode, tick])
 
   return (
-    <WidgetSurface tokens={props.tokens} title="天气" showTitle={props.showTitle}>
+    <WidgetSurface
+      tokens={props.tokens}
+      title="天气"
+      showTitle={props.showTitle}
+    >
       {state.status === "loading" ? (
         <div style={{ color: props.tokens.color.muted }}>加载中…</div>
       ) : null}

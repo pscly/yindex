@@ -60,7 +60,9 @@ export function parsePackageManifest(
       ok: false,
       error: {
         code: "parse",
-        message: parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "),
+        message: parsed.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join("; "),
       },
     }
   }
@@ -88,7 +90,9 @@ export function parsePackageManifest(
 /** Minimal semver range: supports `>=N <M` and `^N` and exact number match for yindex major. */
 export function satisfiesEngine(range: string, hostMajor: number): boolean {
   const trimmed = range.trim()
-  const geLt = trimmed.match(/^>=\s*(\d+)(?:\.\d+\.\d+)?\s+<\s*(\d+)(?:\.\d+\.\d+)?$/)
+  const geLt = trimmed.match(
+    /^>=\s*(\d+)(?:\.\d+\.\d+)?\s+<\s*(\d+)(?:\.\d+\.\d+)?$/,
+  )
   if (geLt) {
     const min = Number(geLt[1])
     const max = Number(geLt[2])

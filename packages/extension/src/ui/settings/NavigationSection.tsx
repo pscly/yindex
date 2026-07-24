@@ -20,7 +20,9 @@ export function NavigationSection(props: {
         <input
           type="checkbox"
           checked={props.doc.settings.rememberLastPage}
-          onChange={(e) => patchSettings({ rememberLastPage: e.target.checked })}
+          onChange={(e) =>
+            patchSettings({ rememberLastPage: e.target.checked })
+          }
         />
         记住上次所在页（关闭则始终打开 Landing）
       </label>
@@ -46,7 +48,9 @@ export function NavigationSection(props: {
         <input
           type="checkbox"
           checked={props.doc.settings.showWidgetTitles !== false}
-          onChange={(e) => patchSettings({ showWidgetTitles: e.target.checked })}
+          onChange={(e) =>
+            patchSettings({ showWidgetTitles: e.target.checked })
+          }
         />
         显示小组件标题（左上角名称，全局）
       </label>
@@ -91,4 +95,3 @@ export function NavigationSection(props: {
     </section>
   )
 }
-

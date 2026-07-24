@@ -1,9 +1,4 @@
-import {
-  buildSnapGuides,
-  clampRect,
-  snapRect,
-  withZ,
-} from "./layout"
+import { buildSnapGuides, clampRect, snapRect, withZ } from "./layout"
 import type { LayoutConstraints, LayoutRect, RectPct } from "./types"
 import { DEFAULT_LAYOUT_CONSTRAINTS } from "./types"
 

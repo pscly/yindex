@@ -1,4 +1,4 @@
-import { parsePackageManifest, type PackageManifest } from "@yindex/widget-sdk"
+import { type PackageManifest, parsePackageManifest } from "@yindex/widget-sdk"
 
 const DB_NAME = "yindex-packages"
 const DB_VERSION = 1
@@ -57,7 +57,9 @@ export async function getPackage(
     const db = await openDb()
     const tx = db.transaction(STORE, "readonly")
     const store = tx.objectStore(STORE)
-    const row = await idbReq(store.get(packageId) as IDBRequest<StoredPackage | undefined>)
+    const row = await idbReq(
+      store.get(packageId) as IDBRequest<StoredPackage | undefined>,
+    )
     db.close()
     return row
   } catch {
@@ -104,7 +106,9 @@ export async function installPackageFromFiles(
   files: Readonly<Record<string, string>>,
 ): Promise<ImportResult> {
   const manifestText =
-    files["manifest.json"] ?? files["./manifest.json"] ?? files["/manifest.json"]
+    files["manifest.json"] ??
+    files["./manifest.json"] ??
+    files["/manifest.json"]
   if (!manifestText) {
     return { ok: false, message: "缺少 manifest.json" }
   }

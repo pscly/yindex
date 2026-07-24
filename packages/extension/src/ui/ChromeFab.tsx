@@ -84,6 +84,7 @@ function IconBtn(props: {
 function GearIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <title>设置</title>
       <path
         d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
         stroke="currentColor"
@@ -102,6 +103,7 @@ function GearIcon() {
 function UndoIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <title>撤销</title>
       <path
         d="M9 14 4 9l5-5"
         stroke="currentColor"
@@ -122,6 +124,7 @@ function UndoIcon() {
 function RedoIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <title>重做</title>
       <path
         d="m15 14 5-5-5-5"
         stroke="currentColor"

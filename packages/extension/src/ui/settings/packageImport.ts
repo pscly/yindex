@@ -1,5 +1,8 @@
 import { strFromU8, unzipSync } from "fflate"
-import { installPackageFromFiles, type ImportResult } from "../../storage/packageStore"
+import {
+  type ImportResult,
+  installPackageFromFiles,
+} from "../../storage/packageStore"
 
 export function normalizeZipPaths(
   files: Record<string, string>,

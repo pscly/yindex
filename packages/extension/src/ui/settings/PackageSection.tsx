@@ -1,4 +1,3 @@
-import type { ChangeEvent } from "react"
 import type { HomeDocument, PageId } from "@yindex/domain"
 import {
   addWidget,
@@ -9,10 +8,11 @@ import {
   widgetTypeId,
   withZ,
 } from "@yindex/domain"
+import type { ChangeEvent } from "react"
 import {
+  type StoredPackage,
   deletePackage,
   installPackageFromFiles,
-  type StoredPackage,
 } from "../../storage/packageStore"
 import {
   fetchBundledPomodoro,
@@ -113,7 +113,9 @@ export function PackageSection(props: {
   return (
     <section style={section}>
       <h3 style={h3}>小组件包</h3>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+      <div
+        style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}
+      >
         <label style={ghostBtn}>
           导入 zip
           <input
@@ -132,7 +134,9 @@ export function PackageSection(props: {
         </button>
       </div>
       {props.packages.length === 0 ? (
-        <div style={{ opacity: 0.65, fontSize: 12 }}>尚未安装第三方 Package</div>
+        <div style={{ opacity: 0.65, fontSize: 12 }}>
+          尚未安装第三方 Package
+        </div>
       ) : (
         <ul style={{ margin: 0, paddingLeft: 18 }}>
           {props.packages.map((p) => (
@@ -160,7 +164,9 @@ export function PackageSection(props: {
         </ul>
       )}
       {props.msg ? (
-        <div style={{ marginTop: 8, fontSize: 12, color: "oklch(0.8 0.08 200)" }}>
+        <div
+          style={{ marginTop: 8, fontSize: 12, color: "oklch(0.8 0.08 200)" }}
+        >
           {props.msg}
         </div>
       ) : null}

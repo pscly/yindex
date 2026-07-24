@@ -56,4 +56,3 @@ export function restorePackageInstances(
   }
   return { ...doc, pages }
 }
-

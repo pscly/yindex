@@ -1,14 +1,16 @@
 import {
+  type HomeDocument,
   migrateHomeDocument,
   serializeHomeDocument,
-  type HomeDocument,
 } from "@yindex/domain"
 import { createDefaultHome } from "../default/createDefaultHome"
 
 const HOME_KEY = "yindex.home"
 
 type StorageArea = {
-  get: (keys?: string | string[] | Record<string, unknown> | null) => Promise<Record<string, unknown>>
+  get: (
+    keys?: string | string[] | Record<string, unknown> | null,
+  ) => Promise<Record<string, unknown>>
   set: (items: Record<string, unknown>) => Promise<void>
   remove: (keys: string | string[]) => Promise<void>
 }
@@ -75,7 +77,10 @@ export async function loadHomeDocument(): Promise<HomeDocument> {
   }
   const migrated = migrateHomeDocument(raw)
   if (!migrated.ok) {
-    console.error("yindex: home migrate failed, resetting to default", migrated.error)
+    console.error(
+      "yindex: home migrate failed, resetting to default",
+      migrated.error,
+    )
     const fresh = createDefaultHome()
     await saveHomeDocument(fresh)
     return fresh

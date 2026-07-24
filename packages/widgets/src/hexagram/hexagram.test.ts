@@ -1,5 +1,11 @@
 import { describe, expect, test } from "bun:test"
-import { findByIndex, findByTrigrams, HEXAGRAMS, localDateKey, randomHexagram } from "./data"
+import {
+  HEXAGRAMS,
+  findByIndex,
+  findByTrigrams,
+  localDateKey,
+  randomHexagram,
+} from "./data"
 
 describe("hexagram data", () => {
   test("has 64 hexagrams", () => {
@@ -21,6 +27,8 @@ describe("hexagram data", () => {
   })
 
   test("localDateKey format", () => {
-    expect(localDateKey(new Date("2026-07-23T12:00:00"))).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    expect(localDateKey(new Date("2026-07-23T12:00:00"))).toMatch(
+      /^\d{4}-\d{2}-\d{2}$/,
+    )
   })
 })

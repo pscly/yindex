@@ -3,7 +3,6 @@
   "compilerOptions": {
     "composite": false,
     "noEmit": true,
-    "rootDir": "src",
     "paths": {
       "@yindex/domain": ["../domain/src/index.ts"]
     },

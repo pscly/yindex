@@ -1,72 +1,102 @@
 import { describe, expect, test } from "bun:test"
-import { stylePackId } from "../ids/ids"
 import {
   applyOverride,
-  clearPageOverrides,
+  pageStyleToTokens,
   resolvePageTokens,
   resolveWidgetTokens,
-  withPack,
+  withGlassProfile,
+  withSeedPalette,
 } from "./cascade"
+import { DEFAULT_GLASS_TUNING } from "./glass"
+import { createGenerativePageStyle } from "./pageStyle"
 import type { StyleTokens } from "./types"
 
-const base: StyleTokens = {
-  color: {
-    bg: "bg",
-    surface: "surface",
-    ink: "ink",
-    muted: "muted",
-    accent: "accent",
-  },
-  typography: {
-    displayFamily: "D",
-    bodyFamily: "B",
-    monoFamily: "M",
-    displayWeight: 400,
-    bodySizePx: 14,
-  },
-  space: { safePct: 2, widgetGapPct: 1 },
-  radius: { sm: "4px", md: "8px", lg: "16px" },
-  elevation: { mode: "flat" },
-  glass: { blurPx: 0, opacity: 0, highlight: 0, enabled: false },
-  wallpaper: { kind: "gradient", fit: "cover", dim: 0 },
-  motion: { turnMs: 400, ease: "ease" },
+function samplePageStyle() {
+  const r = createGenerativePageStyle({
+    seedPalette: {
+      bg: "bg",
+      surface: "surface",
+      ink: "ink",
+      muted: "muted",
+      accent: "accent",
+    },
+    generativePreset: "moment",
+    dim: 0.1,
+    glassProfile: "balanced",
+  })
+  if (!r.ok) throw new Error(r.error.message)
+  return r.value
 }
 
-describe("Style cascade", () => {
-  test("page override wins over pack", () => {
-    const tokens = resolvePageTokens(base, {
-      packId: stylePackId("inkstone"),
-      overrides: { color: { accent: "cinnabar" } },
-    })
-    expect(tokens.color.accent).toBe("cinnabar")
-    expect(tokens.color.bg).toBe("bg")
+describe("Style cascade (v2 liquid glass)", () => {
+  test("page style resolves balanced glass and generative wallpaper", () => {
+    // Given
+    const pageStyle = samplePageStyle()
+    // When
+    const tokens = pageStyleToTokens(pageStyle)
+    // Then
+    expect(tokens.glass.profile).toBe("balanced")
+    expect(tokens.glass.enabled).toBe(true)
+    expect(tokens.glass.adaptive.usedFallback).toBe(true)
+    expect(tokens.glass.adaptive.lens.contrastRatio).toBeGreaterThanOrEqual(4.5)
+    expect(
+      tokens.glass.adaptive.contentDirect.contrastRatio,
+    ).toBeGreaterThanOrEqual(4.5)
+    expect(tokens.glass.adaptive.contrastRatio).toBeGreaterThanOrEqual(4.5)
+    expect(tokens.wallpaper.source.kind).toBe("generative")
+    if (tokens.wallpaper.source.kind === "generative") {
+      expect(tokens.wallpaper.source.generativePreset).toBe("moment")
+    }
+    expect(tokens.color.accent).toBe("accent")
   })
 
-  test("switching pack keeps overrides", () => {
-    const page = {
-      packId: stylePackId("inkstone"),
-      overrides: { color: { accent: "kept" } },
+  test("resolvePageTokens prefers page seed over pack base", () => {
+    // Given
+    const pageStyle = withSeedPalette(samplePageStyle(), {
+      bg: "page-bg",
+      surface: "s",
+      ink: "i",
+      muted: "m",
+      accent: "page-accent",
+    })
+    const packBase: StyleTokens = {
+      ...pageStyleToTokens(samplePageStyle()),
+      color: {
+        bg: "pack-bg",
+        surface: "s",
+        ink: "i",
+        muted: "m",
+        accent: "pack-accent",
+      },
     }
-    const next = withPack(page, stylePackId("caliper"))
-    expect(next.packId).toBe(stylePackId("caliper"))
-    expect(next.overrides.color?.accent).toBe("kept")
+    // When
+    const tokens = resolvePageTokens(packBase, pageStyle)
+    // Then
+    expect(tokens.color.accent).toBe("page-accent")
+    expect(tokens.color.bg).toBe("page-bg")
+  })
+
+  test("switching glass profile keeps wallpaper", () => {
+    // Given
+    const page = samplePageStyle()
+    // When
+    const next = withGlassProfile(page, "deep")
+    // Then
+    expect(next.glassProfile).toBe("deep")
+    expect(next.wallpaper).toEqual(page.wallpaper)
+    expect(next.glassTuning).toEqual(DEFAULT_GLASS_TUNING)
   })
 
   test("widget inherits page unless override", () => {
-    const pageTokens = applyOverride(base, { color: { ink: "page-ink" } })
+    // Given
+    const pageTokens = applyOverride(pageStyleToTokens(samplePageStyle()), {
+      color: { ink: "page-ink" },
+    })
+    // When / Then
     expect(resolveWidgetTokens(pageTokens, null).color.ink).toBe("page-ink")
     expect(
       resolveWidgetTokens(pageTokens, { color: { ink: "widget-ink" } }).color
         .ink,
     ).toBe("widget-ink")
-  })
-
-  test("clear overrides restores pack-only", () => {
-    const page = {
-      packId: stylePackId("dew-glass"),
-      overrides: { glass: { enabled: false } },
-    }
-    const cleared = clearPageOverrides(page)
-    expect(cleared.overrides).toEqual({})
   })
 })

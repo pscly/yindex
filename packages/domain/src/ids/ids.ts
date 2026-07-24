@@ -1,4 +1,4 @@
-import { brandAs, type Brand } from "./brand"
+import { type Brand, brandAs } from "./brand"
 
 export type PageId = Brand<string, "PageId">
 export type WidgetInstanceId = Brand<string, "WidgetInstanceId">

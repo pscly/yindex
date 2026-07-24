@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
 import type { StyleTokens } from "@yindex/domain"
+import { useEffect, useState } from "react"
 import { WidgetSurface } from "../shell/surface"
 
 export type QuoteWidgetConfig = {
@@ -87,7 +87,11 @@ export function QuoteWidget(props: QuoteWidgetProps) {
       : { text: state.text, from: state.from }
 
   return (
-    <WidgetSurface tokens={props.tokens} title="每日一句" showTitle={props.showTitle}>
+    <WidgetSurface
+      tokens={props.tokens}
+      title="每日一句"
+      showTitle={props.showTitle}
+    >
       <blockquote
         style={{
           margin: 0,

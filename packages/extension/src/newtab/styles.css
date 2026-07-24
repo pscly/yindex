@@ -40,7 +40,8 @@ button:disabled {
 
 /* Quiet chrome transitions */
 button {
-  transition: background 140ms ease, border-color 140ms ease, opacity 140ms ease,
+  transition:
+    background 140ms ease, border-color 140ms ease, opacity 140ms ease,
     box-shadow 160ms ease, transform 140ms ease;
 }
 

@@ -17,7 +17,11 @@ export function alignRects(
 ): readonly LayoutRect[] {
   if (rects.length === 0) return []
   if (alignment === "distribute-x" || alignment === "distribute-y") {
-    return distribute(rects, alignment === "distribute-x" ? "x" : "y", constraints)
+    return distribute(
+      rects,
+      alignment === "distribute-x" ? "x" : "y",
+      constraints,
+    )
   }
 
   const xs = rects.map((r) => r.x)
@@ -64,7 +68,9 @@ function distribute(
   constraints: LayoutConstraints,
 ): readonly LayoutRect[] {
   if (rects.length < 3) return rects
-  const sorted = [...rects].sort((a, b) => (axis === "x" ? a.x - b.x : a.y - b.y))
+  const sorted = [...rects].sort((a, b) =>
+    axis === "x" ? a.x - b.x : a.y - b.y,
+  )
   const first = sorted[0]
   const last = sorted[sorted.length - 1]
   if (!first || !last) return rects

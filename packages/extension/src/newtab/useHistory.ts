@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from "react"
 import type { HomeDocument } from "@yindex/domain"
+import { useCallback, useMemo, useRef, useState } from "react"
 
 const MAX = 50
 
@@ -60,15 +60,15 @@ export function useHistory(): HistoryApi {
     [bump],
   )
 
-  return useMemo(
-    () => ({
+  return useMemo(() => {
+    void version
+    return {
       canUndo: past.current.length > 0,
       canRedo: future.current.length > 0,
       push,
       undo,
       redo,
       reset,
-    }),
-    [version, push, undo, redo, reset],
-  )
+    }
+  }, [version, push, undo, redo, reset])
 }

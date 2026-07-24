@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test"
-import { parsePackageManifest, satisfiesEngine, YINDEX_API_VERSION } from "./manifest"
 import { authorizeMethod } from "./bridge"
+import {
+  YINDEX_API_VERSION,
+  parsePackageManifest,
+  satisfiesEngine,
+} from "./manifest"
 
 describe("package manifest", () => {
   test("accepts valid pomodoro-like manifest", () => {

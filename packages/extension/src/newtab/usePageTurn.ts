@@ -1,11 +1,20 @@
+import type { HomeDocument, MotionProfile, PageId } from "@yindex/domain"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { resolveGoByAction, resolveGoToAction } from "./pageTurnActions"
+import { syncPageTurnDocument } from "./pageTurnDocSync"
+import type { GestureSnapshot } from "./pageTurnGesture"
+import { attachPageTurnHost } from "./pageTurnHookBind"
+import { idleAt } from "./pageTurnNav"
+import { type SpringParams, springParamsForProfile } from "./pageTurnPolicy"
 import {
-  adjacentIndex,
-  indexOfPage,
-  resolveOpenPageId,
-  type HomeDocument,
-  type PageId,
-} from "@yindex/domain"
+  type SettleRuntime,
+  beginGoBySettle,
+  beginSettle,
+} from "./pageTurnSettle"
+import type { SpringState } from "./pageTurnSpring"
+import { createSpringLoop } from "./pageTurnSpringLoop"
+import { computePageTurnVisual } from "./pageTurnVisual"
+import { prefersReducedMotion } from "./pageTurnWheelGuard"
 
 export type PageTurnApi = {
   readonly currentIndex: number
@@ -13,22 +22,11 @@ export type PageTurnApi = {
   readonly isTurning: boolean
   readonly goToIndex: (index: number) => void
   readonly goBy: (delta: number) => void
-  /** Percent of the multi-page strip height (0, -100/n, -200/n, …) */
   readonly offsetY: number
   readonly reducedMotion: boolean
-}
-
-const WHEEL_THRESHOLD = 80
-const COOLDOWN_MS = 520
-const TURN_MS = 480
-
-function prefersReducedMotion(
-  setting: HomeDocument["settings"]["reducedMotion"],
-): boolean {
-  if (setting === "force") return true
-  if (setting === "never") return false
-  if (typeof window === "undefined" || !window.matchMedia) return false
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  readonly fadeOpacity: { readonly from: number; readonly to: number }
+  readonly parallaxY: number
+  readonly isAnimating: boolean
 }
 
 export function usePageTurn(
@@ -40,154 +38,219 @@ export function usePageTurn(
   },
 ): PageTurnApi {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isTurning, setIsTurning] = useState(false)
-  const wheelAcc = useRef(0)
-  const cooldownUntil = useRef(0)
+  const [renderTick, setRenderTick] = useState(0)
+  const gestureRef = useRef<GestureSnapshot>(idleAt(0))
+  const springRef = useRef<SpringState>({ x: 0, v: 0 })
+  const springParamsRef = useRef<SpringParams>(
+    springParamsForProfile("balanced"),
+  )
+  const springLoopRef = useRef(createSpringLoop())
   const initialized = useRef(false)
   const onPageChangeRef = useRef(options.onPageChange)
   onPageChangeRef.current = options.onPageChange
   const indexRef = useRef(0)
   indexRef.current = currentIndex
+  const mountedRef = useRef(true)
+  const generationRef = useRef(0)
+  const lastSeqKeyRef = useRef("")
 
   const pageCount = doc?.sequence.pageIds.length ?? 0
+  const motionProfile: MotionProfile = doc?.settings.motionProfile ?? "balanced"
   const reducedMotion = doc
     ? prefersReducedMotion(doc.settings.reducedMotion)
     : false
 
-  // Initial open page + keep index valid when sequence shrinks
+  useEffect(() => {
+    springParamsRef.current = springParamsForProfile(motionProfile)
+  }, [motionProfile])
+
+  useEffect(() => {
+    mountedRef.current = true
+    const loop = springLoopRef.current
+    return () => {
+      mountedRef.current = false
+      loop.stop()
+    }
+  }, [])
+
+  const bump = useCallback(() => {
+    if (mountedRef.current) setRenderTick((n) => n + 1)
+  }, [])
+
+  const notifyPage = useCallback(
+    (index: number) => {
+      const id = doc?.sequence.pageIds[index]
+      if (id) onPageChangeRef.current?.(id)
+    },
+    [doc],
+  )
+
+  const stopRaf = useCallback(() => springLoopRef.current.stop(), [])
+
+  const settleRt = useCallback((): SettleRuntime => {
+    return {
+      gestureRef,
+      springRef,
+      springParamsRef,
+      springLoop: springLoopRef.current,
+      generationRef,
+      indexRef,
+      pageCount,
+      reducedMotion,
+      isMounted: () => mountedRef.current,
+      bump,
+      stopRaf,
+      setIndex: setCurrentIndex,
+      notifyPage,
+    }
+  }, [bump, notifyPage, pageCount, reducedMotion, stopRaf])
+
+  const startSettle = useCallback(
+    (targetProgress: number, targetIndex: number, now: number) => {
+      beginSettle(settleRt(), targetProgress, targetIndex, now)
+    },
+    [settleRt],
+  )
+
   useEffect(() => {
     if (!doc || pageCount === 0) return
-    if (!initialized.current) {
-      const openId = resolveOpenPageId(doc.sequence, {
-        rememberLastPage: doc.settings.rememberLastPage,
-        lastPageId: doc.lastPageId,
-      })
-      const idxR = indexOfPage(doc.sequence, openId)
-      if (idxR.ok) {
-        setCurrentIndex(idxR.value)
-        indexRef.current = idxR.value
+    const synced = syncPageTurnDocument({
+      doc,
+      pageCount,
+      currentIndex,
+      initialized: initialized.current,
+      lastSeqKey: lastSeqKeyRef.current,
+      generation: generationRef.current,
+      gesture: gestureRef.current,
+    })
+    initialized.current = synced.initialized
+    lastSeqKeyRef.current = synced.lastSeqKey
+    generationRef.current = synced.generation
+    if (synced.invalidated) stopRaf()
+    if (synced.indexChanged || synced.invalidated) {
+      if (synced.indexChanged) {
+        setCurrentIndex(synced.index)
+        indexRef.current = synced.index
       }
-      initialized.current = true
-      return
+      gestureRef.current = synced.gesture
+      springRef.current = synced.spring
+      if (synced.invalidated) bump()
     }
-    if (currentIndex >= pageCount) {
-      const next = pageCount - 1
-      setCurrentIndex(next)
-      indexRef.current = next
-    }
-  }, [doc, pageCount, currentIndex])
+  }, [bump, currentIndex, doc, pageCount, stopRaf])
 
   const currentPageId = useMemo(() => {
     if (!doc) return null
     return doc.sequence.pageIds[currentIndex] ?? null
   }, [doc, currentIndex])
 
-  // Strip has n pages each 100/n % of strip → move by i * (100/n) of strip
-  const rawOffset = pageCount > 0 ? -currentIndex * (100 / pageCount) : 0
-  const offsetY = rawOffset === 0 ? 0 : rawOffset
-
   const goToIndex = useCallback(
     (index: number) => {
-      if (!doc || pageCount === 0) return
-      if (index < 0 || index >= pageCount) return
-      if (index === indexRef.current) return
-      setIsTurning(true)
-      setCurrentIndex(index)
-      indexRef.current = index
-      const id = doc.sequence.pageIds[index]
-      if (id) onPageChangeRef.current?.(id)
-      const ms = reducedMotion ? 0 : TURN_MS
-      window.setTimeout(() => setIsTurning(false), ms)
+      if (!doc) return
+      const plan = resolveGoToAction({
+        index,
+        pageCount,
+        currentIndex: indexRef.current,
+        phase: gestureRef.current.phase,
+        reducedMotion,
+        now: performance.now(),
+      })
+      if (plan.kind === "noop") return
+      stopRaf()
+      if (plan.kind === "reduced_fade") {
+        gestureRef.current = plan.gesture
+        bump()
+        return
+      }
+      setCurrentIndex(plan.index)
+      indexRef.current = plan.index
+      notifyPage(plan.index)
+      springRef.current = { x: 0, v: 0 }
+      gestureRef.current = plan.gesture
+      bump()
     },
-    [doc, pageCount, reducedMotion],
+    [bump, doc, notifyPage, pageCount, reducedMotion, stopRaf],
   )
 
   const goBy = useCallback(
     (delta: number) => {
-      if (!doc || pageCount === 0) return
-      const nextR = adjacentIndex(doc.sequence, indexRef.current, delta)
-      if (nextR.ok) goToIndex(nextR.value)
+      if (!doc) return
+      const action = resolveGoByAction({
+        sequence: doc.sequence,
+        currentIndex: indexRef.current,
+        delta,
+        gesture: gestureRef.current,
+        now: performance.now(),
+        reducedMotion,
+        generation: generationRef.current,
+      })
+      if (action.kind === "noop") return
+      if (action.kind === "reduced") {
+        goToIndex(action.targetIndex)
+        return
+      }
+      beginGoBySettle(
+        settleRt(),
+        action.gesture,
+        action.spring,
+        action.generation,
+      )
     },
-    [doc, pageCount, goToIndex],
+    [doc, goToIndex, reducedMotion, settleRt],
   )
 
   useEffect(() => {
     if (!doc || options.editMode || options.settingsOpen) return
+    return attachPageTurnHost({
+      pageCount,
+      reducedMotion,
+      gestureRef,
+      springRef,
+      stopRaf,
+      startSettle,
+      onIndexCommitted: (index) => {
+        setCurrentIndex(index)
+        indexRef.current = index
+        notifyPage(index)
+      },
+      bump,
+      goBy,
+      goToIndex,
+      isMounted: () => mountedRef.current,
+    })
+  }, [
+    bump,
+    doc,
+    goBy,
+    goToIndex,
+    notifyPage,
+    options.editMode,
+    options.settingsOpen,
+    pageCount,
+    reducedMotion,
+    startSettle,
+    stopRaf,
+  ])
 
-    function onWheel(e: WheelEvent) {
-      const target = e.target as HTMLElement | null
-      const scrollable = target?.closest(
-        "[data-scrollable='true']",
-      ) as HTMLElement | null
-      if (scrollable) {
-        const canScroll =
-          scrollable.scrollHeight > scrollable.clientHeight &&
-          ((e.deltaY > 0 &&
-            scrollable.scrollTop + scrollable.clientHeight <
-              scrollable.scrollHeight - 1) ||
-            (e.deltaY < 0 && scrollable.scrollTop > 0))
-        if (canScroll) return
-      }
-
-      // Don't steal wheel from form controls
-      if (
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
-        target instanceof HTMLSelectElement
-      ) {
-        return
-      }
-
-      e.preventDefault()
-      const now = Date.now()
-      if (now < cooldownUntil.current) {
-        wheelAcc.current = 0
-        return
-      }
-      wheelAcc.current += e.deltaY
-      if (Math.abs(wheelAcc.current) >= WHEEL_THRESHOLD) {
-        const dir = wheelAcc.current > 0 ? 1 : -1
-        wheelAcc.current = 0
-        cooldownUntil.current = now + COOLDOWN_MS
-        goBy(dir)
-      }
-    }
-
-    function onKey(e: KeyboardEvent) {
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement ||
-        e.target instanceof HTMLSelectElement
-      ) {
-        return
-      }
-      if (e.key === "ArrowDown" || e.key === "PageDown") {
-        e.preventDefault()
-        goBy(1)
-      } else if (e.key === "ArrowUp" || e.key === "PageUp") {
-        e.preventDefault()
-        goBy(-1)
-      } else if (/^[1-9]$/.test(e.key)) {
-        const idx = Number(e.key) - 1
-        goToIndex(idx)
-      }
-    }
-
-    window.addEventListener("wheel", onWheel, { passive: false })
-    window.addEventListener("keydown", onKey)
-    return () => {
-      window.removeEventListener("wheel", onWheel)
-      window.removeEventListener("keydown", onKey)
-    }
-  }, [doc, options.editMode, options.settingsOpen, goBy, goToIndex])
-
+  void renderTick
+  const nowMs = typeof performance !== "undefined" ? performance.now() : 0
+  const visual = computePageTurnVisual({
+    gesture: gestureRef.current,
+    currentIndex,
+    pageCount,
+    motionProfile,
+    reducedMotion,
+    nowMs,
+  })
   return {
     currentIndex,
     currentPageId,
-    isTurning,
+    isTurning: visual.isTurning,
     goToIndex,
     goBy,
-    offsetY,
+    offsetY: visual.offsetY,
     reducedMotion,
+    fadeOpacity: visual.fadeOpacity,
+    parallaxY: visual.parallaxY,
+    isAnimating: visual.isAnimating,
   }
 }

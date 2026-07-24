@@ -1,5 +1,5 @@
-import { useState, type FormEvent, type CSSProperties } from "react"
 import type { StyleTokens } from "@yindex/domain"
+import { type CSSProperties, type FormEvent, useState } from "react"
 import { WidgetSurface } from "../shell/surface"
 
 export type SearchEngineId =
@@ -35,11 +35,16 @@ const ENGINE_LABEL: Record<SearchEngineId, string> = {
   custom: "自定义",
 }
 
-export function resolveSearchUrl(config: SearchWidgetConfig, query: string): string {
+export function resolveSearchUrl(
+  config: SearchWidgetConfig,
+  query: string,
+): string {
   const q = encodeURIComponent(query.trim())
   if (config.engine === "custom") {
     const template = config.customUrl ?? "https://www.google.com/search?q=%s"
-    return template.includes("%s") ? template.replace("%s", q) : `${template}${q}`
+    return template.includes("%s")
+      ? template.replace("%s", q)
+      : `${template}${q}`
   }
   return ENGINE_URL[config.engine].replace("%s", q)
 }

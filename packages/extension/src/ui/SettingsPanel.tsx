@@ -1,11 +1,8 @@
-import { useEffect, useState, type ChangeEvent } from "react"
 import type { HomeDocument, PageId } from "@yindex/domain"
-import {
-  migrateHomeDocument,
-  serializeHomeDocument,
-} from "@yindex/domain"
-import { listPackages, type StoredPackage } from "../storage/packageStore"
+import { migrateHomeDocument, serializeHomeDocument } from "@yindex/domain"
+import { type ChangeEvent, useEffect, useState } from "react"
 import { resetHomeDocument } from "../storage/homeStorage"
+import { type StoredPackage, listPackages } from "../storage/packageStore"
 import { NavigationSection } from "./settings/NavigationSection"
 import { PackageSection } from "./settings/PackageSection"
 import { ghostBtn, h3, overlay, section, sheet } from "./settings/styles"
@@ -51,9 +48,7 @@ export function SettingsPanel(props: {
     if (!file) return
     setMsg(null)
     try {
-      const migrated = migrateHomeDocument(
-        JSON.parse(await file.text()) as unknown,
-      )
+      const migrated = migrateHomeDocument(JSON.parse(await file.text()))
       if (!migrated.ok) {
         setMsg(`配置无效：${migrated.error.message}`)
         return
@@ -69,17 +64,19 @@ export function SettingsPanel(props: {
   }
 
   return (
-    <div
-      role="dialog"
+    <dialog
+      open
       aria-modal="true"
       aria-label="设置"
       style={overlay}
-      onClick={props.onClose}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) props.onClose()
+      }}
       onKeyDown={(e) => {
         if (e.key === "Escape") props.onClose()
       }}
     >
-      <div style={sheet} onClick={(e) => e.stopPropagation()}>
+      <div style={sheet}>
         <div
           style={{
             display: "flex",
@@ -151,6 +148,6 @@ export function SettingsPanel(props: {
           </div>
         </section>
       </div>
-    </div>
+    </dialog>
   )
 }

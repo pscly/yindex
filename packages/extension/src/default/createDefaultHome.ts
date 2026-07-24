@@ -1,15 +1,16 @@
 import {
+  type HomeDocument,
+  type Page,
+  type PageStyle,
+  type WidgetInstance,
   buildHomeDocument,
   createWidgetInstance,
   pageId,
-  stylePackId,
   widgetInstanceId,
   widgetTypeId,
   withZ,
-  type HomeDocument,
-  type Page,
-  type WidgetInstance,
 } from "@yindex/domain"
+import { FLOW, MOMENT, MUSE } from "@yindex/style-packs"
 
 function fav(domain: string): string {
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
@@ -34,54 +35,124 @@ function page(
   id: string,
   name: string,
   icon: string,
-  pack: string,
+  style: PageStyle,
   widgets: readonly WidgetInstance[],
 ): Page {
   return {
     id: pageId(id),
     name,
     icon,
-    style: { packId: stylePackId(pack), overrides: {} },
+    style,
     widgets,
   }
 }
 
-/** Fixed default 3-page Home: knowledge / launch / atmosphere */
+/**
+ * Default Home v2 — three Living Glass scenes (DESIGN.md Layout):
+ * 此刻 (landing) / 灵感 / 流光
+ */
 export function createDefaultHome(): HomeDocument {
-  const knowledge = page("page_knowledge", "知识·典籍", "典", "inkstone", [
-    w("builtin.quote", { x: 6, y: 10, w: 38, h: 24, z: 1 }, { source: "hitokoto" }),
-    w("builtin.hexagram", { x: 48, y: 6, w: 46, h: 86, z: 2 }),
-  ])
-
-  const launch = page("page_launch", "启动·精密工具", "启", "caliper", [
-    w("builtin.search", { x: 26, y: 26, w: 48, h: 10, z: 1 }, { engine: "google" }),
+  // 此刻: top weather, mid search, bottom shortcuts (+ clock as date companion)
+  const moment = page("page_moment", "此刻", "时", MOMENT.pageStyle, [
+    w(
+      "builtin.weather",
+      { x: 32, y: 6, w: 36, h: 8, z: 3 },
+      {
+        mode: "auto",
+        cityLabel: "本地",
+      },
+    ),
+    w(
+      "builtin.clock",
+      { x: 28, y: 14, w: 44, h: 10, z: 2 },
+      {
+        showSeconds: false,
+        compact: true,
+      },
+    ),
+    w(
+      "builtin.search",
+      { x: 22, y: 32, w: 56, h: 10, z: 1 },
+      { engine: "google" },
+    ),
     w(
       "builtin.shortcuts",
-      { x: 24, y: 42, w: 52, h: 36, z: 2 },
+      { x: 18, y: 72, w: 64, h: 16, z: 2 },
       {
         items: [
-          { id: "s1", title: "GitHub", url: "https://github.com", favicon: fav("github.com") },
-          { id: "s2", title: "文档", url: "https://developer.mozilla.org", favicon: fav("developer.mozilla.org") },
-          { id: "s3", title: "邮箱", url: "https://mail.google.com", favicon: fav("mail.google.com") },
-          { id: "s4", title: "云盘", url: "https://drive.google.com", favicon: fav("drive.google.com") },
-          { id: "s5", title: "日历", url: "https://calendar.google.com", favicon: fav("calendar.google.com") },
-          { id: "s6", title: "翻译", url: "https://translate.google.com", favicon: fav("translate.google.com") },
-          { id: "s7", title: "笔记", url: "https://www.notion.so", favicon: fav("notion.so") },
-          { id: "s8", title: "B站", url: "https://www.bilibili.com", favicon: fav("bilibili.com") },
+          {
+            id: "s1",
+            title: "GitHub",
+            url: "https://github.com",
+            favicon: fav("github.com"),
+          },
+          {
+            id: "s2",
+            title: "文档",
+            url: "https://developer.mozilla.org",
+            favicon: fav("developer.mozilla.org"),
+          },
+          {
+            id: "s3",
+            title: "邮箱",
+            url: "https://mail.google.com",
+            favicon: fav("mail.google.com"),
+          },
+          {
+            id: "s4",
+            title: "云盘",
+            url: "https://drive.google.com",
+            favicon: fav("drive.google.com"),
+          },
+          {
+            id: "s5",
+            title: "日历",
+            url: "https://calendar.google.com",
+            favicon: fav("calendar.google.com"),
+          },
+          {
+            id: "s6",
+            title: "翻译",
+            url: "https://translate.google.com",
+            favicon: fav("translate.google.com"),
+          },
+          {
+            id: "s7",
+            title: "笔记",
+            url: "https://www.notion.so",
+            favicon: fav("notion.so"),
+          },
+          {
+            id: "s8",
+            title: "B站",
+            url: "https://www.bilibili.com",
+            favicon: fav("bilibili.com"),
+          },
         ],
       },
     ),
-    w("builtin.weather", { x: 78, y: 8, w: 16, h: 16, z: 3 }, {
-      mode: "auto",
-      cityLabel: "本地",
-    }),
   ])
 
-  const atmosphere = page("page_atmosphere", "氛围·沉浸光雾", "雾", "dew-glass", [
-    w("builtin.clock", { x: 20, y: 24, w: 60, h: 48, z: 1 }, { showSeconds: true }),
+  // 灵感: quote + hexagram
+  const muse = page("page_muse", "灵感", "灵", MUSE.pageStyle, [
+    w(
+      "builtin.quote",
+      { x: 18, y: 22, w: 64, h: 28, z: 1 },
+      { source: "hitokoto" },
+    ),
+    w("builtin.hexagram", { x: 58, y: 54, w: 34, h: 36, z: 2 }),
   ])
 
-  const pages = [knowledge, launch, atmosphere].map((p) => ({
+  // 流光: oversized clock only
+  const flow = page("page_flow", "流光", "光", FLOW.pageStyle, [
+    w(
+      "builtin.clock",
+      { x: 15, y: 28, w: 70, h: 40, z: 1 },
+      { showSeconds: true },
+    ),
+  ])
+
+  const pages = [moment, muse, flow].map((p) => ({
     ...p,
     widgets: p.widgets.map((widget, i) => ({
       ...widget,
@@ -91,9 +162,10 @@ export function createDefaultHome(): HomeDocument {
 
   const docR = buildHomeDocument({
     pages,
-    landingPageId: pageId("page_launch"),
+    landingPageId: pageId("page_moment"),
     settings: {
       showWidgetTitles: false,
+      motionProfile: "balanced",
     },
   })
   if (!docR.ok) {

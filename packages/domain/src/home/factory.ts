@@ -1,13 +1,14 @@
 import {
+  type PageId,
   createId,
   pageId,
   widgetInstanceId,
   widgetTypeId,
-  type PageId,
 } from "../ids/ids"
 import type { LayoutRect } from "../layout/types"
-import { err, ok, type Result } from "../result/result"
+import { type Result, err, ok } from "../result/result"
 import { createSequence } from "../sequence/sequence"
+import { defaultPageStyle } from "../style/pageStyle"
 import type { PageStyle, WidgetStyleOverride } from "../style/types"
 import type { HomeError } from "./errors"
 import {
@@ -38,13 +39,13 @@ export function createWidgetInstance(input: {
 export function createBlankPage(input: {
   readonly name: string
   readonly icon?: string
-  readonly style: PageStyle
+  readonly style?: PageStyle
 }): Page {
   return {
     id: pageId(createId("page")),
     name: input.name,
     icon: input.icon ?? "◇",
-    style: input.style,
+    style: input.style ?? defaultPageStyle(),
     widgets: [],
   }
 }

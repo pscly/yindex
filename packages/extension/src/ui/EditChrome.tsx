@@ -11,11 +11,10 @@ import {
   setLandingPage,
   setPageMeta,
   setPageStyle,
-  stylePackId,
   updatePage,
   withZ,
 } from "@yindex/domain"
-import { STYLE_PACKS } from "@yindex/style-packs"
+import { MOMENT, STYLE_PACKS } from "@yindex/style-packs"
 import { BUILTIN_CATALOG, faviconForUrl } from "@yindex/widgets"
 import type { CSSProperties, ChangeEvent } from "react"
 
@@ -45,12 +44,37 @@ export function EditChrome(props: {
 
   return (
     <aside style={panel} aria-label="编辑面板">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 14,
+        }}
+      >
         <div>
-          <div style={{ fontSize: 11, letterSpacing: "0.08em", opacity: 0.55, fontWeight: 600 }}>EDIT</div>
+          <div
+            style={{
+              fontSize: 11,
+              letterSpacing: "0.08em",
+              opacity: 0.55,
+              fontWeight: 600,
+            }}
+          >
+            EDIT
+          </div>
           <strong style={{ fontSize: 15 }}>当前页</strong>
         </div>
-        <button type="button" onClick={props.onClose} style={{ ...ghostBtn, background: "oklch(0.62 0.14 36)", borderColor: "transparent", fontWeight: 600 }}>
+        <button
+          type="button"
+          onClick={props.onClose}
+          style={{
+            ...ghostBtn,
+            background: "oklch(0.62 0.14 36)",
+            borderColor: "transparent",
+            fontWeight: 600,
+          }}
+        >
           完成
         </button>
       </div>
@@ -60,7 +84,9 @@ export function EditChrome(props: {
         <input
           value={page.name}
           onChange={(e) => {
-            const r = setPageMeta(props.doc, props.pageId, { name: e.target.value })
+            const r = setPageMeta(props.doc, props.pageId, {
+              name: e.target.value,
+            })
             if (r.ok) props.onDoc(r.value)
           }}
           style={inputStyle}
@@ -73,42 +99,51 @@ export function EditChrome(props: {
           value={page.icon}
           maxLength={2}
           onChange={(e) => {
-            const r = setPageMeta(props.doc, props.pageId, { icon: e.target.value })
+            const r = setPageMeta(props.doc, props.pageId, {
+              icon: e.target.value,
+            })
             if (r.ok) props.onDoc(r.value)
           }}
           style={inputStyle}
         />
       </label>
 
-      <div style={{ marginTop: 12, marginBottom: 6, opacity: 0.75 }}>Style Pack</div>
+      <div style={{ marginTop: 12, marginBottom: 6, opacity: 0.75 }}>
+        场景预设
+      </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {STYLE_PACKS.map((pack) => (
-          <button
-            key={pack.id}
-            type="button"
-            onClick={() => {
-              const r = setPageStyle(props.doc, props.pageId, {
-                packId: pack.id,
-                overrides: page.style.overrides,
-              })
-              if (r.ok) props.onDoc(r.value)
-            }}
-            style={{
-              ...ghostBtn,
-              textAlign: "left",
-              borderColor:
-                page.style.packId === pack.id
+        {STYLE_PACKS.map((pack) => {
+          const active =
+            page.style.wallpaper.kind === "generative" &&
+            page.style.wallpaper.generativePreset === pack.generativePreset
+          return (
+            <button
+              key={pack.id}
+              type="button"
+              onClick={() => {
+                const r = setPageStyle(props.doc, props.pageId, pack.pageStyle)
+                if (r.ok) props.onDoc(r.value)
+              }}
+              style={{
+                ...ghostBtn,
+                textAlign: "left",
+                borderColor: active
                   ? "oklch(0.65 0.12 250)"
                   : "color-mix(in oklch, white 12%, transparent)",
-            }}
-          >
-            <div style={{ fontWeight: 600 }}>{pack.name}</div>
-            <div style={{ fontSize: 11, opacity: 0.65 }}>{pack.description}</div>
-          </button>
-        ))}
+              }}
+            >
+              <div style={{ fontWeight: 600 }}>{pack.name}</div>
+              <div style={{ fontSize: 11, opacity: 0.65 }}>
+                {pack.description}
+              </div>
+            </button>
+          )
+        })}
       </div>
 
-      <div style={{ marginTop: 14, marginBottom: 6, opacity: 0.75 }}>页面序列</div>
+      <div style={{ marginTop: 14, marginBottom: 6, opacity: 0.75 }}>
+        页面序列
+      </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         <button
           type="button"
@@ -117,7 +152,7 @@ export function EditChrome(props: {
             const blank = createBlankPage({
               name: "新页面",
               icon: "页",
-              style: { packId: stylePackId("caliper"), overrides: {} },
+              style: MOMENT.pageStyle,
             })
             const r = addPageToHome(props.doc, blank)
             if (r.ok) props.onDoc(r.value)
@@ -180,7 +215,9 @@ export function EditChrome(props: {
         {props.doc.pages[props.doc.sequence.landingPageId]?.name ?? "—"}
       </div>
 
-      <div style={{ marginTop: 14, marginBottom: 6, opacity: 0.75 }}>添加小组件</div>
+      <div style={{ marginTop: 14, marginBottom: 6, opacity: 0.75 }}>
+        添加小组件
+      </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         {BUILTIN_CATALOG.map((entry) => (
           <button
@@ -254,8 +291,11 @@ export function EditChrome(props: {
           </button>
         </div>
       ) : (
-        <div style={{ marginTop: 14, opacity: 0.6, fontSize: 12, lineHeight: 1.5 }}>
-          点击选中 · 拖拽移动 · 右下角缩放 · 角上「×」删除 · Alt 关闭吸附 · Esc 退出
+        <div
+          style={{ marginTop: 14, opacity: 0.6, fontSize: 12, lineHeight: 1.5 }}
+        >
+          点击选中 · 拖拽移动 · 右下角缩放 · 角上「×」删除 · Alt 关闭吸附 · Esc
+          退出
         </div>
       )}
     </aside>
@@ -371,7 +411,9 @@ function SelectedWidgetEditor(props: {
           城市标签
           <input
             value={cfg.cityLabel ?? ""}
-            onChange={(e) => props.onConfig({ ...cfg, cityLabel: e.target.value })}
+            onChange={(e) =>
+              props.onConfig({ ...cfg, cityLabel: e.target.value })
+            }
             style={inputStyle}
             placeholder="本地"
           />
@@ -447,7 +489,12 @@ function SelectedWidgetEditor(props: {
     const cfg =
       typeof props.config === "object" && props.config !== null
         ? (props.config as {
-            items?: Array<{ id: string; title: string; url: string; favicon?: string }>
+            items?: Array<{
+              id: string
+              title: string
+              url: string
+              favicon?: string
+            }>
           })
         : {}
     const items = cfg.items ?? []
@@ -500,7 +547,15 @@ function ShortcutsEditor(props: {
       {props.items.length === 0 ? (
         <div style={{ fontSize: 12, opacity: 0.6 }}>还没有链接</div>
       ) : (
-        <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 6 }}>
+        <ul
+          style={{
+            margin: 0,
+            padding: 0,
+            listStyle: "none",
+            display: "grid",
+            gap: 6,
+          }}
+        >
           {props.items.map((item) => (
             <li
               key={item.id}
@@ -512,7 +567,13 @@ function ShortcutsEditor(props: {
                 fontSize: 12,
               }}
             >
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span
+                style={{
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {item.title}
               </span>
               <button

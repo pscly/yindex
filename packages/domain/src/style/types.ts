@@ -1,18 +1,31 @@
-import type { StylePackId } from "../ids/ids"
+import type { AdaptiveResolvedGlass } from "./adaptiveGlass"
+import type { GlassProfile, GlassTuning } from "./glass"
+import type { Wallpaper } from "./wallpaper"
 
 export type ElevationMode = "flat" | "tonal" | "glass"
 
-export type WallpaperKind = "image" | "video" | "gradient" | "generative"
+export type SeedPalette = {
+  readonly bg: string
+  readonly surface: string
+  readonly ink: string
+  readonly muted: string
+  readonly accent: string
+  readonly [key: string]: string
+}
+
+/**
+ * Unified Liquid Glass Page Style (v2).
+ * One material language; pages differ by palette / wallpaper / glass profile.
+ */
+export type PageStyle = {
+  readonly seedPalette: SeedPalette
+  readonly wallpaper: Wallpaper
+  readonly glassProfile: GlassProfile
+  readonly glassTuning: GlassTuning
+}
 
 export type StyleTokens = {
-  readonly color: {
-    readonly bg: string
-    readonly surface: string
-    readonly ink: string
-    readonly muted: string
-    readonly accent: string
-    readonly [key: string]: string
-  }
+  readonly color: SeedPalette
   readonly typography: {
     readonly displayFamily: string
     readonly bodyFamily: string
@@ -32,17 +45,13 @@ export type StyleTokens = {
   readonly elevation: {
     readonly mode: ElevationMode
   }
-  readonly glass: {
-    readonly blurPx: number
-    readonly opacity: number
-    readonly highlight: number
-    readonly enabled: boolean
-  }
+  /** Profile + tuning + adaptive material (CSS-ready for WidgetSurface). */
+  readonly glass: AdaptiveResolvedGlass
   readonly wallpaper: {
-    readonly kind: WallpaperKind
-    readonly fit: "cover"
+    readonly source: Wallpaper
     readonly dim: number
-    readonly value?: string
+    /** CSS-ready fallback until generative/image/video engines mount (WS2). */
+    readonly cssBackground: string
   }
   readonly motion: {
     readonly turnMs: number
@@ -51,19 +60,18 @@ export type StyleTokens = {
 }
 
 export type StyleOverride = {
-  readonly color?: Partial<StyleTokens["color"]>
+  readonly color?: Partial<SeedPalette>
   readonly typography?: Partial<StyleTokens["typography"]>
   readonly space?: Partial<StyleTokens["space"]>
   readonly radius?: Partial<StyleTokens["radius"]>
   readonly elevation?: Partial<StyleTokens["elevation"]>
-  readonly glass?: Partial<StyleTokens["glass"]>
-  readonly wallpaper?: Partial<StyleTokens["wallpaper"]>
+  readonly glass?: Partial<{
+    readonly blurPx: number
+    readonly opacity: number
+    readonly highlight: number
+    readonly saturation: number
+  }>
   readonly motion?: Partial<StyleTokens["motion"]>
-}
-
-export type PageStyle = {
-  readonly packId: StylePackId
-  readonly overrides: StyleOverride
 }
 
 export type WidgetStyleOverride = StyleOverride

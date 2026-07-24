@@ -1,14 +1,14 @@
-import { useMemo, useState, type CSSProperties } from "react"
 import type { StyleTokens } from "@yindex/domain"
+import { type CSSProperties, useMemo, useState } from "react"
 import { WidgetSurface } from "../shell/surface"
 import {
+  HEXAGRAMS,
+  type Hexagram,
   findByIndex,
   findByTrigrams,
-  HEXAGRAMS,
   localDateKey,
   randomHexagram,
   trigramName,
-  type Hexagram,
 } from "./data"
 
 export type HexagramBoardConfig = {
@@ -66,8 +66,19 @@ export function HexagramBoard(props: HexagramBoardProps) {
   const detail = selected ?? drawn ?? null
 
   return (
-    <WidgetSurface tokens={props.tokens} title="六十四卦" showTitle={props.showTitle}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, height: "100%" }}>
+    <WidgetSurface
+      tokens={props.tokens}
+      title="六十四卦"
+      showTitle={props.showTitle}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+          height: "100%",
+        }}
+      >
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button
             type="button"
@@ -89,7 +100,13 @@ export function HexagramBoard(props: HexagramBoardProps) {
             {libraryOpen ? "收起卦库" : "打开卦库"}
           </button>
           {drawn ? (
-            <span style={{ color: props.tokens.color.muted, fontSize: 12, alignSelf: "center" }}>
+            <span
+              style={{
+                color: props.tokens.color.muted,
+                fontSize: 12,
+                alignSelf: "center",
+              }}
+            >
               今日：{drawn.index}. {drawn.name}
             </span>
           ) : null}
@@ -149,10 +166,10 @@ export function HexagramBoard(props: HexagramBoardProps) {
             data-scrollable="true"
             onWheel={(e) => e.stopPropagation()}
           >
-            {matrix.flatMap((row, ui) =>
-              row.map((h, li) => (
+            {matrix.flatMap((row) =>
+              row.map((h) => (
                 <button
-                  key={`${ui}-${li}`}
+                  key={h?.index ?? "missing"}
                   type="button"
                   title={h ? `${h.index}.${h.name}` : ""}
                   onClick={() => h && setSelected(h)}

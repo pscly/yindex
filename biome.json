@@ -8,13 +8,11 @@
       "recommended": true,
       "style": {
         "noDefaultExport": "error",
-        "useImportType": "error"
+        "useImportType": "error",
+        "noNonNullAssertion": "error"
       },
       "suspicious": {
         "noExplicitAny": "error"
-      },
-      "complexity": {
-        "noNonNullAssertion": "error"
       }
     }
   },
@@ -22,6 +20,15 @@
     "formatter": { "quoteStyle": "double", "semicolons": "asNeeded" }
   },
   "files": {
-    "ignore": ["node_modules", "dist", ".omo", ".omx", "coverage"]
+    "ignore": [
+      "node_modules",
+      "dist",
+      "release",
+      ".omo",
+      ".omx",
+      ".playwright-mcp",
+      ".serena",
+      "coverage"
+    ]
   }
 }

@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react"
 import type { StyleTokens } from "@yindex/domain"
+import type { PackagePermission } from "@yindex/widget-sdk"
 import { WidgetSurface } from "@yindex/widgets"
-import { getPackage } from "../storage/packageStore"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { handleBridgeMessage } from "../runtime/bridgeHost"
 import { instanceStorage } from "../runtime/instanceStorage"
-import type { PackagePermission } from "@yindex/widget-sdk"
+import { getPackage } from "../storage/packageStore"
 
 export function PackageWidgetFrame(props: {
   readonly tokens: StyleTokens
@@ -53,7 +53,10 @@ export function PackageWidgetFrame(props: {
 
   useEffect(() => {
     async function onMessage(event: MessageEvent) {
-      const data = event.data as { channel?: string; instanceId?: string } | null
+      const data = event.data as {
+        channel?: string
+        instanceId?: string
+      } | null
       if (!data || data.channel !== "yindex-bridge") return
       // Accept from blob iframe; instance scoping best-effort
       const response = await handleBridgeMessage(data, {
@@ -79,7 +82,9 @@ export function PackageWidgetFrame(props: {
   if (error) {
     return (
       <WidgetSurface tokens={props.tokens} title="运行错误">
-        <div style={{ color: props.tokens.color.muted, fontSize: 13 }}>{error}</div>
+        <div style={{ color: props.tokens.color.muted, fontSize: 13 }}>
+          {error}
+        </div>
       </WidgetSurface>
     )
   }
@@ -87,7 +92,9 @@ export function PackageWidgetFrame(props: {
   if (!sandboxSrc) {
     return (
       <WidgetSurface tokens={props.tokens} title="加载中">
-        <div style={{ color: props.tokens.color.muted, fontSize: 13 }}>Package 启动中…</div>
+        <div style={{ color: props.tokens.color.muted, fontSize: 13 }}>
+          Package 启动中…
+        </div>
       </WidgetSurface>
     )
   }
@@ -107,7 +114,12 @@ export function PackageWidgetFrame(props: {
         title={`${props.packageId}/${props.typeId}`}
         src={sandboxSrc}
         sandbox="allow-scripts allow-forms allow-modals"
-        style={{ width: "100%", height: "100%", border: 0, background: "transparent" }}
+        style={{
+          width: "100%",
+          height: "100%",
+          border: 0,
+          background: "transparent",
+        }}
       />
     </div>
   )

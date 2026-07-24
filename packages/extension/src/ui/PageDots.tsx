@@ -1,5 +1,5 @@
-import type { CSSProperties } from "react"
 import type { HomeDocument } from "@yindex/domain"
+import type { CSSProperties } from "react"
 
 export function PageDots(props: {
   readonly doc: HomeDocument
@@ -42,7 +42,9 @@ export function PageDots(props: {
               width: active ? 9 : 7,
               height: active ? 9 : 7,
               borderRadius: 999,
-              border: active ? "none" : `1.5px solid color-mix(in oklch, ${accent} 55%, white)`,
+              border: active
+                ? "none"
+                : `1.5px solid color-mix(in oklch, ${accent} 55%, white)`,
               padding: 0,
               background: active ? accent : "transparent",
               boxShadow: active

@@ -34,7 +34,9 @@ export type BridgeMethod =
   | "clock.now"
   | "host.log"
 
-export const METHOD_PERMISSIONS: Readonly<Record<BridgeMethod, PackagePermission | null>> = {
+export const METHOD_PERMISSIONS: Readonly<
+  Record<BridgeMethod, PackagePermission | null>
+> = {
   "storage.get": "storage.instance",
   "storage.set": "storage.instance",
   "storage.remove": "storage.instance",
@@ -53,9 +55,19 @@ export type BridgeErrorCode =
 export function authorizeMethod(
   method: string,
   granted: readonly PackagePermission[],
-): { readonly ok: true; readonly method: BridgeMethod } | { readonly ok: false; readonly code: BridgeErrorCode; readonly message: string } {
+):
+  | { readonly ok: true; readonly method: BridgeMethod }
+  | {
+      readonly ok: false
+      readonly code: BridgeErrorCode
+      readonly message: string
+    } {
   if (!(method in METHOD_PERMISSIONS)) {
-    return { ok: false, code: "unknown_method", message: `unknown method: ${method}` }
+    return {
+      ok: false,
+      code: "unknown_method",
+      message: `unknown method: ${method}`,
+    }
   }
   const m = method as BridgeMethod
   const need = METHOD_PERMISSIONS[m]

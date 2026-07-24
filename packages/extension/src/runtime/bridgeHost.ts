@@ -1,8 +1,8 @@
 import {
-  authorizeMethod,
-  parseBridgeRequest,
   type BridgeResponse,
   type PackagePermission,
+  authorizeMethod,
+  parseBridgeRequest,
 } from "@yindex/widget-sdk"
 
 export type BridgeHostContext = {
@@ -47,7 +47,9 @@ export async function handleBridgeMessage(
         return { channel: "yindex-bridge", id: req.id, ok: true, result: true }
       }
       case "storage.get": {
-        const key = String((req.params as { key?: string } | undefined)?.key ?? "")
+        const key = String(
+          (req.params as { key?: string } | undefined)?.key ?? "",
+        )
         const value = await ctx.storage.get(`${ctx.instanceId}:${key}`)
         return { channel: "yindex-bridge", id: req.id, ok: true, result: value }
       }
@@ -58,7 +60,9 @@ export async function handleBridgeMessage(
         return { channel: "yindex-bridge", id: req.id, ok: true, result: true }
       }
       case "storage.remove": {
-        const key = String((req.params as { key?: string } | undefined)?.key ?? "")
+        const key = String(
+          (req.params as { key?: string } | undefined)?.key ?? "",
+        )
         await ctx.storage.remove(`${ctx.instanceId}:${key}`)
         return { channel: "yindex-bridge", id: req.id, ok: true, result: true }
       }
