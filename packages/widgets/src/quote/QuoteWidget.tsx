@@ -10,6 +10,7 @@ export type QuoteWidgetConfig = {
 export type QuoteWidgetProps = {
   readonly tokens: StyleTokens
   readonly config: QuoteWidgetConfig
+  readonly showTitle?: boolean | undefined
 }
 
 type QuoteState =
@@ -86,7 +87,7 @@ export function QuoteWidget(props: QuoteWidgetProps) {
       : { text: state.text, from: state.from }
 
   return (
-    <WidgetSurface tokens={props.tokens} title="每日一句">
+    <WidgetSurface tokens={props.tokens} title="每日一句" showTitle={props.showTitle}>
       <blockquote
         style={{
           margin: 0,

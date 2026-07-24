@@ -16,7 +16,7 @@ import {
   withZ,
 } from "@yindex/domain"
 import { STYLE_PACKS } from "@yindex/style-packs"
-import { BUILTIN_CATALOG, faviconForUrl } from "@yindex/widgets"
+import { BUILTIN_CATALOG, faviconForUrl, readShowTitle } from "@yindex/widgets"
 import type { CSSProperties, ChangeEvent } from "react"
 
 export function EditChrome(props: {
@@ -218,32 +218,61 @@ export function EditChrome(props: {
                 ? selected.source.typeId
                 : "缺失"}
           </div>
-          <SelectedWidgetEditor
-            sourceKind={selected.source.kind}
-            typeId={
-              selected.source.kind === "missing"
-                ? selected.source.typeId
-                : selected.source.typeId
-            }
-            config={selected.config}
-            onConfig={patchSelectedConfig}
-          />
+          <label style={rowCheck}>
+            <input
+              type="checkbox"
+              checked={readShowTitle(
+                selected.config,
+                !(
+                  selected.source.kind === "builtin" &&
+                  selected.source.typeId === "builtin.clock"
+                ),
+              )}
+              onChange={(e) => {
+                const base =
+                  typeof selected.config === "object" && selected.config !== null
+                    ? (selected.config as Record<string, unknown>)
+                    : {}
+                patchSelectedConfig({ ...base, showTitle: e.target.checked })
+              }}
+            />
+            显示标题（左上角名称）
+          </label>
+          <div style={{ marginTop: 10 }}>
+            <SelectedWidgetEditor
+              sourceKind={selected.source.kind}
+              typeId={
+                selected.source.kind === "missing"
+                  ? selected.source.typeId
+                  : selected.source.typeId
+              }
+              config={selected.config}
+              onConfig={patchSelectedConfig}
+            />
+          </div>
           <button
             type="button"
-            style={{ ...ghostBtn, color: "oklch(0.75 0.14 25)", marginTop: 10 }}
+            style={{
+              ...ghostBtn,
+              color: "oklch(0.75 0.14 25)",
+              marginTop: 12,
+              width: "100%",
+              fontWeight: 600,
+            }}
             onClick={() => {
               const id = props.selectedWidgetId
               if (!id) return
+              if (!confirm("删除该小组件？布局与配置将移除。")) return
               const r = removeWidget(props.doc, props.pageId, id)
               if (r.ok) props.onDoc(r.value)
             }}
           >
-            删除选中
+            删除此小组件
           </button>
         </div>
       ) : (
         <div style={{ marginTop: 14, opacity: 0.6, fontSize: 12, lineHeight: 1.5 }}>
-          点击选中 · 拖拽移动 · 右下角缩放 · Alt 临时关闭吸附 · Esc 退出编辑
+          点击选中 · 拖拽移动 · 右下角缩放 · 角上「×」删除 · Alt 关闭吸附 · Esc 退出
         </div>
       )}
     </aside>

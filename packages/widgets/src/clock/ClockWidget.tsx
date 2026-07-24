@@ -5,6 +5,7 @@ import { WidgetSurface } from "../shell/surface"
 export type ClockWidgetProps = {
   readonly tokens: StyleTokens
   readonly showSeconds?: boolean
+  readonly showTitle?: boolean | undefined
 }
 
 function pad(n: number): string {
@@ -29,7 +30,7 @@ export function ClockWidget(props: ClockWidgetProps) {
   const time = props.showSeconds === false ? `${h}:${m}` : `${h}:${m}:${s}`
 
   return (
-    <WidgetSurface tokens={props.tokens}>
+    <WidgetSurface tokens={props.tokens} title="时钟" showTitle={props.showTitle === true}>
       <div
         style={{
           height: "100%",

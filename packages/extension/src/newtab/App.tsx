@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { PageId, WidgetInstanceId } from "@yindex/domain"
-import { applyLayoutDraft, updatePage } from "@yindex/domain"
+import { applyLayoutDraft, removeWidget, updatePage } from "@yindex/domain"
 import { useHomeState } from "./useHomeState"
 import { usePageTurn } from "./usePageTurn"
 import { PageCanvas, type LayoutDraftEvent } from "../ui/PageCanvas"
@@ -104,6 +104,15 @@ export function App() {
     if (r.ok) setDoc(r.value)
   }
 
+  function onDeleteWidget(widgetId: WidgetInstanceId) {
+    if (!doc || !currentPageId) return
+    const r = removeWidget(doc, currentPageId, widgetId)
+    if (r.ok) {
+      setDoc(r.value)
+      setSelectedWidgetId(null)
+    }
+  }
+
   function onWidgetLayoutDraft(event: LayoutDraftEvent) {
     if (!doc || !currentPageId) return
     const page = doc.pages[currentPageId]
@@ -183,7 +192,7 @@ export function App() {
                 onSelectWidget={setSelectedWidgetId}
                 onWidgetConfig={onWidgetConfig}
                 {...(editMode && page.id === currentPageId
-                  ? { onWidgetLayoutDraft }
+                  ? { onWidgetLayoutDraft, onDeleteWidget }
                   : {})}
               />
             </div>

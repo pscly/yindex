@@ -17,6 +17,7 @@ export type SearchWidgetConfig = {
 export type SearchWidgetProps = {
   readonly tokens: StyleTokens
   readonly config: SearchWidgetConfig
+  readonly showTitle?: boolean | undefined
 }
 
 const ENGINE_URL: Record<Exclude<SearchEngineId, "custom">, string> = {
@@ -56,7 +57,7 @@ export function SearchWidget(props: SearchWidgetProps) {
   }
 
   return (
-    <WidgetSurface tokens={props.tokens} title={`搜索 · ${engineLabel}`}>
+    <WidgetSurface tokens={props.tokens} title={`搜索 · ${engineLabel}`} showTitle={props.showTitle}>
       <form
         onSubmit={onSubmit}
         style={{

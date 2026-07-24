@@ -23,6 +23,7 @@ export type PageCanvasProps = {
   readonly selectedWidgetId: WidgetInstanceId | null
   readonly onSelectWidget: (id: WidgetInstanceId | null) => void
   readonly onWidgetConfig: (widgetId: string, config: unknown) => void
+  readonly onDeleteWidget?: (widgetId: WidgetInstanceId) => void
   readonly onWidgetLayoutDraft?: (event: LayoutDraftEvent) => void
 }
 
@@ -129,6 +130,43 @@ export function PageCanvas(props: PageCanvasProps) {
                 onWidgetConfig={props.onWidgetConfig}
               />
             )}
+            {props.editMode && props.onDeleteWidget ? (
+              <button
+                type="button"
+                aria-label="删除小组件"
+                title="删除"
+                data-resize-handle="true"
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (!confirm("删除该小组件？")) return
+                  props.onDeleteWidget?.(w.id)
+                  if (selected) props.onSelectWidget(null)
+                }}
+                style={{
+                  position: "absolute",
+                  top: -10,
+                  right: -10,
+                  width: 24,
+                  height: 24,
+                  borderRadius: 999,
+                  border: `1px solid color-mix(in oklch, ${tokens.color.ink} 20%, transparent)`,
+                  background: "color-mix(in oklch, black 55%, transparent)",
+                  color: "white",
+                  fontSize: 14,
+                  lineHeight: "22px",
+                  padding: 0,
+                  cursor: "pointer",
+                  zIndex: 5,
+                  display: "grid",
+                  placeItems: "center",
+                  backdropFilter: "blur(6px)",
+                  boxShadow: "0 2px 8px color-mix(in oklch, black 30%, transparent)",
+                }}
+              >
+                ×
+              </button>
+            ) : null}
           </div>
         )
       })}
@@ -147,7 +185,7 @@ export function PageCanvas(props: PageCanvasProps) {
             backdropFilter: "blur(8px)",
           }}
         >
-          编辑 · {props.page.name} · 拖拽移动 · 角点缩放 · Alt 关闭吸附
+          编辑 · {props.page.name} · 拖拽 · 缩放 · ×删除 · Alt 关吸附
         </div>
       ) : null}
     </section>

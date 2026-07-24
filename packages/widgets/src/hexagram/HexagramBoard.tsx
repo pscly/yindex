@@ -22,6 +22,7 @@ export type HexagramBoardProps = {
   readonly tokens: StyleTokens
   readonly config: HexagramBoardConfig
   readonly allowRedraw: boolean
+  readonly showTitle?: boolean | undefined
   readonly onConfigChange?: (next: HexagramBoardConfig) => void
 }
 
@@ -65,7 +66,7 @@ export function HexagramBoard(props: HexagramBoardProps) {
   const detail = selected ?? drawn ?? null
 
   return (
-    <WidgetSurface tokens={props.tokens} title="六十四卦">
+    <WidgetSurface tokens={props.tokens} title="六十四卦" showTitle={props.showTitle}>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, height: "100%" }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button

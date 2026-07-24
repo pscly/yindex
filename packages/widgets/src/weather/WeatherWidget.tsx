@@ -12,6 +12,7 @@ export type WeatherWidgetConfig = {
 export type WeatherWidgetProps = {
   readonly tokens: StyleTokens
   readonly config: WeatherWidgetConfig
+  readonly showTitle?: boolean | undefined
 }
 
 type WeatherState =
@@ -126,7 +127,7 @@ export function WeatherWidget(props: WeatherWidgetProps) {
   }, [props.config.latitude, props.config.longitude, props.config.mode, tick])
 
   return (
-    <WidgetSurface tokens={props.tokens} title="天气">
+    <WidgetSurface tokens={props.tokens} title="天气" showTitle={props.showTitle}>
       {state.status === "loading" ? (
         <div style={{ color: props.tokens.color.muted }}>加载中…</div>
       ) : null}

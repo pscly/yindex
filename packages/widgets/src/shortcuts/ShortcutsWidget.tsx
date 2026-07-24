@@ -15,6 +15,7 @@ export type ShortcutsWidgetConfig = {
 export type ShortcutsWidgetProps = {
   readonly tokens: StyleTokens
   readonly config: ShortcutsWidgetConfig
+  readonly showTitle?: boolean | undefined
   readonly onOpen?: (url: string) => void
 }
 
@@ -32,7 +33,7 @@ export function ShortcutsWidget(props: ShortcutsWidgetProps) {
   const items = props.config.items
 
   return (
-    <WidgetSurface tokens={props.tokens} title="快捷方式">
+    <WidgetSurface tokens={props.tokens} title="快捷方式" showTitle={props.showTitle}>
       {items.length === 0 ? (
         <div style={{ color: props.tokens.color.muted, fontSize: 13 }}>
           暂无快捷方式。进入编辑态选中本组件后可添加链接。

@@ -1,5 +1,6 @@
 export * from "./catalog"
 export * from "./shell/surface"
+export * from "./shell/config"
 export * from "./clock/ClockWidget"
 export * from "./search/SearchWidget"
 export * from "./shortcuts/ShortcutsWidget"

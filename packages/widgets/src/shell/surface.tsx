@@ -4,6 +4,8 @@ import type { StyleTokens } from "@yindex/domain"
 export type WidgetSurfaceProps = {
   readonly tokens: StyleTokens
   readonly title?: string
+  /** When false, title is hidden even if `title` string is provided */
+  readonly showTitle?: boolean | undefined
   readonly children: ReactNode
   readonly className?: string
   readonly style?: CSSProperties
@@ -11,6 +13,7 @@ export type WidgetSurfaceProps = {
 
 export function WidgetSurface(props: WidgetSurfaceProps) {
   const { tokens, title, children, className, style } = props
+  const showTitle = props.showTitle !== false && Boolean(title)
   const glass = tokens.glass.enabled
   const surfaceStyle: CSSProperties = {
     width: "100%",
@@ -39,20 +42,31 @@ export function WidgetSurface(props: WidgetSurfaceProps) {
 
   return (
     <section className={className} style={surfaceStyle} data-widget-surface="">
-      {title ? (
+      {showTitle ? (
         <header
           style={{
-            padding: "8px 12px 0",
-            fontSize: 12,
-            letterSpacing: "0.04em",
+            padding: "10px 14px 0",
+            fontSize: 11,
+            letterSpacing: "0.08em",
+            textTransform: "none",
             color: tokens.color.muted,
             flex: "0 0 auto",
+            fontWeight: 500,
+            opacity: 0.9,
           }}
         >
           {title}
         </header>
       ) : null}
-      <div style={{ flex: 1, minHeight: 0, padding: 12 }}>{children}</div>
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          padding: showTitle ? "8px 14px 14px" : 14,
+        }}
+      >
+        {children}
+      </div>
     </section>
   )
 }
