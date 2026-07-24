@@ -2,7 +2,12 @@ import { useState, type FormEvent } from "react"
 import type { StyleTokens } from "@yindex/domain"
 import { WidgetSurface } from "../shell/surface"
 
-export type SearchEngineId = "google" | "bing" | "duckduckgo" | "custom"
+export type SearchEngineId =
+  | "google"
+  | "bing"
+  | "duckduckgo"
+  | "baidu"
+  | "custom"
 
 export type SearchWidgetConfig = {
   readonly engine: SearchEngineId
@@ -18,6 +23,15 @@ const ENGINE_URL: Record<Exclude<SearchEngineId, "custom">, string> = {
   google: "https://www.google.com/search?q=%s",
   bing: "https://www.bing.com/search?q=%s",
   duckduckgo: "https://duckduckgo.com/?q=%s",
+  baidu: "https://www.baidu.com/s?wd=%s",
+}
+
+const ENGINE_LABEL: Record<SearchEngineId, string> = {
+  google: "Google",
+  bing: "Bing",
+  duckduckgo: "DuckDuckGo",
+  baidu: "百度",
+  custom: "自定义",
 }
 
 export function resolveSearchUrl(config: SearchWidgetConfig, query: string): string {
@@ -31,17 +45,18 @@ export function resolveSearchUrl(config: SearchWidgetConfig, query: string): str
 
 export function SearchWidget(props: SearchWidgetProps) {
   const [q, setQ] = useState("")
+  const canSubmit = q.trim().length > 0
+  const engineLabel = ENGINE_LABEL[props.config.engine] ?? "搜索"
 
   function onSubmit(e: FormEvent) {
     e.preventDefault()
     const query = q.trim()
     if (!query) return
-    const url = resolveSearchUrl(props.config, query)
-    window.location.href = url
+    window.location.href = resolveSearchUrl(props.config, query)
   }
 
   return (
-    <WidgetSurface tokens={props.tokens} title="搜索">
+    <WidgetSurface tokens={props.tokens} title={`搜索 · ${engineLabel}`}>
       <form
         onSubmit={onSubmit}
         style={{
@@ -56,6 +71,8 @@ export function SearchWidget(props: SearchWidgetProps) {
           onChange={(e) => setQ(e.target.value)}
           placeholder="搜索网页…"
           aria-label="搜索"
+          autoComplete="off"
+          spellCheck={false}
           style={{
             flex: 1,
             height: 44,
@@ -70,6 +87,7 @@ export function SearchWidget(props: SearchWidgetProps) {
         />
         <button
           type="submit"
+          disabled={!canSubmit}
           style={{
             height: 44,
             padding: "0 16px",
@@ -78,7 +96,8 @@ export function SearchWidget(props: SearchWidgetProps) {
             background: props.tokens.color.accent,
             color: props.tokens.color.bg,
             fontWeight: 600,
-            cursor: "pointer",
+            cursor: canSubmit ? "pointer" : "not-allowed",
+            opacity: canSubmit ? 1 : 0.5,
           }}
         >
           搜索

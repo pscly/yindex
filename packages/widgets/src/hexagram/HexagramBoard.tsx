@@ -31,12 +31,13 @@ export function HexagramBoard(props: HexagramBoardProps) {
   const [selected, setSelected] = useState<Hexagram | null>(null)
   const [libraryOpen, setLibraryOpen] = useState(false)
   const today = localDateKey()
-  const drawn =
-    props.config.drawnIndex && props.config.drawnDate === today
-      ? findByIndex(props.config.drawnIndex)
-      : props.config.drawnDate === today
-        ? findByIndex(props.config.drawnIndex ?? -1)
-        : undefined
+  const drawnToday =
+    props.config.drawnDate === today &&
+    typeof props.config.drawnIndex === "number"
+  const drawn = drawnToday
+    ? findByIndex(props.config.drawnIndex as number)
+    : undefined
+  const locked = Boolean(drawn) && !props.allowRedraw
 
   const matrix = useMemo(() => {
     const rows: Array<Array<Hexagram | undefined>> = []
@@ -51,7 +52,7 @@ export function HexagramBoard(props: HexagramBoardProps) {
   }, [])
 
   function draw() {
-    if (drawn && !props.allowRedraw) return
+    if (locked) return
     const h = randomHexagram()
     props.onConfigChange?.({
       ...props.config,
@@ -67,8 +68,17 @@ export function HexagramBoard(props: HexagramBoardProps) {
     <WidgetSurface tokens={props.tokens} title="六十四卦">
       <div style={{ display: "flex", flexDirection: "column", gap: 10, height: "100%" }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button type="button" onClick={draw} style={btnStyle(props.tokens)}>
-            {drawn && !props.allowRedraw ? "今日已抽" : "今日抽卦"}
+          <button
+            type="button"
+            onClick={draw}
+            disabled={locked}
+            style={{
+              ...btnStyle(props.tokens),
+              opacity: locked ? 0.55 : 1,
+              cursor: locked ? "not-allowed" : "pointer",
+            }}
+          >
+            {locked ? "今日已抽" : drawn ? "再抽一卦" : "今日抽卦"}
           </button>
           <button
             type="button"
@@ -86,6 +96,8 @@ export function HexagramBoard(props: HexagramBoardProps) {
 
         {detail ? (
           <div
+            data-scrollable="true"
+            onWheel={(e) => e.stopPropagation()}
             style={{
               padding: 10,
               borderRadius: props.tokens.radius.sm,
@@ -133,6 +145,7 @@ export function HexagramBoard(props: HexagramBoardProps) {
               gridTemplateColumns: "repeat(8, minmax(0, 1fr))",
               gap: 2,
             }}
+            data-scrollable="true"
             onWheel={(e) => e.stopPropagation()}
           >
             {matrix.flatMap((row, ui) =>
@@ -184,5 +197,3 @@ function btnStyle(tokens: StyleTokens): CSSProperties {
     fontSize: 12,
   }
 }
-
-// React types for CSSProperties without importing namespace conflict

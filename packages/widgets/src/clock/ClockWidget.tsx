@@ -16,9 +16,10 @@ const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"] as const
 export function ClockWidget(props: ClockWidgetProps) {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 1000)
+    const ms = props.showSeconds === false ? 15_000 : 1000
+    const id = window.setInterval(() => setNow(new Date()), ms)
     return () => window.clearInterval(id)
-  }, [])
+  }, [props.showSeconds])
 
   const h = pad(now.getHours())
   const m = pad(now.getMinutes())
@@ -37,6 +38,8 @@ export function ClockWidget(props: ClockWidgetProps) {
           alignItems: "center",
           justifyContent: "center",
           gap: 8,
+          textAlign: "center",
+          userSelect: "none",
         }}
       >
         <div
@@ -48,6 +51,8 @@ export function ClockWidget(props: ClockWidgetProps) {
             lineHeight: 1,
             fontVariantNumeric: "tabular-nums",
           }}
+          aria-live="polite"
+          aria-label={`当前时间 ${time}`}
         >
           {time}
         </div>

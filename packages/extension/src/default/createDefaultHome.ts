@@ -56,9 +56,24 @@ export function createDefaultHome(): HomeDocument {
       { x: 20, y: 40, w: 60, h: 32, z: 2 },
       {
         items: [
-          { id: "s1", title: "GitHub", url: "https://github.com" },
-          { id: "s2", title: "翻译", url: "https://translate.google.com" },
-          { id: "s3", title: "日历", url: "https://calendar.google.com" },
+          {
+            id: "s1",
+            title: "GitHub",
+            url: "https://github.com",
+            favicon: "https://www.google.com/s2/favicons?domain=github.com&sz=64",
+          },
+          {
+            id: "s2",
+            title: "翻译",
+            url: "https://translate.google.com",
+            favicon: "https://www.google.com/s2/favicons?domain=translate.google.com&sz=64",
+          },
+          {
+            id: "s3",
+            title: "日历",
+            url: "https://calendar.google.com",
+            favicon: "https://www.google.com/s2/favicons?domain=calendar.google.com&sz=64",
+          },
         ],
       },
     ),

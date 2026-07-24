@@ -26,6 +26,7 @@ const CACHE_KEY = "yindex.quote.cache"
 
 export function QuoteWidget(props: QuoteWidgetProps) {
   const [state, setState] = useState<QuoteState>({ status: "loading" })
+  const [force, setForce] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -36,7 +37,7 @@ export function QuoteWidget(props: QuoteWidgetProps) {
         return
       }
       try {
-        const cachedRaw = localStorage.getItem(CACHE_KEY)
+        const cachedRaw = force > 0 ? null : localStorage.getItem(CACHE_KEY)
         if (cachedRaw) {
           const cached = JSON.parse(cachedRaw) as {
             text: string
@@ -51,6 +52,7 @@ export function QuoteWidget(props: QuoteWidgetProps) {
             return
           }
         }
+        if (!cancelled) setState({ status: "loading" })
         const res = await fetch("https://v1.hitokoto.cn/?encode=json")
         if (!res.ok) throw new Error(`hitokoto ${res.status}`)
         const data = (await res.json()) as { hitokoto?: string; from?: string }
@@ -76,7 +78,7 @@ export function QuoteWidget(props: QuoteWidgetProps) {
     return () => {
       cancelled = true
     }
-  }, [props.config.refreshHours, props.config.source])
+  }, [props.config.refreshHours, props.config.source, force])
 
   const body =
     state.status === "loading"
@@ -105,11 +107,35 @@ export function QuoteWidget(props: QuoteWidgetProps) {
         >
           {body.text}
         </p>
-        {body.from ? (
-          <footer style={{ color: props.tokens.color.muted, fontSize: 12 }}>
-            — {body.from}
-          </footer>
-        ) : null}
+        <footer
+          style={{
+            color: props.tokens.color.muted,
+            fontSize: 12,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <span>{body.from ? `— ${body.from}` : "\u00a0"}</span>
+          {props.config.source !== "static" ? (
+            <button
+              type="button"
+              onClick={() => setForce((n) => n + 1)}
+              style={{
+                border: "none",
+                background: "transparent",
+                color: props.tokens.color.muted,
+                cursor: "pointer",
+                fontSize: 11,
+                padding: 0,
+                textDecoration: "underline",
+              }}
+            >
+              换一句
+            </button>
+          ) : null}
+        </footer>
       </blockquote>
     </WidgetSurface>
   )

@@ -31,8 +31,9 @@
         letter-spacing: 0.06em;
         font-weight: 300;
       }
-      .label { opacity: 0.7; font-size: 12px; }
-      .row { display: flex; gap: 8px; }
+      .label { opacity: 0.7; fontSize: 12px; font-size: 12px; }
+      .status { min-height: 1.2em; font-size: 12px; opacity: 0.75; }
+      .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
       button {
         border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
         background: color-mix(in srgb, currentColor 8%, transparent);
@@ -41,14 +42,20 @@
         padding: 8px 12px;
         cursor: pointer;
       }
+      button:disabled { opacity: 0.45; cursor: not-allowed; }
+      button.primary {
+        background: color-mix(in srgb, currentColor 18%, transparent);
+        font-weight: 600;
+      }
     </style>
   </head>
   <body>
     <div class="wrap">
-      <div class="label">番茄钟 · 专注</div>
+      <div class="label">番茄钟 · 专注 25 分钟</div>
       <div class="time" id="time">25:00</div>
+      <div class="status" id="status">就绪</div>
       <div class="row">
-        <button type="button" id="start">开始</button>
+        <button type="button" class="primary" id="start">开始</button>
         <button type="button" id="pause">暂停</button>
         <button type="button" id="reset">重置</button>
       </div>
@@ -57,12 +64,21 @@
       const TOTAL = 25 * 60
       let remaining = TOTAL
       let timer = null
+      let running = false
       const el = document.getElementById("time")
+      const statusEl = document.getElementById("status")
+      const startBtn = document.getElementById("start")
 
       function render() {
         const m = String(Math.floor(remaining / 60)).padStart(2, "0")
         const s = String(remaining % 60).padStart(2, "0")
         el.textContent = m + ":" + s
+        startBtn.disabled = running
+        startBtn.textContent = running ? "进行中" : remaining < TOTAL ? "继续" : "开始"
+      }
+
+      function setStatus(text) {
+        statusEl.textContent = text
       }
 
       function bridge(method, params) {
@@ -85,39 +101,61 @@
 
       async function persist() {
         await bridge("storage.set", { key: "remaining", value: remaining })
+        await bridge("storage.set", { key: "running", value: running })
       }
 
       async function restore() {
         const res = await bridge("storage.get", { key: "remaining" })
         if (res && res.ok && typeof res.result === "number") {
-          remaining = res.result
+          remaining = Math.max(0, Math.min(TOTAL, res.result))
           render()
         }
       }
 
-      document.getElementById("start").onclick = () => {
-        if (timer) return
-        timer = setInterval(() => {
-          if (remaining <= 0) {
-            clearInterval(timer)
-            timer = null
-            bridge("host.log", { event: "pomodoro-done" })
-            return
-          }
-          remaining -= 1
+      function tick() {
+        if (remaining <= 0) {
+          clearInterval(timer)
+          timer = null
+          running = false
+          remaining = 0
           render()
-          if (remaining % 5 === 0) persist()
-        }, 1000)
+          setStatus("完成 · 休息一下")
+          bridge("host.log", { event: "pomodoro-done" })
+          bridge("notifications.create", {
+            title: "番茄钟",
+            message: "专注时段结束，休息一下吧",
+          })
+          persist()
+          return
+        }
+        remaining -= 1
+        render()
+        if (remaining % 5 === 0) persist()
+      }
+
+      document.getElementById("start").onclick = () => {
+        if (running) return
+        if (remaining <= 0) remaining = TOTAL
+        running = true
+        setStatus("专注中…")
+        render()
+        timer = setInterval(tick, 1000)
+        persist()
       }
       document.getElementById("pause").onclick = () => {
         if (timer) clearInterval(timer)
         timer = null
+        running = false
+        setStatus("已暂停")
+        render()
         persist()
       }
       document.getElementById("reset").onclick = () => {
         if (timer) clearInterval(timer)
         timer = null
+        running = false
         remaining = TOTAL
+        setStatus("就绪")
         render()
         persist()
       }

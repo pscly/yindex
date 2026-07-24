@@ -13,7 +13,8 @@
   "permissions": ["storage", "bookmarks", "alarms", "notifications"],
   "host_permissions": [
     "https://api.open-meteo.com/*",
-    "https://v1.hitokoto.cn/*"
+    "https://v1.hitokoto.cn/*",
+    "https://www.google.com/*"
   ],
   "sandbox": {
     "pages": ["sandbox.html"]

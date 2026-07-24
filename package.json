@@ -12,7 +12,9 @@
     "test": "bun test packages/domain packages/widget-sdk packages/style-packs packages/widgets",
     "typecheck": "bun run --filter @yindex/domain typecheck && bun run --filter @yindex/widget-sdk typecheck && bun run --filter @yindex/extension typecheck",
     "lint": "biome check .",
-    "format": "biome check --write ."
+    "format": "biome check --write .",
+    "pack": "bash scripts/pack-extension.sh",
+    "release:zip": "bash scripts/pack-extension.sh"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

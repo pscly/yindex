@@ -145,7 +145,9 @@ export function SettingsPanel(props: {
           <div style={{ fontSize: 12, opacity: 0.7, lineHeight: 1.5 }}>
             yindex v0.1.0 · Chrome MV3 新标签页 · 配置仅存本机
             <br />
-            加载目录：packages/extension/dist
+            滚轮翻页 · 编辑拖拽布局 · 设置中可导入小组件包
+            <br />
+            项目：github.com/pscly/yindex
           </div>
         </section>
       </div>

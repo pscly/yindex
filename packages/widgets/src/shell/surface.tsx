@@ -20,7 +20,9 @@ export function WidgetSurface(props: WidgetSurfaceProps) {
     flexDirection: "column",
     overflow: "hidden",
     color: tokens.color.ink,
-    background: tokens.color.surface,
+    background: glass
+      ? `color-mix(in oklch, ${tokens.color.surface} ${Math.round(tokens.glass.opacity * 100)}%, transparent)`
+      : tokens.color.surface,
     borderRadius: tokens.radius.md,
     border: `1px solid color-mix(in oklch, ${tokens.color.ink} 12%, transparent)`,
     fontFamily: tokens.typography.bodyFamily,
@@ -28,9 +30,9 @@ export function WidgetSurface(props: WidgetSurfaceProps) {
     backdropFilter: glass ? `blur(${tokens.glass.blurPx}px)` : undefined,
     WebkitBackdropFilter: glass ? `blur(${tokens.glass.blurPx}px)` : undefined,
     boxShadow: glass
-      ? `inset 0 1px 0 color-mix(in oklch, white ${tokens.glass.highlight * 100}%, transparent)`
+      ? `inset 0 1px 0 color-mix(in oklch, white ${tokens.glass.highlight * 100}%, transparent), 0 8px 28px color-mix(in oklch, black 22%, transparent)`
       : tokens.elevation.mode === "tonal"
-        ? `0 1px 0 color-mix(in oklch, ${tokens.color.ink} 8%, transparent)`
+        ? `0 1px 0 color-mix(in oklch, ${tokens.color.ink} 8%, transparent), 0 6px 20px color-mix(in oklch, black 12%, transparent)`
         : "none",
     ...style,
   }
