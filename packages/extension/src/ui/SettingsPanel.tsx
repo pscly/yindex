@@ -1,11 +1,13 @@
 import type { HomeDocument, PageId } from "@yindex/domain"
 import { migrateHomeDocument, serializeHomeDocument } from "@yindex/domain"
 import { type ChangeEvent, useEffect, useRef, useState } from "react"
-import { resetHomeDocument } from "../storage/homeStorage"
 import { type StoredPackage, listPackages } from "../storage/packageStore"
+import type { MediaStore } from "../wallpaper/mediaStore"
 import { AdvancedGlassSection } from "./settings/AdvancedGlassSection"
+import { MediaResourceSection } from "./settings/MediaResourceSection"
 import { NavigationSection } from "./settings/NavigationSection"
 import { PackageSection } from "./settings/PackageSection"
+import { ResetSection } from "./settings/ResetSection"
 import {
   ghostBtn,
   h3,
@@ -23,9 +25,11 @@ export function SettingsPanel(props: {
   readonly onReplaceDoc: (doc: HomeDocument) => void
   readonly pageAccent?: string | undefined
   readonly reducedMotion?: boolean | undefined
+  readonly mediaStore?: MediaStore | undefined
 }) {
   const [packages, setPackages] = useState<readonly StoredPackage[]>([])
   const [msg, setMsg] = useState<string | null>(null)
+  const [mediaRevision, setMediaRevision] = useState(0)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const importInputRef = useRef<HTMLInputElement>(null)
 
@@ -112,7 +116,7 @@ export function SettingsPanel(props: {
         if (event.key === "Escape") props.onClose()
       }}
     >
-      <div style={sheet}>
+      <div data-settings-sheet style={sheet}>
         <div
           style={{
             display: "flex",
@@ -166,22 +170,21 @@ export function SettingsPanel(props: {
           refreshPackages={refreshPackages}
         />
 
-        <section style={section}>
-          <h3 style={h3}>重置</h3>
-          <button
-            type="button"
-            style={ghostBtn}
-            onClick={() => {
-              if (!confirm("将恢复默认三页配置，确定？")) return
-              void resetHomeDocument("default3").then((doc) => {
-                props.onReplaceDoc(doc)
-                setMsg("已恢复默认三页")
-              })
-            }}
-          >
-            恢复默认三页
-          </button>
-        </section>
+        <MediaResourceSection
+          key={mediaRevision}
+          doc={props.doc}
+          store={props.mediaStore}
+        />
+
+        <ResetSection
+          onReplaceDoc={props.onReplaceDoc}
+          setMsg={setMsg}
+          mediaStore={props.mediaStore}
+          onResetComplete={async () => {
+            await refreshPackages()
+            setMediaRevision((revision) => revision + 1)
+          }}
+        />
 
         <section style={section}>
           <h3 style={h3}>关于</h3>

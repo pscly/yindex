@@ -39,6 +39,14 @@ function idbReq<T>(req: IDBRequest<T>): Promise<T> {
   })
 }
 
+function idbTransaction(tx: IDBTransaction): Promise<void> {
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve()
+    tx.onabort = () => reject(tx.error ?? new Error("idb transaction aborted"))
+    tx.onerror = () => reject(tx.error ?? new Error("idb transaction failed"))
+  })
+}
+
 export async function listPackages(): Promise<readonly StoredPackage[]> {
   try {
     const db = await openDb()
@@ -93,6 +101,20 @@ export async function deletePackage(packageId: string): Promise<void> {
   }
 }
 
+export async function clearAllPackages(): Promise<void> {
+  memoryMap.clear()
+  if (typeof indexedDB === "undefined") return
+  const db = await openDb()
+  try {
+    const tx = db.transaction(STORE, "readwrite")
+    const completed = idbTransaction(tx)
+    tx.objectStore(STORE).clear()
+    await completed
+  } finally {
+    db.close()
+  }
+}
+
 const memoryMap = new Map<string, StoredPackage>()
 
 function memoryPackages(): readonly StoredPackage[] {
@@ -116,7 +138,7 @@ export async function installPackageFromFiles(
   }
   let raw: unknown
   try {
-    raw = JSON.parse(manifestText) as unknown
+    raw = JSON.parse(manifestText)
   } catch {
     return { ok: false, message: "manifest.json 不是合法 JSON" }
   }
