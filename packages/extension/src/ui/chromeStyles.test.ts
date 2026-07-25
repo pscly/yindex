@@ -8,10 +8,14 @@ import {
   PRESS_SCALE,
   accentActionStyle,
   borrowAccentFill,
+  chromeControlLine,
   chromeFontFamily,
   chromeStyleVars,
   dockStyle,
+  ghostBtn,
+  inputStyle,
   panelStyle,
+  selectStyle,
   settingsOverlayStyle,
   settingsSheetStyle,
 } from "./chromeStyles"
@@ -75,6 +79,18 @@ describe("graphite editor chrome contract", () => {
     expect(overlay.margin).toBe(0)
     expect(overlay.border).toBe(0)
     expect(sheet.width).toBe("min(460px, 100%)")
+  })
+
+  test("keeps control boundaries on stable high-contrast graphite", () => {
+    const lightness = /oklch\(([\d.]+)/.exec(chromeControlLine)?.[1]
+
+    expect(Number(lightness)).toBeGreaterThanOrEqual(0.55)
+    expect(String(ghostBtn.border)).toContain(chromeControlLine)
+    expect(String(inputStyle.border)).toContain(chromeControlLine)
+    expect(String(selectStyle.border)).toContain(chromeControlLine)
+    expect(accentActionStyle({ pageAccent: "white" }).borderColor).toBe(
+      chromeControlLine,
+    )
   })
 
   test("exposes one variable contract to every chrome root", () => {

@@ -9,7 +9,10 @@ import {
   withZ,
 } from "@yindex/domain"
 import { BUILTIN_CATALOG } from "@yindex/widgets"
-import { EditPageControls } from "./EditPageControls"
+import { EditGlassSection } from "./EditGlassSection"
+import { EditPageSequence } from "./EditPageSequence"
+import { EditStylePackSection } from "./EditStylePackSection"
+import { EditWallpaperSection } from "./EditWallpaperSection"
 import { SelectedWidgetEditor } from "./SelectedWidgetEditor"
 import {
   accentActionStyle,
@@ -111,7 +114,25 @@ export function EditChrome(props: {
         />
       </label>
 
-      <EditPageControls
+      <EditStylePackSection
+        doc={props.doc}
+        page={page}
+        pageId={props.pageId}
+        onDoc={props.onDoc}
+      />
+      <EditGlassSection
+        doc={props.doc}
+        page={page}
+        pageId={props.pageId}
+        onDoc={props.onDoc}
+      />
+      <EditWallpaperSection
+        doc={props.doc}
+        page={page}
+        pageId={props.pageId}
+        onDoc={props.onDoc}
+      />
+      <EditPageSequence
         doc={props.doc}
         page={page}
         pageId={props.pageId}

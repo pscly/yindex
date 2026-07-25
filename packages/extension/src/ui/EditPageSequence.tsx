@@ -4,59 +4,22 @@ import {
   deletePageFromHome,
   reorderPageInHome,
   setLandingPage,
-  setPageStyle,
 } from "@yindex/domain"
-import { STYLE_PACKS } from "@yindex/style-packs"
-import { ghostBtn } from "./editChromeStyles"
+import { ghostBtn } from "./chromeStyles"
 
-export function EditPageControls(props: {
+export function EditPageSequence(props: {
   readonly doc: HomeDocument
   readonly page: Page
   readonly pageId: PageId
   readonly onDoc: (doc: HomeDocument) => void
 }) {
   return (
-    <>
-      <div style={{ marginTop: 12, marginBottom: 6, opacity: 0.75 }}>
-        场景预设
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {STYLE_PACKS.map((pack) => {
-          const active =
-            props.page.style.wallpaper.kind === "generative" &&
-            props.page.style.wallpaper.generativePreset ===
-              pack.generativePreset
-          return (
-            <button
-              key={pack.id}
-              type="button"
-              onClick={() => {
-                const result = setPageStyle(
-                  props.doc,
-                  props.pageId,
-                  pack.pageStyle,
-                )
-                if (result.ok) props.onDoc(result.value)
-              }}
-              style={{
-                ...ghostBtn,
-                textAlign: "left",
-                borderColor: active
-                  ? "oklch(0.65 0.12 250)"
-                  : "color-mix(in oklch, white 12%, transparent)",
-              }}
-            >
-              <div style={{ fontWeight: 600 }}>{pack.name}</div>
-              <div style={{ fontSize: 11, opacity: 0.65 }}>
-                {pack.description}
-              </div>
-            </button>
-          )
-        })}
-      </div>
-
-      <div style={{ marginTop: 14, marginBottom: 6, opacity: 0.75 }}>
-        页面序列
+    <section style={{ marginTop: 14 }} aria-labelledby="edit-sequence-heading">
+      <div
+        id="edit-sequence-heading"
+        style={{ marginBottom: 6, opacity: 0.75 }}
+      >
+        页序列
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         <button
@@ -125,6 +88,6 @@ export function EditPageControls(props: {
         共 {props.doc.sequence.pageIds.length} 页 · Landing：
         {props.doc.pages[props.doc.sequence.landingPageId]?.name ?? "—"}
       </div>
-    </>
+    </section>
   )
 }

@@ -10,6 +10,7 @@ colors:
   editor-ink: "oklch(0.94 0.01 260)"
   editor-muted: "oklch(0.72 0.02 260)"
   editor-line: "oklch(0.35 0.015 260)"
+  editor-control-line: "oklch(0.58 0.015 260)"
   editor-accent: "oklch(0.62 0.14 36)"
   # Page seed light-fields (generative wallpaper color fields)
   moment-field: "晨光 · oklch hue 210→260, L 0.55–0.88"
@@ -121,6 +122,7 @@ spacing:
 
 - 每页一个 accent：此刻 = 晨蓝 `oklch(0.62 0.10 240)`；灵感 = 朱砂 `oklch(0.55 0.18 28)`；流光 = 冷青 `oklch(0.78 0.08 200)`
 - 编辑器只借 accent 与 ≤8% 环境 tint（Borrowed Accent Rule）
+- 编辑器交互控件边界固定使用 `editor-control-line`；即使 Page accent 极端，仍须与最亮石墨控件底色保持 ≥3:1 非文本对比
 
 ### Content-direct 文字着色
 

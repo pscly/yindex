@@ -6,6 +6,7 @@ export const PANEL_OPEN_MS = 200 as const
 export const PANEL_OPEN_REDUCED_MS = 120 as const
 export const PRESS_SCALE = 0.97 as const
 export const PRESS_MS = 120 as const
+export const chromeControlLine = "oklch(0.58 0.015 260)" as const
 export const chromeFontFamily =
   '"Noto Sans SC Variable", "Noto Sans SC", "Source Han Sans SC", system-ui, sans-serif' as const
 
@@ -146,7 +147,7 @@ export function accentActionStyle(opts: ChromeAccentOpts = {}): CSSProperties {
   const accent = opts.pageAccent ?? EDITOR_GRAPHITE.color.accent
   return {
     background: borrowAccentFill(accent),
-    borderColor: `color-mix(in oklch, ${accent} 46%, ${EDITOR_GRAPHITE.color.line})`,
+    borderColor: chromeControlLine,
     color: EDITOR_GRAPHITE.color.ink,
     fontWeight: 600,
     boxShadow: `0 6px 20px color-mix(in oklch, ${accent} 18%, transparent)`,
@@ -161,7 +162,7 @@ export function fabIdlePrimaryStyle(): CSSProperties {
 }
 
 export const ghostBtn: CSSProperties = {
-  border: `1px solid ${EDITOR_GRAPHITE.color.line}`,
+  border: `1px solid ${chromeControlLine}`,
   background: `color-mix(in oklch, ${EDITOR_GRAPHITE.color.surface} 94%, white 6%)`,
   color: "inherit",
   borderRadius: 10,
@@ -176,7 +177,7 @@ export const inputStyle: CSSProperties = {
   width: "100%",
   marginTop: 5,
   borderRadius: 10,
-  border: "1px solid color-mix(in oklch, white 12%, transparent)",
+  border: `1px solid ${chromeControlLine}`,
   background: "color-mix(in oklch, black 28%, transparent)",
   color: "inherit",
   padding: "9px 11px",
@@ -230,7 +231,7 @@ export const row: CSSProperties = {
 export const selectStyle: CSSProperties = {
   width: "100%",
   borderRadius: 10,
-  border: "1px solid color-mix(in oklch, white 12%, transparent)",
+  border: `1px solid ${chromeControlLine}`,
   background: "color-mix(in oklch, black 28%, transparent)",
   color: "inherit",
   padding: "10px 12px",
