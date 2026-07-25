@@ -1,21 +1,27 @@
 import type {
-  AdaptiveGlassInput,
   HomeDocument,
   Page,
   PageId,
-  StyleTokens,
   WidgetInstanceId,
 } from "@yindex/domain"
-import { pageStyleToTokens, wallpaperCssBackground } from "@yindex/domain"
+import { wallpaperCssBackground } from "@yindex/domain"
 import { type CSSProperties, useCallback, useState } from "react"
 import type { WallpaperAnalysisResult } from "../wallpaper/wallpaperAnalyzer"
 import { EditDragShell } from "./EditDragShell"
 import type { LayoutDraftEvent } from "./EditDragShell"
 import { WallpaperStage } from "./WallpaperStage"
 import { WidgetMount } from "./WidgetMount"
-import { localFontFamily } from "./localFontFamilies"
+import {
+  type PageAnalysisPublication,
+  adaptiveAnalysisOf,
+  pageAnalysisResult,
+  wallpaperAnalysisKey,
+} from "./pageAnalysis"
+import { pageTokenCssVars } from "./pageTokenCssVars"
+import { pageTokensOf } from "./pageTokens"
 
 export type { LayoutDraftEvent } from "./EditDragShell"
+export { pageTokensOf } from "./pageTokens"
 
 export type PageCanvasProps = {
   readonly doc: HomeDocument
@@ -30,29 +36,19 @@ export type PageCanvasProps = {
   readonly reducedMotion?: boolean
 }
 
-export function pageTokensOf(
-  page: Page,
-  analysis?: AdaptiveGlassInput | null,
-): StyleTokens {
-  const tokens = pageStyleToTokens(page.style, analysis)
-  return {
-    ...tokens,
-    typography: {
-      ...tokens.typography,
-      bodyFamily: localFontFamily(tokens.typography.bodyFamily),
-      displayFamily: localFontFamily(tokens.typography.displayFamily),
-    },
-  }
-}
-
 export function PageCanvas(props: PageCanvasProps) {
-  const sourceKey = JSON.stringify(props.page.style.wallpaper)
-  const [published, setPublished] = useState<{
-    readonly sourceKey: string
-    readonly result: WallpaperAnalysisResult
-  } | null>(null)
-  const analysis =
-    published?.sourceKey === sourceKey ? published.result.analysis : null
+  const wallpaperActive = props.wallpaperActive ?? true
+  const reducedMotion = props.reducedMotion ?? false
+  const sourceKey = wallpaperAnalysisKey(props.page.style.wallpaper)
+  const [published, setPublished] = useState<PageAnalysisPublication | null>(
+    null,
+  )
+  const currentResult = pageAnalysisResult({
+    wallpaper: props.page.style.wallpaper,
+    active: wallpaperActive,
+    published,
+  })
+  const analysis = adaptiveAnalysisOf(currentResult)
   const tokens = pageTokensOf(props.page, analysis)
   const fallbackBackground =
     props.page.style.wallpaper.kind === "generative"
@@ -63,8 +59,10 @@ export function PageCanvas(props: PageCanvasProps) {
           dim: props.page.style.wallpaper.dim,
         })
   const onAnalysis = useCallback(
-    (result: WallpaperAnalysisResult) => setPublished({ sourceKey, result }),
-    [sourceKey],
+    (result: WallpaperAnalysisResult) => {
+      if (wallpaperActive) setPublished({ sourceKey, result })
+    },
+    [sourceKey, wallpaperActive],
   )
 
   const rootStyle: CSSProperties = {
@@ -75,12 +73,19 @@ export function PageCanvas(props: PageCanvasProps) {
     color: tokens.color.ink,
     fontFamily: tokens.typography.bodyFamily,
     background: fallbackBackground || tokens.color.bg,
+    ...pageTokenCssVars(tokens),
   }
 
   return (
     <section
       style={rootStyle}
       data-page-id={props.page.id}
+      data-analysis-ready={currentResult === null ? "false" : "true"}
+      data-used-fallback={
+        currentResult?.usedFallback === false ? "false" : "true"
+      }
+      data-lens-polarity={tokens.glass.adaptive.lens.polarity}
+      data-content-polarity={tokens.glass.adaptive.contentDirect.polarity}
       aria-label={props.page.name}
       onMouseDown={() => {
         if (props.editMode) props.onSelectWidget(null)
@@ -88,8 +93,8 @@ export function PageCanvas(props: PageCanvasProps) {
     >
       <WallpaperStage
         wallpaper={props.page.style.wallpaper}
-        active={props.wallpaperActive ?? true}
-        reducedMotion={props.reducedMotion ?? false}
+        active={wallpaperActive}
+        reducedMotion={reducedMotion}
         fallbackBackground={fallbackBackground || tokens.color.bg}
         dimColor={tokens.color.bg}
         onAnalysis={onAnalysis}

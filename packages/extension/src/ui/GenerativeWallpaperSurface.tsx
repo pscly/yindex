@@ -21,8 +21,9 @@ export function GenerativeWallpaperSurface(props: {
   const rendererRef = useRef<GenerativeRenderer | null>(null)
 
   useEffect(() => {
+    if (!props.active) return
     props.onAnalysis(analyzeGenerativeWallpaper(props.preset))
-  }, [props.onAnalysis, props.preset])
+  }, [props.active, props.onAnalysis, props.preset])
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: renderer identity is mount-scoped; prop changes use setters below.
   useEffect(() => {

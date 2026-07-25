@@ -3,11 +3,7 @@ import { applyLayoutDraft, removeWidget, updatePage } from "@yindex/domain"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { ChromeFab } from "../ui/ChromeFab"
 import { EditChrome } from "../ui/EditChrome"
-import {
-  type LayoutDraftEvent,
-  PageCanvas,
-  pageTokensOf,
-} from "../ui/PageCanvas"
+import { type LayoutDraftEvent, PageCanvas } from "../ui/PageCanvas"
 import { PageDots } from "../ui/PageDots"
 import { SettingsPanel } from "../ui/SettingsPanel"
 import { centerMessageStyle, homeRootStyle } from "./appStyles"
@@ -217,7 +213,7 @@ export function App() {
         currentIndex={turn.currentIndex}
         onSelect={turn.goToIndex}
         {...(currentPageId && doc.pages[currentPageId]
-          ? { accent: pageTokensOf(doc.pages[currentPageId]).color.accent }
+          ? { accent: doc.pages[currentPageId].style.seedPalette.accent }
           : {})}
       />
 

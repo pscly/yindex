@@ -32,7 +32,11 @@ export function WallpaperStage(props: WallpaperStageProps) {
       break
     case "image":
       surface = (
-        <ImageWallpaperSurface lease={lease} onAnalysis={props.onAnalysis} />
+        <ImageWallpaperSurface
+          lease={lease}
+          active={props.active}
+          onAnalysis={props.onAnalysis}
+        />
       )
       break
     case "video":
@@ -54,6 +58,8 @@ export function WallpaperStage(props: WallpaperStageProps) {
       aria-hidden
       data-wallpaper-kind={props.wallpaper.kind}
       data-wallpaper-active={props.active ? "true" : "false"}
+      data-wallpaper-analysis-active={props.active ? "true" : "false"}
+      data-wallpaper-reduced-motion={props.reducedMotion ? "true" : "false"}
       data-wallpaper-fallback={
         props.wallpaper.kind !== "generative" && lease === null
           ? "true"

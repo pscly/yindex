@@ -8,6 +8,7 @@ const imageAnalyzer = createStaticImageAnalyzer()
 
 export function ImageWallpaperSurface(props: {
   readonly lease: WallpaperMediaUrlLease | null
+  readonly active: boolean
   readonly onAnalysis: WallpaperStageProps["onAnalysis"]
 }) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
@@ -15,7 +16,7 @@ export function ImageWallpaperSurface(props: {
 
   useEffect(() => {
     const lease = props.lease
-    if (lease === null) return
+    if (lease === null || !props.active) return
     let mounted = true
     void imageAnalyzer
       .analyze({ contentHash: lease.contentHash, blob: lease.blob })
@@ -25,7 +26,7 @@ export function ImageWallpaperSurface(props: {
     return () => {
       mounted = false
     }
-  }, [props.lease, props.onAnalysis])
+  }, [props.active, props.lease, props.onAnalysis])
 
   if (props.lease === null || failed) return null
   return (

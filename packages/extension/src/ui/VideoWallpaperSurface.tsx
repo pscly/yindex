@@ -9,6 +9,16 @@ import { captureWallpaperVideoFrame } from "../wallpaper/wallpaperVideoFrame"
 import type { WallpaperStageProps } from "./WallpaperStage"
 import { wallpaperMediaStyle } from "./wallpaperSurfaceStyles"
 
+export type VideoWallpaperAnalysisMode = "inactive" | "single-frame" | "sampled"
+
+export function videoWallpaperAnalysisMode(
+  active: boolean,
+  reducedMotion: boolean,
+): VideoWallpaperAnalysisMode {
+  if (!active) return "inactive"
+  return reducedMotion ? "single-frame" : "sampled"
+}
+
 export function VideoWallpaperSurface(props: {
   readonly lease: WallpaperMediaUrlLease | null
   readonly active: boolean
@@ -43,9 +53,19 @@ export function VideoWallpaperSurface(props: {
 
   useEffect(() => {
     const video = videoRef.current
-    if (video === null || props.lease === null || failed || !props.active)
+    const analysisMode = videoWallpaperAnalysisMode(
+      props.active,
+      props.reducedMotion,
+    )
+    if (
+      video === null ||
+      props.lease === null ||
+      failed ||
+      analysisMode === "inactive"
+    ) {
       return
-    if (props.reducedMotion) {
+    }
+    if (analysisMode === "single-frame") {
       const publish = (): void => {
         void captureWallpaperVideoFrame(video)
           .then(analyzePixelFrame)
