@@ -141,6 +141,7 @@ describe("Style cascade (v2 liquid glass)", () => {
       expect(tokens.wallpaper.source.generativePreset).toBe("moment")
     }
     expect(tokens.color.accent).toBe("accent")
+    expect("motion" in tokens).toBe(false)
   })
 
   test("page typography mood selects the display family", () => {

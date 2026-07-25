@@ -13,6 +13,10 @@ export type PageTurnVisual = {
   readonly parallaxY: number
   readonly isTurning: boolean
   readonly isAnimating: boolean
+  readonly fadeLayers: {
+    readonly outgoing: { readonly index: number; readonly opacity: number }
+    readonly incoming: { readonly index: number; readonly opacity: number }
+  } | null
 }
 
 export function computePageTurnVisual(input: {
@@ -40,6 +44,7 @@ export function computePageTurnVisual(input: {
       parallaxY: 0,
       isTurning: false,
       isAnimating: false,
+      fadeLayers: null,
     }
   }
 
@@ -47,6 +52,7 @@ export function computePageTurnVisual(input: {
   let fadeOpacity = { from: 1, to: 0 }
   let isTurning = false
   let isAnimating = false
+  let fadeLayers: PageTurnVisual["fadeLayers"] = null
 
   if (g.phase === "reduced_fade") {
     const t = reducedFadeT(nowMs, g.reducedFadeStartAt)
@@ -58,6 +64,10 @@ export function computePageTurnVisual(input: {
     )
     offsetFraction = r.offset
     fadeOpacity = { from: r.opacityFrom, to: r.opacityTo }
+    fadeLayers = {
+      outgoing: { index: g.reducedFadeFrom, opacity: r.opacityFrom },
+      incoming: { index: g.reducedFadeTo, opacity: r.opacityTo },
+    }
     isTurning = true
     isAnimating = true
   } else if (g.phase === "tracking" || g.phase === "settling") {
@@ -77,5 +87,6 @@ export function computePageTurnVisual(input: {
     parallaxY: parallaxForProfile(progress, motionProfile, reducedMotion),
     isTurning,
     isAnimating,
+    fadeLayers,
   }
 }

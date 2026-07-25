@@ -11,6 +11,7 @@ import {
 import { PageDots } from "../ui/PageDots"
 import { SettingsPanel } from "../ui/SettingsPanel"
 import { cyclicSlotCount } from "./pageTurnLayout"
+import { PageTurnStage } from "./pageTurnStage"
 import { useHomeState } from "./useHomeState"
 import { usePageTurn } from "./usePageTurn"
 
@@ -177,52 +178,39 @@ export function App() {
         overflow: "hidden",
       }}
     >
-      <div
-        style={{
-          height: `${stripSlots * 100}%`,
-          width: "100%",
-          transform: `translate3d(0, calc(${turn.offsetY}% + ${turn.parallaxY * 100}vh), 0)`,
-          transition: "none",
-          // max(from,to) keeps single-layer opacity continuous with settle (1 at ends).
-          opacity:
-            turn.reducedMotion && turn.isTurning
-              ? Math.max(turn.fadeOpacity.from, turn.fadeOpacity.to)
-              : 1,
-          willChange: turn.isAnimating ? "transform, opacity" : "auto",
-        }}
+      <PageTurnStage
+        fadeLayers={turn.fadeLayers}
+        isAnimating={turn.isAnimating}
+        offsetY={turn.offsetY}
+        parallaxY={turn.parallaxY}
+        stripSlots={stripSlots}
       >
-        {stripPages.map((page, slot) => (
-          <div
-            key={`${page.id}#${slot}`}
-            style={{
-              height: `${100 / stripSlots}%`,
-              width: "100%",
-            }}
-          >
-            <div style={{ height: "100vh", width: "100%" }}>
+        {stripPages.map((page, slot) => {
+          const isEditable =
+            editMode &&
+            page.id === currentPageId &&
+            slot > 0 &&
+            slot <= orderedPages.length
+          return (
+            <div
+              key={`${page.id}#${slot}`}
+              style={{ height: "100vh", width: "100%" }}
+            >
               <PageCanvas
                 doc={doc}
                 page={page}
-                editMode={
-                  editMode &&
-                  page.id === currentPageId &&
-                  slot > 0 &&
-                  slot <= orderedPages.length
-                }
+                editMode={isEditable}
                 selectedWidgetId={selectedWidgetId}
                 onSelectWidget={setSelectedWidgetId}
                 onWidgetConfig={onWidgetConfig}
-                {...(editMode &&
-                page.id === currentPageId &&
-                slot > 0 &&
-                slot <= orderedPages.length
+                {...(isEditable
                   ? { onWidgetLayoutDraft, onDeleteWidget }
                   : {})}
               />
             </div>
-          </div>
-        ))}
-      </div>
+          )
+        })}
+      </PageTurnStage>
 
       <PageDots
         doc={doc}

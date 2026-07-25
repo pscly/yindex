@@ -1,10 +1,5 @@
 import type { MotionProfile } from "@yindex/domain"
 
-/**
- * WS4 Page Turn policy — single documented table.
- * Spring is research-aligned near-critical (k=340, c=38) to prove no overshoot.
- * DESIGN.md ~180/26 is the same damping ratio; we pick the research pair and lock it in tests.
- */
 export const PAGE_TURN_POLICY = {
   /** Coherent scroll before direction locks */
   directionLockPx: 12,
@@ -22,8 +17,7 @@ export const PAGE_TURN_POLICY = {
   cooldownMs: 180,
   /** Silence after last wheel sample → decide commit/return */
   idleReleaseMs: 90,
-  /** Reduced-motion crossfade duration (within 120–160ms) */
-  reducedMotionMs: 140,
+  reducedMotionMs: 120,
   /** Reduced-motion max strip travel as fraction of one page */
   reducedMotionMaxOffset: 0.04,
   /** Velocity EMA time constant (ms) */
@@ -36,10 +30,9 @@ export type SpringParams = {
   readonly mass: number
 }
 
-/** Near-critical base spring (m=1): c_crit = 2√k ≈ 36.88; c=38 → slightly overdamped, no bounce */
 export const SPRING_BASE: SpringParams = {
-  stiffness: 340,
-  damping: 38,
+  stiffness: 180,
+  damping: 26,
   mass: 1,
 } as const
 

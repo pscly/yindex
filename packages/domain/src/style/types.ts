@@ -55,10 +55,6 @@ export type StyleTokens = {
     /** CSS-ready fallback until generative/image/video engines mount (WS2). */
     readonly cssBackground: string
   }
-  readonly motion: {
-    readonly turnMs: number
-    readonly ease: string
-  }
 }
 
 export type StyleOverride = {
@@ -67,7 +63,6 @@ export type StyleOverride = {
   readonly space?: Partial<StyleTokens["space"]>
   readonly radius?: Partial<StyleTokens["radius"]>
   readonly elevation?: Partial<StyleTokens["elevation"]>
-  readonly motion?: Partial<StyleTokens["motion"]>
 }
 
 export type WidgetStyleOverride = StyleOverride

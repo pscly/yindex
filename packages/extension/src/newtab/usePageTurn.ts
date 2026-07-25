@@ -27,6 +27,7 @@ export type PageTurnApi = {
   readonly fadeOpacity: { readonly from: number; readonly to: number }
   readonly parallaxY: number
   readonly isAnimating: boolean
+  readonly fadeLayers: ReturnType<typeof computePageTurnVisual>["fadeLayers"]
 }
 
 export function usePageTurn(
@@ -252,5 +253,6 @@ export function usePageTurn(
     fadeOpacity: visual.fadeOpacity,
     parallaxY: visual.parallaxY,
     isAnimating: visual.isAnimating,
+    fadeLayers: visual.fadeLayers,
   }
 }

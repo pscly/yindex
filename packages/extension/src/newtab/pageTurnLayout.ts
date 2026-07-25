@@ -49,11 +49,6 @@ export function stripOffsetFraction(
   return Object.is(raw, -0) ? 0 : raw
 }
 
-/**
- * Reduced-motion no-snap: interpolate strip offset one signed Loop step while
- * opacity crossfades. t in [0,1]. Terminal frame matches destination idle
- * (or the edge clone that is visually identical to the wrapped Page).
- */
 export function reducedMotionOffsetFraction(
   fromIndex: number,
   toIndex: number,
@@ -71,8 +66,7 @@ export function reducedMotionOffsetFraction(
     return { offset: 0, opacityFrom: 1, opacityTo: 0 }
   }
   const clampedT = Math.max(0, Math.min(1, t))
-  const steps = signedLoopSteps(fromIndex, toIndex, pageCount)
-  const offset = stripOffsetFraction(fromIndex, steps * clampedT, pageCount)
+  const offset = stripOffsetFraction(fromIndex, 0, pageCount)
   return {
     offset: Object.is(offset, -0) ? 0 : offset,
     opacityFrom: 1 - clampedT,

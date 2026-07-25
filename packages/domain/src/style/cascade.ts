@@ -79,10 +79,6 @@ export function pageStyleToTokens(
       dim,
       cssBackground: wallpaperCssBackground(pageStyle.wallpaper),
     },
-    motion: {
-      turnMs: 420,
-      ease: "cubic-bezier(0.22, 1, 0.36, 1)",
-    },
   }
 }
 
@@ -106,7 +102,6 @@ export function applyOverride(
     elevation: mergePartial(base.elevation, override.elevation),
     glass: base.glass,
     wallpaper: base.wallpaper,
-    motion: mergePartial(base.motion, override.motion),
   }
 }
 
