@@ -45,4 +45,18 @@ describe("Missing Widget host surface", () => {
     expect(html).toContain("重装同一 Package 后可恢复配置与布局")
     expect(html).not.toContain("opaque-host-surface")
   })
+
+  test("keeps the Missing Widget status visible when Widget titles are hidden", () => {
+    const html = renderToStaticMarkup(
+      <MissingWidget
+        tokens={hostTokens()}
+        packageId="com.example.pomodoro"
+        typeId="pomodoro.timer"
+        showTitle={false}
+      />,
+    )
+
+    expect(html).toContain("Package 未安装或类型不可用")
+    expect(html).toContain("com.example.pomodoro")
+  })
 })
