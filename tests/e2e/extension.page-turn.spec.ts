@@ -18,7 +18,9 @@ test("reduced-motion Page Turn crossfades overlapping outgoing and incoming Page
     )
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => resolve()),
+      )
       const outgoing = document.querySelector(
         "[data-page-turn-role='outgoing']",
       )

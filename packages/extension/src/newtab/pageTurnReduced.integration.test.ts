@@ -6,11 +6,7 @@ import {
   stripOffsetFraction,
 } from "./pageTurnLayout"
 import { PAGE_TURN_POLICY } from "./pageTurnPolicy"
-import {
-  TEST_VH,
-  runHostReducedFade,
-  visualOf,
-} from "./pageTurnTestUtil"
+import { TEST_VH, runHostReducedFade, visualOf } from "./pageTurnTestUtil"
 
 describe("pageTurn reduced_fade — no-snap continuity", () => {
   test("Given reduced_fade 0→1 n=3, When t=0..settle inclusive, Then both Page layers crossfade continuously", () => {
@@ -55,9 +51,9 @@ describe("pageTurn reduced_fade — no-snap continuity", () => {
     expect(firstSettled).toBeDefined()
     if (firstSettled) {
       expect(firstSettled.offsetY).toBeCloseTo(dest * 100, 5)
-      expect(
-        Math.abs(terminal.opacityTo - 1),
-      ).toBeLessThanOrEqual(1 / 255 + 1e-9)
+      expect(Math.abs(terminal.opacityTo - 1)).toBeLessThanOrEqual(
+        1 / 255 + 1e-9,
+      )
     }
 
     if (turning.length >= 2) {
@@ -71,8 +67,7 @@ describe("pageTurn reduced_fade — no-snap continuity", () => {
     }
 
     const middle = intermediate.find(
-      (snapshot) =>
-        snapshot.opacityFrom > 0.4 && snapshot.opacityFrom < 0.6,
+      (snapshot) => snapshot.opacityFrom > 0.4 && snapshot.opacityFrom < 0.6,
     )
     expect(middle).toBeDefined()
     if (!middle) return
