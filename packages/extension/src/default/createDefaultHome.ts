@@ -56,7 +56,7 @@ export function createDefaultHome(): HomeDocument {
   const moment = page("page_moment", "此刻", "时", MOMENT.pageStyle, [
     w(
       "builtin.weather",
-      { x: 32, y: 6, w: 36, h: 8, z: 3 },
+      { x: 53, y: 6, w: 22, h: 8, z: 3 },
       {
         mode: "auto",
         cityLabel: "本地",
@@ -64,7 +64,7 @@ export function createDefaultHome(): HomeDocument {
     ),
     w(
       "builtin.clock",
-      { x: 28, y: 14, w: 44, h: 10, z: 2 },
+      { x: 25, y: 6, w: 22, h: 8, z: 2 },
       {
         showSeconds: false,
         compact: true,
@@ -72,12 +72,12 @@ export function createDefaultHome(): HomeDocument {
     ),
     w(
       "builtin.search",
-      { x: 22, y: 32, w: 56, h: 10, z: 1 },
+      { x: 22, y: 36, w: 56, h: 9, z: 1 },
       { engine: "google" },
     ),
     w(
       "builtin.shortcuts",
-      { x: 18, y: 72, w: 64, h: 16, z: 2 },
+      { x: 18, y: 78, w: 64, h: 16, z: 2 },
       {
         items: [
           {
@@ -137,17 +137,17 @@ export function createDefaultHome(): HomeDocument {
   const muse = page("page_muse", "灵感", "灵", MUSE.pageStyle, [
     w(
       "builtin.quote",
-      { x: 18, y: 22, w: 64, h: 28, z: 1 },
+      { x: 14, y: 14, w: 54, h: 30, z: 1 },
       { source: "hitokoto" },
     ),
-    w("builtin.hexagram", { x: 58, y: 54, w: 34, h: 36, z: 2 }),
+    w("builtin.hexagram", { x: 60, y: 54, w: 34, h: 39, z: 2 }),
   ])
 
   // 流光: oversized clock only
   const flow = page("page_flow", "流光", "光", FLOW.pageStyle, [
     w(
       "builtin.clock",
-      { x: 15, y: 28, w: 70, h: 40, z: 1 },
+      { x: 10, y: 18, w: 80, h: 48, z: 1 },
       { showSeconds: true },
     ),
   ])
