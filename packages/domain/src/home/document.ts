@@ -28,6 +28,7 @@ import {
 } from "./types"
 
 import type { HomeError } from "./errors"
+import { createBlankPage } from "./factory"
 export type { HomeError } from "./errors"
 
 export function getPage(
@@ -72,6 +73,22 @@ export function addPageToHome(
     sequence: seqR.value,
     pages: { ...doc.pages, [page.id]: page },
   })
+}
+
+export function addBlankPageToHome(
+  doc: HomeDocument,
+  sourcePageId: PageId,
+): Result<HomeDocument, HomeError> {
+  const sourcePageR = getPage(doc, sourcePageId)
+  if (!sourcePageR.ok) return sourcePageR
+  return addPageToHome(
+    doc,
+    createBlankPage({
+      name: "新页面",
+      icon: "页",
+      style: sourcePageR.value.style,
+    }),
+  )
 }
 
 export function deletePageFromHome(

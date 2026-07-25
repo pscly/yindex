@@ -8,7 +8,7 @@ import {
 import type { LayoutRect } from "../layout/types"
 import { type Result, err, ok } from "../result/result"
 import { createSequence } from "../sequence/sequence"
-import { defaultPageStyle } from "../style/pageStyle"
+import { clonePageStyle, defaultPageStyle } from "../style/pageStyle"
 import type { PageStyle, WidgetStyleOverride } from "../style/types"
 import type { HomeError } from "./errors"
 import {
@@ -45,7 +45,7 @@ export function createBlankPage(input: {
     id: pageId(createId("page")),
     name: input.name,
     icon: input.icon ?? "◇",
-    style: input.style ?? defaultPageStyle(),
+    style: input.style ? clonePageStyle(input.style) : defaultPageStyle(),
     widgets: [],
   }
 }

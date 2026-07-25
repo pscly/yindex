@@ -26,6 +26,94 @@ describe("migrateHomeDocument v2", () => {
     }
   })
 
+  test("defaults typography mood when upgrading an earlier v2 document", () => {
+    // Given — schema v2 existed before typographyMood was persisted
+    const raw = {
+      schemaVersion: 2,
+      sequence: { pageIds: ["page-old"], landingPageId: "page-old" },
+      pages: {
+        "page-old": {
+          id: "page-old",
+          name: "保留页",
+          icon: "旧",
+          style: {
+            seedPalette: {
+              bg: "old-bg",
+              surface: "old-surface",
+              ink: "old-ink",
+              muted: "old-muted",
+              accent: "old-accent",
+            },
+            wallpaper: {
+              kind: "generative",
+              generativePreset: "muse",
+              dim: 0.35,
+            },
+            glassProfile: "deep",
+            glassTuning: {
+              transmission: 0.1,
+              blur: 3,
+              saturation: -0.2,
+              highlight: 0.2,
+            },
+          },
+          widgets: [
+            {
+              id: "widget-old",
+              source: { kind: "builtin", typeId: "builtin.clock" },
+              layout: { x: 11, y: 12, w: 31, h: 32, z: 4 },
+              config: { showSeconds: false },
+              styleOverride: null,
+            },
+          ],
+        },
+      },
+      settings: {
+        rememberLastPage: true,
+        allowHexagramRedraw: false,
+        snapEnabled: true,
+        showWidgetTitles: false,
+        reducedMotion: "system",
+        locale: "zh-CN",
+        motionProfile: "balanced",
+      },
+      lastPageId: "page-old",
+    }
+
+    // When
+    const migrated = migrateHomeDocument(raw)
+
+    // Then
+    expect(migrated.ok).toBe(true)
+    if (!migrated.ok) throw new Error(migrated.error.message)
+    const page = migrated.value.pages["page-old"]
+    if (!page) throw new Error("migrated page missing")
+    expect(page.style.typographyMood).toBe("sans")
+    expect(page.style.wallpaper.kind).toBe("generative")
+    if (page.style.wallpaper.kind !== "generative") {
+      throw new Error("expected generative wallpaper")
+    }
+    expect(page.style.wallpaper.generativePreset).toBe("muse")
+    expect(Number(page.style.wallpaper.dim)).toBe(0.35)
+    expect(page.style.glassProfile).toBe("deep")
+    expect(page.style.glassTuning.transmission).toBe(0.1)
+    expect(page.style.glassTuning.blur).toBe(3)
+    expect(page.style.glassTuning.saturation).toBe(-0.2)
+    expect(page.style.glassTuning.highlight).toBe(0.2)
+    expect(page.widgets).toHaveLength(1)
+    const widget = page.widgets[0]
+    if (!widget) throw new Error("migrated widget missing")
+    expect(String(widget.id)).toBe("widget-old")
+    expect(widget.source.kind).toBe("builtin")
+    if (widget.source.kind !== "builtin") {
+      throw new Error("expected builtin widget source")
+    }
+    expect(String(widget.source.typeId)).toBe("builtin.clock")
+    expect(widget.layout).toEqual({ x: 11, y: 12, w: 31, h: 32, z: 4 })
+    expect(widget.config).toEqual({ showSeconds: false })
+    expect(widget.styleOverride).toBeNull()
+  })
+
   test("rejects future schema as unsupported", () => {
     // Given / When
     const r = migrateHomeDocument({ schemaVersion: 99, pages: {} })
@@ -101,14 +189,19 @@ describe("migrateHomeDocument v2", () => {
     const page = createBlankPage({ name: "x", style: defaultPageStyle() })
     const docR = buildHomeDocument({ pages: [page] })
     if (!docR.ok) throw new Error("doc")
-    const raw = serializeHomeDocument(docR.value) as {
-      pages: Record<string, { style: { wallpaper: unknown } }>
+    const raw = {
+      ...docR.value,
+      pages: {
+        ...docR.value.pages,
+        [page.id]: {
+          ...page,
+          style: {
+            ...page.style,
+            wallpaper: { dim: 0.2, value: "legacy-bag" },
+          },
+        },
+      },
     }
-    const firstId = Object.keys(raw.pages)[0]
-    if (!firstId) throw new Error("no page")
-    const pageRaw = raw.pages[firstId]
-    if (!pageRaw) throw new Error("no page raw")
-    pageRaw.style.wallpaper = { dim: 0.2, value: "legacy-bag" }
     // When
     const r = migrateHomeDocument(raw)
     // Then

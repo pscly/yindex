@@ -4,14 +4,9 @@ import type {
   PageStyle,
   SeedPalette,
   StylePackId,
-  StyleTokens,
+  TypographyMood,
 } from "@yindex/domain"
-import {
-  baseLiquidTokens,
-  createGenerativePageStyle,
-  pageStyleToTokens,
-  stylePackId,
-} from "@yindex/domain"
+import { createGenerativePageStyle, stylePackId } from "@yindex/domain"
 
 /**
  * Style Pack remains a coherent preset seam (scene light-field + seed palette).
@@ -22,10 +17,10 @@ export type StylePackDefinition = {
   readonly name: string
   readonly description: string
   readonly generativePreset: GenerativePreset
+  readonly typographyMood: TypographyMood
   readonly glassProfile: GlassProfile
   readonly seedPalette: SeedPalette
   readonly pageStyle: PageStyle
-  readonly tokens: StyleTokens
 }
 
 function packOf(input: {
@@ -33,6 +28,7 @@ function packOf(input: {
   readonly name: string
   readonly description: string
   readonly generativePreset: GenerativePreset
+  readonly typographyMood: TypographyMood
   readonly glassProfile: GlassProfile
   readonly seedPalette: SeedPalette
   readonly dim: number
@@ -40,6 +36,7 @@ function packOf(input: {
   const styleR = createGenerativePageStyle({
     seedPalette: input.seedPalette,
     generativePreset: input.generativePreset,
+    typographyMood: input.typographyMood,
     dim: input.dim,
     glassProfile: input.glassProfile,
   })
@@ -52,10 +49,10 @@ function packOf(input: {
     name: input.name,
     description: input.description,
     generativePreset: input.generativePreset,
+    typographyMood: input.typographyMood,
     glassProfile: input.glassProfile,
     seedPalette: input.seedPalette,
     pageStyle,
-    tokens: pageStyleToTokens(pageStyle),
   }
 }
 
@@ -64,6 +61,7 @@ export const MOMENT: StylePackDefinition = packOf({
   name: "此刻",
   description: "晨光场 · 开工启动",
   generativePreset: "moment",
+  typographyMood: "sans",
   glassProfile: "balanced",
   dim: 0.12,
   seedPalette: {
@@ -80,6 +78,7 @@ export const MUSE: StylePackDefinition = packOf({
   name: "灵感",
   description: "暖墨场 · 阅读沉思",
   generativePreset: "muse",
+  typographyMood: "serif",
   glassProfile: "balanced",
   dim: 0.2,
   seedPalette: {
@@ -96,6 +95,7 @@ export const FLOW: StylePackDefinition = packOf({
   name: "流光",
   description: "深海夜光 · 沉浸",
   generativePreset: "flow",
+  typographyMood: "sans",
   glassProfile: "balanced",
   dim: 0.18,
   seedPalette: {
@@ -107,72 +107,18 @@ export const FLOW: StylePackDefinition = packOf({
   },
 })
 
-/** @deprecated alias — prefer MOMENT */
-export const CALIPER = MOMENT
-/** @deprecated alias — prefer MUSE */
-export const INKSTONE = MUSE
-/** @deprecated alias — prefer FLOW */
-export const DEW_GLASS = FLOW
-
-export const EDITOR_GRAPHITE: StylePackDefinition = {
-  id: stylePackId("editor-graphite"),
-  name: "编辑器·石墨",
-  description: "编辑壳，系统明暗跟随",
-  generativePreset: "moment",
-  glassProfile: "balanced",
-  seedPalette: {
-    bg: "oklch(0.22 0.01 260)",
-    surface: "oklch(0.28 0.01 260)",
-    ink: "oklch(0.94 0.01 260)",
-    muted: "oklch(0.7 0.01 260)",
-    accent: "oklch(0.65 0.12 250)",
-    danger: "oklch(0.6 0.18 25)",
-  },
-  pageStyle: MOMENT.pageStyle,
-  tokens: {
-    ...baseLiquidTokens("balanced"),
-    color: {
-      bg: "oklch(0.22 0.01 260)",
-      surface: "oklch(0.28 0.01 260)",
-      ink: "oklch(0.94 0.01 260)",
-      muted: "oklch(0.7 0.01 260)",
-      accent: "oklch(0.65 0.12 250)",
-      danger: "oklch(0.6 0.18 25)",
-    },
-    typography: {
-      displayFamily: '"Noto Sans SC", "PingFang SC", sans-serif',
-      bodyFamily: '"Noto Sans SC", "PingFang SC", sans-serif',
-      monoFamily:
-        "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-      displayWeight: 500,
-      bodySizePx: 13,
-    },
-    space: { safePct: 0, widgetGapPct: 0.8 },
-    radius: { sm: "4px", md: "8px", lg: "10px" },
-    elevation: { mode: "flat" },
-    motion: { turnMs: 200, ease: "ease-out" },
-  },
-}
-
-export const STYLE_PACKS: readonly StylePackDefinition[] = [MOMENT, MUSE, FLOW]
-
-export const STYLE_PACK_BY_ID: Readonly<Record<string, StylePackDefinition>> = {
-  [MOMENT.id]: MOMENT,
-  [MUSE.id]: MUSE,
-  [FLOW.id]: FLOW,
-  [EDITOR_GRAPHITE.id]: EDITOR_GRAPHITE,
-  // legacy ids map to new scenes so old UI buttons still resolve
-  inkstone: MUSE,
-  caliper: MOMENT,
-  "dew-glass": FLOW,
-}
+export const STYLE_PACKS = [
+  MOMENT,
+  MUSE,
+  FLOW,
+] as const satisfies readonly StylePackDefinition[]
 
 export function getStylePack(id: string): StylePackDefinition | undefined {
-  return STYLE_PACK_BY_ID[id]
+  return STYLE_PACKS.find((pack) => pack.id === id)
 }
 
 export function requireStylePack(id: string): StylePackDefinition {
-  const pack = STYLE_PACK_BY_ID[id]
+  const pack = getStylePack(id)
   if (!pack) {
     throw new Error(`unknown style pack: ${id}`)
   }

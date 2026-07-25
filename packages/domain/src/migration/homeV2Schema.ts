@@ -92,6 +92,7 @@ export const wallpaperSchema = z.discriminatedUnion("kind", [
 const pageStyleSchema = z.object({
   seedPalette: seedPaletteSchema,
   wallpaper: wallpaperSchema,
+  typographyMood: z.enum(["sans", "serif"]).default("sans"),
   glassProfile: z.enum(GLASS_PROFILES),
   glassTuning: glassTuningSchema.default(DEFAULT_GLASS_TUNING),
 })

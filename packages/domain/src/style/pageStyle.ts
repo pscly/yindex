@@ -5,7 +5,7 @@ import {
   type GlassTuning,
   createGlassTuning,
 } from "./glass"
-import type { PageStyle, SeedPalette } from "./types"
+import type { PageStyle, SeedPalette, TypographyMood } from "./types"
 import {
   type GenerativePreset,
   type Wallpaper,
@@ -15,6 +15,7 @@ import {
 export type PageStyleInput = {
   readonly seedPalette: SeedPalette
   readonly wallpaper: Wallpaper
+  readonly typographyMood?: TypographyMood
   readonly glassProfile?: GlassProfile
   readonly glassTuning?: GlassTuning
 }
@@ -22,6 +23,15 @@ export type PageStyleInput = {
 export type PageStyleError = {
   readonly code: "invalid_glass"
   readonly message: string
+}
+
+export function clonePageStyle(style: PageStyle): PageStyle {
+  return {
+    ...style,
+    seedPalette: { ...style.seedPalette },
+    wallpaper: { ...style.wallpaper },
+    glassTuning: { ...style.glassTuning },
+  }
 }
 
 export function createPageStyle(
@@ -34,6 +44,7 @@ export function createPageStyle(
   return ok({
     seedPalette: input.seedPalette,
     wallpaper: input.wallpaper,
+    typographyMood: input.typographyMood ?? "sans",
     glassProfile: input.glassProfile ?? "balanced",
     glassTuning: tuningR.value,
   })
@@ -42,6 +53,7 @@ export function createPageStyle(
 export function createGenerativePageStyle(input: {
   readonly seedPalette: SeedPalette
   readonly generativePreset: GenerativePreset
+  readonly typographyMood?: TypographyMood
   readonly dim?: number
   readonly glassProfile?: GlassProfile
   readonly glassTuning?: GlassTuning
@@ -57,6 +69,7 @@ export function createGenerativePageStyle(input: {
   const styleInput: PageStyleInput = {
     seedPalette: input.seedPalette,
     wallpaper: wallR.value,
+    typographyMood: input.typographyMood ?? "sans",
     glassProfile: input.glassProfile ?? "balanced",
     glassTuning: input.glassTuning ?? DEFAULT_GLASS_TUNING,
   }

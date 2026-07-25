@@ -2,7 +2,9 @@ import { describe, expect, test } from "bun:test"
 import { packageId, widgetTypeId } from "../ids/ids"
 import { withZ } from "../layout/layout"
 import { defaultPageStyle } from "../style/pageStyle"
+import { wallpaperDim } from "../style/wallpaper"
 import {
+  addBlankPageToHome,
   addPageToHome,
   addWidget,
   deletePageFromHome,
@@ -26,6 +28,65 @@ function blank(name: string) {
 }
 
 describe("HomeDocument", () => {
+  test("Blank Page copies the current Page Style with zero Widgets", () => {
+    // Given — a non-default mood and palette distinguish copying from fallback
+    const sourcePalette = {
+      bg: "copied-bg",
+      surface: "copied-surface",
+      ink: "copied-ink",
+      muted: "copied-muted",
+      accent: "copied-accent",
+    }
+    const defaults = defaultPageStyle()
+    const sourceWallpaper = { ...defaults.wallpaper }
+    const sourceGlassTuning = { ...defaults.glassTuning }
+    const currentStyle = {
+      ...defaults,
+      typographyMood: "serif" as const,
+      seedPalette: sourcePalette,
+      wallpaper: sourceWallpaper,
+      glassTuning: sourceGlassTuning,
+    }
+
+    const currentPage = {
+      ...createBlankPage({ name: "当前页" }),
+      style: currentStyle,
+    }
+    const existingWidget = createWidgetInstance({
+      source: builtinSource("builtin.clock"),
+      layout: withZ({ x: 10, y: 10, w: 30, h: 20 }, 1),
+    })
+    const docR = buildHomeDocument({
+      pages: [{ ...currentPage, widgets: [existingWidget] }],
+    })
+    if (!docR.ok) throw new Error("doc")
+
+    // When
+    const result = addBlankPageToHome(docR.value, currentPage.id)
+
+    // Then
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      const addedId = result.value.sequence.pageIds[1]
+      const page = addedId ? result.value.pages[addedId] : undefined
+      expect(page?.style).toEqual(currentStyle)
+      expect(page?.style).not.toBe(currentStyle)
+      expect(page?.style.seedPalette).not.toBe(currentStyle.seedPalette)
+      expect(page?.style.wallpaper).not.toBe(currentStyle.wallpaper)
+      expect(page?.style.glassTuning).not.toBe(currentStyle.glassTuning)
+      expect(page?.widgets).toEqual([])
+
+      sourcePalette.accent = "mutated-after-creation"
+      const changedDim = wallpaperDim(0.91)
+      if (!changedDim.ok) throw new Error("test wallpaper dim")
+      sourceWallpaper.dim = changedDim.value
+      sourceGlassTuning.blur = 11
+      expect(page?.style.seedPalette.accent).toBe("copied-accent")
+      expect(page?.style.wallpaper.dim).toBe(defaults.wallpaper.dim)
+      expect(page?.style.glassTuning.blur).toBe(defaults.glassTuning.blur)
+    }
+  })
+
   test("build requires pages and emits schema v2", () => {
     // Given / When
     const empty = buildHomeDocument({ pages: [] })

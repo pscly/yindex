@@ -3,6 +3,7 @@ import type { GlassProfile, GlassTuning } from "./glass"
 import type { Wallpaper } from "./wallpaper"
 
 export type ElevationMode = "flat" | "tonal" | "glass"
+export type TypographyMood = "sans" | "serif"
 
 export type SeedPalette = {
   readonly bg: string
@@ -20,6 +21,7 @@ export type SeedPalette = {
 export type PageStyle = {
   readonly seedPalette: SeedPalette
   readonly wallpaper: Wallpaper
+  readonly typographyMood: TypographyMood
   readonly glassProfile: GlassProfile
   readonly glassTuning: GlassTuning
 }

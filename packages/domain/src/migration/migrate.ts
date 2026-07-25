@@ -103,6 +103,7 @@ function brandDocument(raw: HomeV2Raw): HomeDocument {
       style: {
         seedPalette: brandSeedPalette(page.style.seedPalette),
         wallpaper: brandWallpaper(page.style.wallpaper),
+        typographyMood: page.style.typographyMood,
         glassProfile: page.style.glassProfile,
         glassTuning: page.style.glassTuning,
       },
@@ -197,5 +198,5 @@ export function migrateHomeDocument(
 }
 
 export function serializeHomeDocument(doc: HomeDocument): unknown {
-  return JSON.parse(JSON.stringify(doc)) as unknown
+  return JSON.parse(JSON.stringify(doc))
 }

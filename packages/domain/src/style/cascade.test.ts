@@ -6,11 +6,9 @@ import {
   resolvePageTokens,
   resolveWidgetTokens,
   withGlassProfile,
-  withSeedPalette,
 } from "./cascade"
 import { DEFAULT_GLASS_TUNING } from "./glass"
 import { createGenerativePageStyle } from "./pageStyle"
-import type { StyleTokens } from "./types"
 
 function samplePageStyle() {
   const r = createGenerativePageStyle({
@@ -51,6 +49,7 @@ function rawHomeWithStyleOverride(styleOverride: unknown) {
             generativePreset: "moment",
             dim: 0.15,
           },
+          typographyMood: "sans",
           glassProfile: "balanced",
           glassTuning: DEFAULT_GLASS_TUNING,
         },
@@ -144,30 +143,21 @@ describe("Style cascade (v2 liquid glass)", () => {
     expect(tokens.color.accent).toBe("accent")
   })
 
-  test("resolvePageTokens prefers page seed over pack base", () => {
+  test("page typography mood selects the display family", () => {
     // Given
-    const pageStyle = withSeedPalette(samplePageStyle(), {
-      bg: "page-bg",
-      surface: "s",
-      ink: "i",
-      muted: "m",
-      accent: "page-accent",
-    })
-    const packBase: StyleTokens = {
-      ...pageStyleToTokens(samplePageStyle()),
-      color: {
-        bg: "pack-bg",
-        surface: "s",
-        ink: "i",
-        muted: "m",
-        accent: "pack-accent",
-      },
-    }
+    const sansStyle = samplePageStyle()
+    const serifStyle = { ...sansStyle, typographyMood: "serif" as const }
+
     // When
-    const tokens = resolvePageTokens(packBase, pageStyle)
+    const sansTokens = resolvePageTokens(sansStyle)
+    const serifTokens = resolvePageTokens(serifStyle)
+
     // Then
-    expect(tokens.color.accent).toBe("page-accent")
-    expect(tokens.color.bg).toBe("page-bg")
+    expect(sansTokens.typography.displayFamily).toContain("Noto Sans SC")
+    expect(serifTokens.typography.displayFamily).toContain("Noto Serif SC")
+    expect(serifTokens.typography.displayFamily).not.toBe(
+      sansTokens.typography.displayFamily,
+    )
   })
 
   test("switching glass profile keeps wallpaper", () => {

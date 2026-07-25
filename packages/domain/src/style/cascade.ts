@@ -3,25 +3,19 @@ import {
   type AdaptiveGlassInput,
   resolveGlassWithAdaptive,
 } from "./adaptiveGlass"
-import {
-  DEFAULT_GLASS_TUNING,
-  type GlassProfile,
-  type GlassTuning,
-} from "./glass"
+import type { GlassProfile, GlassTuning } from "./glass"
 import type {
   PageStyle,
   StyleOverride,
   StyleTokens,
   WidgetStyleOverride,
 } from "./types"
-import {
-  type GenerativePreset,
-  type Wallpaper,
-  wallpaperDim,
-} from "./wallpaper"
+import type { GenerativePreset, Wallpaper } from "./wallpaper"
 
 const DISPLAY_FAMILY =
   '"Noto Sans SC", "Source Han Sans SC", system-ui, sans-serif'
+const SERIF_DISPLAY_FAMILY =
+  '"Noto Serif SC", "Source Han Serif SC", "Songti SC", serif'
 const BODY_FAMILY =
   '"Noto Sans SC", "Source Han Sans SC", system-ui, sans-serif'
 const MONO_FAMILY = '"JetBrains Mono", "SF Mono", ui-monospace, monospace'
@@ -67,7 +61,10 @@ export function pageStyleToTokens(
   return {
     color: pageStyle.seedPalette,
     typography: {
-      displayFamily: DISPLAY_FAMILY,
+      displayFamily:
+        pageStyle.typographyMood === "serif"
+          ? SERIF_DISPLAY_FAMILY
+          : DISPLAY_FAMILY,
       bodyFamily: BODY_FAMILY,
       monoFamily: MONO_FAMILY,
       displayWeight: 200,
@@ -113,23 +110,8 @@ export function applyOverride(
   }
 }
 
-/**
- * Resolve Page effective tokens from the page's liquid-glass style.
- * Optional packTokens are applied as a soft base then overridden by page style.
- */
-export function resolvePageTokens(
-  packTokens: StyleTokens | null,
-  pageStyle: PageStyle,
-): StyleTokens {
-  const pageTokens = pageStyleToTokens(pageStyle)
-  if (!packTokens) return pageTokens
-  return {
-    ...packTokens,
-    color: pageStyle.seedPalette,
-    glass: pageTokens.glass,
-    wallpaper: pageTokens.wallpaper,
-    elevation: { mode: "glass" },
-  }
+export function resolvePageTokens(pageStyle: PageStyle): StyleTokens {
+  return pageStyleToTokens(pageStyle)
 }
 
 export function resolveWidgetTokens(
@@ -166,51 +148,4 @@ export function withSeedPalette(
   seedPalette: PageStyle["seedPalette"],
 ): PageStyle {
   return { ...pageStyle, seedPalette }
-}
-
-/** Neutral glass-base tokens for editor chrome / pack registry fallbacks. */
-export function baseLiquidTokens(
-  profile: GlassProfile = "balanced",
-  tuning: GlassTuning = DEFAULT_GLASS_TUNING,
-  analysis?: AdaptiveGlassInput | null,
-): StyleTokens {
-  const glass = resolveGlassWithAdaptive(profile, tuning, analysis)
-  const dimR = wallpaperDim(0.15)
-  if (!dimR.ok) {
-    throw new Error(`baseLiquidTokens: ${dimR.error.message}`)
-  }
-  const dim = dimR.value
-  return {
-    color: {
-      bg: "oklch(0.16 0.02 250)",
-      surface: "oklch(0.28 0.03 250 / 0.5)",
-      ink: "oklch(0.96 0.01 250)",
-      muted: "oklch(0.78 0.02 250)",
-      accent: "oklch(0.62 0.1 240)",
-    },
-    typography: {
-      displayFamily: DISPLAY_FAMILY,
-      bodyFamily: BODY_FAMILY,
-      monoFamily: MONO_FAMILY,
-      displayWeight: 200,
-      bodySizePx: 15,
-    },
-    space: { safePct: 3, widgetGapPct: 1.5 },
-    radius: { sm: "16px", md: "22px", lg: "28px" },
-    elevation: { mode: "glass" },
-    glass,
-    wallpaper: {
-      source: {
-        kind: "generative",
-        generativePreset: "moment",
-        dim,
-      },
-      dim: Number(dim),
-      cssBackground: GENERATIVE_CSS.moment ?? "",
-    },
-    motion: {
-      turnMs: 420,
-      ease: "cubic-bezier(0.22, 1, 0.36, 1)",
-    },
-  }
 }
