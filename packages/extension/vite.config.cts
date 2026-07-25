@@ -1,9 +1,8 @@
 import { resolve } from "node:path"
 import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
 import { viteStaticCopy } from "vite-plugin-static-copy"
 
-const config = defineConfig({
+const config = {
   // Relative URLs required for chrome-extension:// origin
   base: "./",
   plugins: [
@@ -14,6 +13,16 @@ const config = defineConfig({
         { src: "public/icons/*", dest: "icons" },
         { src: "public/sandbox.html", dest: "." },
         { src: "../examples/pomodoro/*", dest: "examples/pomodoro" },
+        {
+          src: "node_modules/@fontsource-variable/noto-sans-sc/LICENSE",
+          dest: "licenses",
+          rename: "Noto-Sans-SC-OFL.txt",
+        },
+        {
+          src: "node_modules/@fontsource-variable/noto-serif-sc/LICENSE",
+          dest: "licenses",
+          rename: "Noto-Serif-SC-OFL.txt",
+        },
       ],
     }),
   ],
@@ -28,6 +37,7 @@ const config = defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    assetsInlineLimit: 0,
     rollupOptions: {
       input: {
         newtab: resolve(__dirname, "newtab.html"),
@@ -35,7 +45,7 @@ const config = defineConfig({
         sandbox: resolve(__dirname, "src/runtime/sandbox-frame.ts"),
       },
       output: {
-        entryFileNames: (chunk) => {
+        entryFileNames: (chunk: { readonly name: string }) => {
           if (chunk.name === "background") return "background.js"
           if (chunk.name === "sandbox") return "sandbox.js"
           return "assets/[name]-[hash].js"
@@ -51,6 +61,6 @@ const config = defineConfig({
     port: 5173,
     strictPort: true,
   },
-})
+}
 
 module.exports = config

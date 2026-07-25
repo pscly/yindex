@@ -31,6 +31,7 @@ export type WidgetMountProps = {
 }
 
 type WidgetConfigRecord = {
+  readonly compact?: unknown
   readonly showSeconds?: unknown
   readonly [key: string]: unknown
 }
@@ -76,11 +77,13 @@ export function WidgetMount(props: WidgetMountProps) {
   }
 
   const typeId = src.typeId
+  const hasCompact = "compact" in cfg
   const hasShowSeconds = "showSeconds" in cfg
   switch (typeId) {
     case "builtin.clock":
       return (
         <ClockWidget
+          compact={hasCompact ? Boolean(cfg.compact) : false}
           tokens={tokens}
           showSeconds={hasShowSeconds ? Boolean(cfg.showSeconds) : true}
           showTitle={showTitle}

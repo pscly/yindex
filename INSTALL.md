@@ -8,7 +8,7 @@
 
 ## 安装
 
-1. 解压 zip，得到文件夹 `yindex-extension`  
+1. 解压 zip，得到固定文件夹 `yindex-extension/`
    - 确认该文件夹**直接**包含 `manifest.json`（不要多嵌套一层）
 2. 打开 Chrome：`chrome://extensions`
 3. 开启 **开发者模式**
@@ -20,7 +20,7 @@
 
 - 不要加载整个源码仓库目录
 - 不要只解压后选择 zip 文件本身
-- 若更新扩展：重新下载 zip → 解压覆盖 → 在扩展页点「重新加载」
+- 若更新 Extension：退出正在打开的 Home，重新下载 zip，覆盖同一个 `yindex-extension/` 文件夹，再到扩展页点「重新加载」；不要改名或换目录
 
 ## 卸载 / 重置
 

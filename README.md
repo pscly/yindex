@@ -8,13 +8,17 @@ Chrome **不能**直接拖入 zip 当作扩展安装。正确步骤：
 
 1. 打开 [Releases](https://github.com/pscly/yindex/releases) 页面  
 2. 下载 **`yindex-extension-vX.Y.Z.zip`**（或 `yindex-extension-latest.zip`）  
-3. 解压得到文件夹 **`yindex-extension`**（内含 `manifest.json`）  
+3. 解压得到固定文件夹 **`yindex-extension/`**（内含 `manifest.json`）
 4. Chrome 打开 `chrome://extensions`  
 5. 打开右上角 **开发者模式**  
 6. **加载已解压的扩展程序** → 选择刚才的 `yindex-extension` 文件夹  
 7. 打开新标签页即可使用
 
 > 若从源码仓库下载「整个源码 zip」，那不是可加载扩展。请用 Releases 里的 **extension** 压缩包。
+
+### 更新
+
+后续版本仍使用固定目录 `yindex-extension/`。退出正在打开的 Home 后，下载新 zip，**覆盖同一个 `yindex-extension/` 文件夹**，再到 `chrome://extensions` 点击 yindex 的「重新加载」。不要为每个版本新建不同目录，否则 Chrome 会继续跟踪原先加载的目录。
 
 ### 首次使用提示
 

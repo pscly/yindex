@@ -19,7 +19,7 @@ if [[ ! -d node_modules ]]; then
 fi
 
 echo "==> test"
-bun test
+bun run test
 
 echo "==> build"
 bun run build
@@ -70,4 +70,5 @@ PY
 cp -f "$ZIP_PATH" "$OUT_DIR/yindex-extension-latest.zip"
 SIZE=$(wc -c < "$ZIP_PATH" | tr -d ' ')
 echo "==> done: $ZIP_PATH ($SIZE bytes)"
-echo "Unzip, then Chrome → 扩展程序 → 加载已解压的扩展程序 → 选择 yindex-extension 文件夹"
+echo "Unzip, then Chrome → 扩展程序 → 加载已解压的扩展程序 → 选择 yindex-extension/ 文件夹"
+echo "Updates: overwrite the same yindex-extension/ folder, then click 重新加载"

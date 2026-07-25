@@ -13,7 +13,8 @@ body,
   overflow: hidden;
   background: #0a0a0c;
   color: #f2f2f4;
-  font-family: "Noto Sans SC", "PingFang SC", system-ui, sans-serif;
+  font-family: "Noto Sans SC Variable", "Noto Sans SC", "PingFang SC", system-ui,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }

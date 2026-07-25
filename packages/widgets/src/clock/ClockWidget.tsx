@@ -4,6 +4,7 @@ import { WidgetSurface } from "../shell/surface"
 
 export type ClockWidgetProps = {
   readonly tokens: StyleTokens
+  readonly compact?: boolean
   readonly showSeconds?: boolean
   readonly showTitle?: boolean | undefined
 }
@@ -54,7 +55,7 @@ export function ClockWidget(props: ClockWidgetProps) {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          gap: 14,
+          gap: props.compact ? 2 : 14,
           textAlign: "center",
           userSelect: "none",
         }}
@@ -63,7 +64,9 @@ export function ClockWidget(props: ClockWidgetProps) {
           style={{
             fontFamily: props.tokens.typography.displayFamily,
             fontWeight: props.tokens.typography.displayWeight,
-            fontSize: "clamp(3rem, 11vw, 7rem)",
+            fontSize: props.compact
+              ? "clamp(1.75rem, 8vw, 2rem)"
+              : "clamp(3rem, 11vw, 7rem)",
             letterSpacing: "-0.03em",
             lineHeight: 0.95,
             fontVariantNumeric: "tabular-nums",
@@ -79,9 +82,13 @@ export function ClockWidget(props: ClockWidgetProps) {
         <div
           style={{
             color: props.tokens.color.muted,
-            fontSize: "clamp(13px, 1.4vw, 16px)",
+            fontSize: props.compact
+              ? "clamp(11px, 1.2vw, 12px)"
+              : "clamp(13px, 1.4vw, 16px)",
             letterSpacing: "0.06em",
             fontWeight: 400,
+            lineHeight: props.compact ? 1.2 : undefined,
+            whiteSpace: props.compact ? "nowrap" : undefined,
           }}
         >
           {date} · {week}

@@ -10,7 +10,13 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "permissions": ["storage", "bookmarks", "alarms", "notifications"],
+  "permissions": [
+    "storage",
+    "bookmarks",
+    "alarms",
+    "notifications",
+    "unlimitedStorage"
+  ],
   "host_permissions": [
     "https://api.open-meteo.com/*",
     "https://v1.hitokoto.cn/*",
@@ -20,7 +26,7 @@
     "pages": ["sandbox.html"]
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self';",
+    "extension_pages": "script-src 'self'; worker-src 'self'; object-src 'none'; font-src 'self'; connect-src 'self' https://api.open-meteo.com https://v1.hitokoto.cn; img-src 'self' blob: https://www.google.com https://*.gstatic.com; media-src 'self' blob:; frame-src 'self' blob:; require-trusted-types-for 'script'; trusted-types yindex-packaged-workers;",
     "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'unsafe-eval'; child-src 'self';"
   },
   "icons": {
