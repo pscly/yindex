@@ -19,11 +19,11 @@ export type GlassParseError = {
   readonly message: string
 }
 
-const TUNING_BOUNDS = {
-  transmission: { min: -0.2, max: 0.2 },
-  blur: { min: -12, max: 12 },
-  saturation: { min: -0.4, max: 0.4 },
-  highlight: { min: -0.25, max: 0.25 },
+export const GLASS_TUNING_BOUNDS = {
+  transmission: { min: -0.2, max: 0.2, step: 0.01 },
+  blur: { min: -12, max: 12, step: 1 },
+  saturation: { min: -0.4, max: 0.4, step: 0.01 },
+  highlight: { min: -0.25, max: 0.25, step: 0.01 },
 } as const
 
 export const DEFAULT_GLASS_TUNING: GlassTuning = {
@@ -129,9 +129,9 @@ export function createGlassTuning(
     highlight: input.highlight ?? DEFAULT_GLASS_TUNING.highlight,
   }
   for (const key of Object.keys(
-    TUNING_BOUNDS,
-  ) as (keyof typeof TUNING_BOUNDS)[]) {
-    const bound = TUNING_BOUNDS[key]
+    GLASS_TUNING_BOUNDS,
+  ) as (keyof typeof GLASS_TUNING_BOUNDS)[]) {
+    const bound = GLASS_TUNING_BOUNDS[key]
     if (!inRange(tuning[key], bound.min, bound.max)) {
       return err({
         code: "invalid_tuning",

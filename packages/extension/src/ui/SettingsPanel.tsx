@@ -3,6 +3,7 @@ import { migrateHomeDocument, serializeHomeDocument } from "@yindex/domain"
 import { type ChangeEvent, useEffect, useRef, useState } from "react"
 import { resetHomeDocument } from "../storage/homeStorage"
 import { type StoredPackage, listPackages } from "../storage/packageStore"
+import { AdvancedGlassSection } from "./settings/AdvancedGlassSection"
 import { NavigationSection } from "./settings/NavigationSection"
 import { PackageSection } from "./settings/PackageSection"
 import {
@@ -126,6 +127,11 @@ export function SettingsPanel(props: {
         </div>
 
         <NavigationSection doc={props.doc} onDoc={props.onDoc} />
+        <AdvancedGlassSection
+          doc={props.doc}
+          pageId={props.pageId}
+          onDoc={props.onDoc}
+        />
 
         <section style={section}>
           <h3 style={h3}>配置导入导出</h3>

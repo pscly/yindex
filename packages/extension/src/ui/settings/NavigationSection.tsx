@@ -59,6 +59,7 @@ export function NavigationSection(props: {
           减少动态效果
         </div>
         <select
+          aria-label="减少动态效果"
           value={props.doc.settings.reducedMotion}
           onChange={(e) => {
             const v = e.target.value

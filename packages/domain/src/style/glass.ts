@@ -11,6 +11,7 @@ export {
   GLASS_PROFILES,
   GLASS_PROFILE_BANDS,
   GLASS_PROFILE_BASE,
+  GLASS_TUNING_BOUNDS,
   MOTION_PROFILES,
   clampGlassProfileTokens,
   createGlassTuning,

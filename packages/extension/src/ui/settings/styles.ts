@@ -1,6 +1,8 @@
 export {
   ghostBtn,
   h3,
+  inputStyle,
+  labelStyle,
   row,
   section,
   selectStyle,
