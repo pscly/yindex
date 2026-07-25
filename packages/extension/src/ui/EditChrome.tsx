@@ -8,11 +8,16 @@ import {
   updatePage,
   withZ,
 } from "@yindex/domain"
-import { EDITOR_GRAPHITE } from "@yindex/style-packs"
 import { BUILTIN_CATALOG } from "@yindex/widgets"
 import { EditPageControls } from "./EditPageControls"
 import { SelectedWidgetEditor } from "./SelectedWidgetEditor"
-import { ghostBtn, inputStyle, labelStyle, panel } from "./editChromeStyles"
+import {
+  accentActionStyle,
+  editPanelStyle,
+  ghostBtn,
+  inputStyle,
+  labelStyle,
+} from "./chromeStyles"
 
 export function EditChrome(props: {
   readonly doc: HomeDocument
@@ -20,6 +25,8 @@ export function EditChrome(props: {
   readonly selectedWidgetId: WidgetInstanceId | null
   readonly onDoc: (doc: HomeDocument) => void
   readonly onClose: () => void
+  readonly pageAccent?: string | undefined
+  readonly reducedMotion?: boolean | undefined
 }) {
   const page = props.doc.pages[props.pageId]
   if (!page) return null
@@ -38,8 +45,17 @@ export function EditChrome(props: {
     if (r.ok) props.onDoc(r.value)
   }
 
+  const panel = editPanelStyle({
+    pageAccent: props.pageAccent,
+    reducedMotion: props.reducedMotion,
+  })
+  const doneStyle = {
+    ...ghostBtn,
+    ...accentActionStyle({ pageAccent: props.pageAccent }),
+  }
+
   return (
-    <aside style={panel} aria-label="编辑面板">
+    <aside data-chrome-root style={panel} aria-label="编辑面板">
       <div
         style={{
           display: "flex",
@@ -61,16 +77,7 @@ export function EditChrome(props: {
           </div>
           <strong style={{ fontSize: 15 }}>当前页</strong>
         </div>
-        <button
-          type="button"
-          onClick={props.onClose}
-          style={{
-            ...ghostBtn,
-            background: EDITOR_GRAPHITE.color.accent,
-            borderColor: "transparent",
-            fontWeight: 600,
-          }}
-        >
+        <button type="button" onClick={props.onClose} style={doneStyle}>
           完成
         </button>
       </div>

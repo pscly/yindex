@@ -5,7 +5,13 @@ import { resetHomeDocument } from "../storage/homeStorage"
 import { type StoredPackage, listPackages } from "../storage/packageStore"
 import { NavigationSection } from "./settings/NavigationSection"
 import { PackageSection } from "./settings/PackageSection"
-import { ghostBtn, h3, overlay, section, sheet } from "./settings/styles"
+import {
+  ghostBtn,
+  h3,
+  section,
+  settingsOverlayStyle,
+  settingsSheetStyle,
+} from "./settings/styles"
 
 export function SettingsPanel(props: {
   readonly open: boolean
@@ -14,6 +20,8 @@ export function SettingsPanel(props: {
   readonly onClose: () => void
   readonly onDoc: (doc: HomeDocument) => void
   readonly onReplaceDoc: (doc: HomeDocument) => void
+  readonly pageAccent?: string | undefined
+  readonly reducedMotion?: boolean | undefined
 }) {
   const [packages, setPackages] = useState<readonly StoredPackage[]>([])
   const [msg, setMsg] = useState<string | null>(null)
@@ -24,6 +32,15 @@ export function SettingsPanel(props: {
   }, [props.open])
 
   if (!props.open) return null
+
+  const overlay = settingsOverlayStyle({
+    pageAccent: props.pageAccent,
+    reducedMotion: props.reducedMotion,
+  })
+  const sheet = settingsSheetStyle({
+    pageAccent: props.pageAccent,
+    reducedMotion: props.reducedMotion,
+  })
 
   async function refreshPackages() {
     setPackages(await listPackages())
@@ -65,6 +82,7 @@ export function SettingsPanel(props: {
 
   return (
     <dialog
+      data-chrome-root
       open
       aria-modal="true"
       aria-label="设置"

@@ -1,4 +1,12 @@
-import type { CSSProperties, ReactNode } from "react"
+import type { ReactNode } from "react"
+import {
+  accentActionStyle,
+  divider,
+  fabDockStyle,
+  fabIdlePrimaryStyle,
+  iconBtn,
+  primaryBtn,
+} from "./chromeStyles"
 
 export function ChromeFab(props: {
   readonly editMode: boolean
@@ -8,9 +16,18 @@ export function ChromeFab(props: {
   readonly onRedo: () => void
   readonly onSettings: () => void
   readonly onToggleEdit: () => void
+  readonly pageAccent?: string | undefined
+  readonly reducedMotion?: boolean | undefined
 }) {
+  const dock = fabDockStyle({
+    pageAccent: props.pageAccent,
+    reducedMotion: props.reducedMotion,
+  })
+  const active = accentActionStyle({ pageAccent: props.pageAccent })
+  const idle = fabIdlePrimaryStyle()
+
   return (
-    <div style={dock} role="toolbar" aria-label="主控">
+    <div data-chrome-root style={dock} role="toolbar" aria-label="主控">
       {props.editMode ? (
         <>
           <IconBtn
@@ -42,12 +59,7 @@ export function ChromeFab(props: {
         title={props.editMode ? "完成编辑 Esc" : "编辑布局"}
         style={{
           ...primaryBtn,
-          background: props.editMode
-            ? "oklch(0.62 0.14 36)"
-            : "color-mix(in oklch, oklch(0.22 0.01 260) 92%, transparent)",
-          boxShadow: props.editMode
-            ? "0 6px 20px color-mix(in oklch, oklch(0.62 0.14 36) 35%, transparent)"
-            : "0 8px 24px color-mix(in oklch, black 28%, transparent)",
+          ...(props.editMode ? active : idle),
         }}
       >
         {props.editMode ? "完成" : "编辑"}
@@ -140,53 +152,4 @@ function RedoIcon() {
       />
     </svg>
   )
-}
-
-const dock: CSSProperties = {
-  position: "fixed",
-  right: 20,
-  bottom: 20,
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  zIndex: 3100,
-  padding: "8px 10px",
-  borderRadius: 999,
-  background: "color-mix(in oklch, oklch(0.16 0.008 260) 78%, transparent)",
-  border: "1px solid color-mix(in oklch, white 12%, transparent)",
-  backdropFilter: "blur(16px) saturate(1.2)",
-  WebkitBackdropFilter: "blur(16px) saturate(1.2)",
-  boxShadow: "0 12px 40px color-mix(in oklch, black 35%, transparent)",
-}
-
-const iconBtn: CSSProperties = {
-  width: 36,
-  height: 36,
-  borderRadius: 999,
-  border: "1px solid color-mix(in oklch, white 10%, transparent)",
-  background: "color-mix(in oklch, white 6%, transparent)",
-  color: "oklch(0.94 0.01 260)",
-  display: "grid",
-  placeItems: "center",
-  padding: 0,
-}
-
-const primaryBtn: CSSProperties = {
-  height: 36,
-  minWidth: 64,
-  borderRadius: 999,
-  border: "1px solid color-mix(in oklch, white 12%, transparent)",
-  color: "oklch(0.98 0.01 80)",
-  fontSize: 13,
-  fontWeight: 600,
-  letterSpacing: "0.02em",
-  padding: "0 16px",
-  cursor: "pointer",
-}
-
-const divider: CSSProperties = {
-  width: 1,
-  height: 18,
-  background: "color-mix(in oklch, white 14%, transparent)",
-  margin: "0 2px",
 }

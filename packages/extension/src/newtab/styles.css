@@ -50,6 +50,41 @@ a {
   transition: opacity 140ms ease;
 }
 
+@keyframes yindex-chrome-panel-open {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes yindex-chrome-panel-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+[data-chrome-root] button {
+  transition:
+    transform var(--chrome-press-ms, 120ms) ease,
+    background 140ms ease,
+    border-color 140ms ease,
+    opacity 140ms ease,
+    box-shadow 160ms ease;
+}
+
+[data-chrome-root] button:active:not(:disabled) {
+  transform: scale(var(--chrome-press-scale, 0.97));
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

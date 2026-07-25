@@ -63,6 +63,10 @@ export function App() {
 
   const stripSlots = Math.max(cyclicSlotCount(orderedPages.length), 1)
   const currentPageId = turn.currentPageId
+  const pageAccent =
+    currentPageId && doc?.pages[currentPageId]
+      ? doc.pages[currentPageId].style.seedPalette.accent
+      : undefined
   const wallpaperSlots = activeWallpaperSlots({
     fadeLayers: turn.fadeLayers,
     offsetY: turn.offsetY,
@@ -212,9 +216,7 @@ export function App() {
         doc={doc}
         currentIndex={turn.currentIndex}
         onSelect={turn.goToIndex}
-        {...(currentPageId && doc.pages[currentPageId]
-          ? { accent: doc.pages[currentPageId].style.seedPalette.accent }
-          : {})}
+        {...(pageAccent ? { accent: pageAccent } : {})}
       />
 
       <ChromeFab
@@ -228,6 +230,8 @@ export function App() {
           setEditMode((v) => !v)
           setSelectedWidgetId(null)
         }}
+        reducedMotion={turn.reducedMotion}
+        {...(pageAccent ? { pageAccent } : {})}
       />
 
       {editMode && currentPageId ? (
@@ -240,6 +244,8 @@ export function App() {
             setEditMode(false)
             setSelectedWidgetId(null)
           }}
+          reducedMotion={turn.reducedMotion}
+          {...(pageAccent ? { pageAccent } : {})}
         />
       ) : null}
 
@@ -250,6 +256,8 @@ export function App() {
         onClose={() => setSettingsOpen(false)}
         onDoc={setDoc}
         onReplaceDoc={replaceDoc}
+        reducedMotion={turn.reducedMotion}
+        {...(pageAccent ? { pageAccent } : {})}
       />
     </div>
   )
