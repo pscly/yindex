@@ -54,6 +54,15 @@ describe("Package Widget host contract", () => {
         "--yindex-lens-ink": tokens.glass.adaptive.lens.foreground,
         "--yindex-lens-muted-ink": tokens.glass.adaptive.lens.mutedForeground,
         "--yindex-accent": tokens.color.accent,
+        "--yindex-glass-tint-opacity": String(
+          tokens.glass.adaptive.lens.tintOpacity,
+        ),
+        "--yindex-glass-scrim-opacity": String(
+          tokens.glass.adaptive.lens.scrimOpacity,
+        ),
+        "--yindex-glass-opacity": String(tokens.glass.opacity),
+        "--yindex-glass-saturation": String(tokens.glass.saturation),
+        "--yindex-glass-highlight": String(tokens.glass.highlight),
         "--yindex-font-body": tokens.typography.bodyFamily,
       }),
     })

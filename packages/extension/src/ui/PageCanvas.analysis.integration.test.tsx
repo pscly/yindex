@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import {
   BALANCED_SAFE_ANALYSIS,
+  type MotionProfile,
   type StyleTokens,
   type Wallpaper,
   createGenerativeWallpaper,
@@ -31,11 +32,15 @@ function renderPage(
   wallpaperActive = true,
   reducedMotion = false,
   wallpaper?: Wallpaper,
+  motionProfile: MotionProfile = "balanced",
 ): string {
   const { doc, page } = defaultPageFixture()
   return renderToStaticMarkup(
     createElement(PageCanvas, {
-      doc,
+      doc: {
+        ...doc,
+        settings: { ...doc.settings, motionProfile },
+      },
       page:
         wallpaper === undefined
           ? page
@@ -222,6 +227,7 @@ describe("PageCanvas Wallpaper analysis integration", () => {
       widget,
       pageTokens: brightTokens,
       editMode: false,
+      reducedMotion: false,
       onWidgetConfig: noWidget,
     })
     const darkMount = WidgetMount({
@@ -230,6 +236,7 @@ describe("PageCanvas Wallpaper analysis integration", () => {
       widget,
       pageTokens: darkTokens,
       editMode: false,
+      reducedMotion: false,
       onWidgetConfig: noWidget,
     })
 
@@ -278,5 +285,30 @@ describe("PageCanvas Wallpaper analysis integration", () => {
 
     // Then
     expect(markup).toContain('data-wallpaper-reduced-motion="true"')
+  })
+
+  test("Given an active balanced Page with ambient motion allowed, When it renders, Then lens highlight drift is enabled", () => {
+    // Given / When
+    const markup = renderPage(true, false, undefined, "balanced")
+
+    // Then
+    expect(markup).toContain('data-ambient-motion="running"')
+    expect(markup).toContain("--yindex-highlight-drift-sec:36s")
+  })
+
+  test("Given an inactive or reduced-motion Page, When it renders, Then ambient highlight drift is disabled", () => {
+    // Given / When
+    const inactive = renderPage(false, false, undefined, "immersive")
+    const reduced = renderPage(true, true, undefined, "immersive")
+    const calm = renderPage(true, false, undefined, "calm")
+
+    // Then
+    expect(inactive).not.toContain("data-ambient-motion=")
+    expect(reduced).not.toContain("data-ambient-motion=")
+    expect(calm).not.toContain("data-ambient-motion=")
+    expect(inactive).toContain('data-wallpaper-reduced-motion="true"')
+    expect(inactive).not.toContain("--yindex-highlight-drift-sec:24s")
+    expect(reduced).not.toContain("--yindex-highlight-drift-sec:24s")
+    expect(calm).not.toContain("--yindex-highlight-drift-sec")
   })
 })

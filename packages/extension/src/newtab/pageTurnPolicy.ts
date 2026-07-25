@@ -41,14 +41,19 @@ export type MotionProfileValues = {
   readonly springScale: number
   /** Max parallax as fraction of viewport (immersive only, ≤0.03) */
   readonly parallaxMax: number
+  readonly highlightDriftSec: number | null
 }
 
 export const MOTION_PROFILE_TABLE: Readonly<
   Record<MotionProfile, MotionProfileValues>
 > = {
-  calm: { springScale: 0.7, parallaxMax: 0 },
-  balanced: { springScale: 1, parallaxMax: 0 },
-  immersive: { springScale: 1.15, parallaxMax: 0.03 },
+  calm: { springScale: 0.7, parallaxMax: 0, highlightDriftSec: null },
+  balanced: { springScale: 1, parallaxMax: 0, highlightDriftSec: 36 },
+  immersive: {
+    springScale: 1.15,
+    parallaxMax: 0.03,
+    highlightDriftSec: 24,
+  },
 } as const
 
 export function springParamsForProfile(profile: MotionProfile): SpringParams {

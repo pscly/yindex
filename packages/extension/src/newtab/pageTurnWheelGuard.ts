@@ -1,3 +1,5 @@
+export { ambientMotionAllowed } from "./ambientMotion"
+
 function isDomAvailable(): boolean {
   return typeof Element !== "undefined"
 }

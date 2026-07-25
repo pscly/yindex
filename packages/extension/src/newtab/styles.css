@@ -85,12 +85,37 @@ a {
   transform: scale(var(--chrome-press-scale, 0.97));
 }
 
+@keyframes yindex-lens-highlight-drift {
+  0%,
+  100% {
+    transform: translate3d(-38%, -16%, 0) rotate(-8deg);
+  }
+
+  50% {
+    transform: translate3d(38%, 16%, 0) rotate(8deg);
+  }
+}
+
+[data-ambient-motion="running"] [data-widget-surface="lens"]::before {
+  position: absolute;
+  inset: -45%;
+  z-index: 1;
+  border-radius: inherit;
+  background: linear-gradient(
+    110deg,
+    transparent 34%,
+    color-mix(in oklch, white 14%, transparent) 48%,
+    transparent 62%
+  );
+  pointer-events: none;
+  content: "";
+  animation: yindex-lens-highlight-drift var(--yindex-highlight-drift-sec)
+    ease-in-out infinite;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  [data-ambient-motion] [data-widget-surface="lens"]::before {
+    animation: none;
   }
 }

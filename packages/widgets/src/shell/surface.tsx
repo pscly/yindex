@@ -34,6 +34,7 @@ function baseChrome(tokens: StyleTokens): CSSProperties {
     boxSizing: "border-box",
     display: "flex",
     flexDirection: "column",
+    position: "relative",
     overflow: "hidden",
     fontFamily: tokens.typography.bodyFamily,
     fontSize: tokens.typography.bodySizePx,
@@ -138,6 +139,8 @@ function SurfaceFrame(props: {
       {props.showTitle ? (
         <header
           style={{
+            position: "relative",
+            zIndex: 2,
             padding: "10px 16px 0",
             fontSize: 11,
             letterSpacing: "0.1em",
@@ -153,6 +156,8 @@ function SurfaceFrame(props: {
       ) : null}
       <div
         style={{
+          position: "relative",
+          zIndex: 2,
           flex: 1,
           minHeight: 0,
           padding: props.showTitle ? "10px 16px 16px" : 16,

@@ -75,6 +75,30 @@ export function NavigationSection(props: {
       </div>
       <div style={{ marginTop: 8 }}>
         <div style={{ opacity: 0.7, marginBottom: 6, fontSize: 12 }}>
+          动态档位
+        </div>
+        <select
+          aria-label="动态档位"
+          value={props.doc.settings.motionProfile}
+          onChange={(e) => {
+            const value = e.target.value
+            if (
+              value === "calm" ||
+              value === "balanced" ||
+              value === "immersive"
+            ) {
+              patchSettings({ motionProfile: value })
+            }
+          }}
+          style={selectStyle}
+        >
+          <option value="calm">舒缓</option>
+          <option value="balanced">均衡</option>
+          <option value="immersive">沉浸</option>
+        </select>
+      </div>
+      <div style={{ marginTop: 8 }}>
+        <div style={{ opacity: 0.7, marginBottom: 6, fontSize: 12 }}>
           Landing 页
         </div>
         <select

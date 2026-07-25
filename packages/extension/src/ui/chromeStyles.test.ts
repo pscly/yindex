@@ -12,6 +12,7 @@ import {
   chromeStyleVars,
   dockStyle,
   panelStyle,
+  settingsOverlayStyle,
   settingsSheetStyle,
 } from "./chromeStyles"
 
@@ -61,6 +62,19 @@ describe("graphite editor chrome contract", () => {
     expect(PANEL_OPEN_REDUCED_MS).toBeLessThan(PANEL_OPEN_MS)
     expect(String(normal.animation)).toContain(`${PANEL_OPEN_MS}ms`)
     expect(String(reduced.animation)).toContain(`${PANEL_OPEN_REDUCED_MS}ms`)
+  })
+
+  test("resets native dialog geometry for a full-viewport Settings modal", () => {
+    const overlay = settingsOverlayStyle()
+    const sheet = settingsSheetStyle()
+
+    expect(overlay.width).toBe("100vw")
+    expect(overlay.height).toBe("100vh")
+    expect(overlay.maxWidth).toBe("none")
+    expect(overlay.maxHeight).toBe("none")
+    expect(overlay.margin).toBe(0)
+    expect(overlay.border).toBe(0)
+    expect(sheet.width).toBe("min(460px, 100%)")
   })
 
   test("exposes one variable contract to every chrome root", () => {

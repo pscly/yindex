@@ -69,6 +69,21 @@ describe("pageTurnSpring", () => {
     expect(MOTION_PROFILE_TABLE.calm.parallaxMax).toBe(0)
   })
 
+  test("Given DESIGN ambient profiles, When reading highlight drift periods, Then calm is off and animated periods stay in range", () => {
+    // Given / When
+    const calm = MOTION_PROFILE_TABLE.calm.highlightDriftSec
+    const balanced = MOTION_PROFILE_TABLE.balanced.highlightDriftSec
+    const immersive = MOTION_PROFILE_TABLE.immersive.highlightDriftSec
+
+    // Then
+    expect(calm).toBeNull()
+    expect(balanced).toBeGreaterThanOrEqual(30)
+    expect(balanced).toBeLessThanOrEqual(45)
+    expect(immersive).toBeGreaterThanOrEqual(18)
+    expect(immersive).toBeLessThanOrEqual(30)
+    expect(MOTION_PROFILE_TABLE.immersive.parallaxMax).toBeLessThanOrEqual(0.03)
+  })
+
   test("Given Settings motion profiles, When resolving spring params, Then Home consumes DESIGN multipliers", () => {
     expect(springParamsForProfile("calm").stiffness).toBeCloseTo(126)
     expect(springParamsForProfile("balanced")).toEqual(SPRING_BASE)

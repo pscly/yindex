@@ -6,10 +6,12 @@ import { EditChrome } from "../ui/EditChrome"
 import { type LayoutDraftEvent, PageCanvas } from "../ui/PageCanvas"
 import { PageDots } from "../ui/PageDots"
 import { SettingsPanel } from "../ui/SettingsPanel"
+import { ambientMotionAllowed } from "./ambientMotion"
 import { centerMessageStyle, homeRootStyle } from "./appStyles"
 import { cyclicSlotCount } from "./pageTurnLayout"
 import { PageTurnStage } from "./pageTurnStage"
 import { useHomeState } from "./useHomeState"
+import { useOsPrefersReducedMotion } from "./useOsPrefersReducedMotion"
 import { usePageTurn } from "./usePageTurn"
 import { activeWallpaperSlots } from "./wallpaperActivity"
 
@@ -31,6 +33,7 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [selectedWidgetId, setSelectedWidgetId] =
     useState<WidgetInstanceId | null>(null)
+  const osPrefersReducedMotion = useOsPrefersReducedMotion()
 
   const onPageChange = useCallback(
     (pageId: PageId) => {
@@ -71,6 +74,11 @@ export function App() {
     fadeLayers: turn.fadeLayers,
     offsetY: turn.offsetY,
     stripSlots,
+  })
+  const ambientAllowed = ambientMotionAllowed({
+    reducedMotionSetting: doc?.settings.reducedMotion ?? "system",
+    osPrefersReduced: osPrefersReducedMotion,
+    pageActive: true,
   })
 
   useEffect(() => {
@@ -202,6 +210,8 @@ export function App() {
                 editMode={isEditable}
                 wallpaperActive={wallpaperSlots.has(slot)}
                 reducedMotion={turn.reducedMotion}
+                motionProfile={doc.settings.motionProfile}
+                ambientMotionAllowed={ambientAllowed}
                 selectedWidgetId={selectedWidgetId}
                 onSelectWidget={setSelectedWidgetId}
                 onWidgetConfig={onWidgetConfig}

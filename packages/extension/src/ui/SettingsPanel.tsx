@@ -1,6 +1,6 @@
 import type { HomeDocument, PageId } from "@yindex/domain"
 import { migrateHomeDocument, serializeHomeDocument } from "@yindex/domain"
-import { type ChangeEvent, useEffect, useState } from "react"
+import { type ChangeEvent, useEffect, useRef, useState } from "react"
 import { resetHomeDocument } from "../storage/homeStorage"
 import { type StoredPackage, listPackages } from "../storage/packageStore"
 import { NavigationSection } from "./settings/NavigationSection"
@@ -25,10 +25,24 @@ export function SettingsPanel(props: {
 }) {
   const [packages, setPackages] = useState<readonly StoredPackage[]>([])
   const [msg, setMsg] = useState<string | null>(null)
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const importInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!props.open) return
     void listPackages().then(setPackages)
+  }, [props.open])
+
+  useEffect(() => {
+    if (!props.open) return
+    const dialog = dialogRef.current
+    if (!dialog) return
+    const previousFocus = document.activeElement
+    dialog.showModal()
+    return () => {
+      dialog.close()
+      if (previousFocus instanceof HTMLElement) previousFocus.focus()
+    }
   }, [props.open])
 
   if (!props.open) return null
@@ -82,16 +96,19 @@ export function SettingsPanel(props: {
 
   return (
     <dialog
+      ref={dialogRef}
       data-chrome-root
-      open
-      aria-modal="true"
       aria-label="设置"
       style={overlay}
       onClick={(event) => {
         if (event.target === event.currentTarget) props.onClose()
       }}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") props.onClose()
+      onCancel={(event) => {
+        event.preventDefault()
+        props.onClose()
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") props.onClose()
       }}
     >
       <div style={sheet}>
@@ -116,15 +133,20 @@ export function SettingsPanel(props: {
             <button type="button" style={ghostBtn} onClick={exportConfig}>
               导出 JSON
             </button>
-            <label style={ghostBtn}>
+            <button
+              type="button"
+              style={ghostBtn}
+              onClick={() => importInputRef.current?.click()}
+            >
               导入 JSON
-              <input
-                type="file"
-                accept="application/json,.json"
-                hidden
-                onChange={(e) => void onImportConfig(e)}
-              />
-            </label>
+            </button>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept="application/json,.json"
+              hidden
+              onChange={(e) => void onImportConfig(e)}
+            />
           </div>
         </section>
 

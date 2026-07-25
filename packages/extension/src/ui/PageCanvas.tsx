@@ -1,11 +1,13 @@
 import type {
   HomeDocument,
+  MotionProfile,
   Page,
   PageId,
   WidgetInstanceId,
 } from "@yindex/domain"
 import { wallpaperCssBackground } from "@yindex/domain"
 import { type CSSProperties, useCallback, useState } from "react"
+import { ambientHighlightStyle } from "../newtab/ambientMotion"
 import type { WallpaperAnalysisResult } from "../wallpaper/wallpaperAnalyzer"
 import { EditDragShell } from "./EditDragShell"
 import type { LayoutDraftEvent } from "./EditDragShell"
@@ -34,11 +36,16 @@ export type PageCanvasProps = {
   readonly onWidgetLayoutDraft?: (event: LayoutDraftEvent) => void
   readonly wallpaperActive?: boolean
   readonly reducedMotion?: boolean
+  readonly motionProfile?: MotionProfile
+  readonly ambientMotionAllowed?: boolean
 }
 
 export function PageCanvas(props: PageCanvasProps) {
   const wallpaperActive = props.wallpaperActive ?? true
   const reducedMotion = props.reducedMotion ?? false
+  const motionProfile = props.motionProfile ?? props.doc.settings.motionProfile
+  const ambientAllowed = props.ambientMotionAllowed ?? !reducedMotion
+  const wallpaperReducedMotion = !ambientAllowed || !wallpaperActive
   const sourceKey = wallpaperAnalysisKey(props.page.style.wallpaper)
   const [published, setPublished] = useState<PageAnalysisPublication | null>(
     null,
@@ -65,6 +72,14 @@ export function PageCanvas(props: PageCanvasProps) {
     [sourceKey, wallpaperActive],
   )
 
+  const highlightStyle = ambientHighlightStyle({
+    profile: motionProfile,
+    allowed: ambientAllowed,
+    pageActive: wallpaperActive,
+  })
+  const ambientHighlight =
+    highlightStyle["--yindex-highlight-drift-sec"] !== undefined
+
   const rootStyle: CSSProperties = {
     position: "relative",
     width: "100%",
@@ -74,6 +89,7 @@ export function PageCanvas(props: PageCanvasProps) {
     fontFamily: tokens.typography.bodyFamily,
     background: fallbackBackground || tokens.color.bg,
     ...pageTokenCssVars(tokens),
+    ...highlightStyle,
   }
 
   return (
@@ -86,6 +102,7 @@ export function PageCanvas(props: PageCanvasProps) {
       }
       data-lens-polarity={tokens.glass.adaptive.lens.polarity}
       data-content-polarity={tokens.glass.adaptive.contentDirect.polarity}
+      data-ambient-motion={ambientHighlight ? "running" : undefined}
       aria-label={props.page.name}
       onMouseDown={() => {
         if (props.editMode) props.onSelectWidget(null)
@@ -94,7 +111,7 @@ export function PageCanvas(props: PageCanvasProps) {
       <WallpaperStage
         wallpaper={props.page.style.wallpaper}
         active={wallpaperActive}
-        reducedMotion={reducedMotion}
+        reducedMotion={wallpaperReducedMotion}
         fallbackBackground={fallbackBackground || tokens.color.bg}
         dimColor={tokens.color.bg}
         onAnalysis={onAnalysis}
