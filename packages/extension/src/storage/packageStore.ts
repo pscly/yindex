@@ -8,9 +8,11 @@ export type StoredPackage = {
   readonly packageId: string
   readonly version: string
   readonly manifest: PackageManifest
-  readonly files: Readonly<Record<string, string>> // path -> text or data URL
+  readonly files: PackageFileMap
   readonly installedAt: number
 }
+
+export type PackageFileMap = Readonly<Record<string, string>>
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -101,9 +103,9 @@ export type ImportResult =
   | { readonly ok: true; readonly package: StoredPackage }
   | { readonly ok: false; readonly message: string }
 
-/** Import from a map of relative paths to file text (already unzipped). */
+/** Import an unzipped map whose values are UTF-8 text or binary data URLs. */
 export async function installPackageFromFiles(
-  files: Readonly<Record<string, string>>,
+  files: PackageFileMap,
 ): Promise<ImportResult> {
   const manifestText =
     files["manifest.json"] ??

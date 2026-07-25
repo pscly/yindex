@@ -4,6 +4,63 @@ import {
   installPackageFromFiles,
 } from "../../storage/packageStore"
 
+const TEXT_FILE_EXTENSIONS = new Set([
+  "css",
+  "csv",
+  "htm",
+  "html",
+  "js",
+  "json",
+  "map",
+  "md",
+  "mjs",
+  "svg",
+  "txt",
+  "webmanifest",
+  "xml",
+])
+
+const BINARY_MEDIA_TYPES: Readonly<Record<string, string>> = {
+  avif: "image/avif",
+  gif: "image/gif",
+  ico: "image/x-icon",
+  jpeg: "image/jpeg",
+  jpg: "image/jpeg",
+  mp3: "audio/mpeg",
+  mp4: "video/mp4",
+  ogg: "audio/ogg",
+  otf: "font/otf",
+  png: "image/png",
+  ttf: "font/ttf",
+  wav: "audio/wav",
+  webm: "video/webm",
+  webp: "image/webp",
+  woff: "font/woff",
+  woff2: "font/woff2",
+}
+
+function fileExtension(path: string): string {
+  const filename = path.slice(path.lastIndexOf("/") + 1)
+  const dot = filename.lastIndexOf(".")
+  return dot < 0 ? "" : filename.slice(dot + 1).toLowerCase()
+}
+
+function bytesToBase64(data: Uint8Array): string {
+  let binary = ""
+  const chunkSize = 0x8000
+  for (let offset = 0; offset < data.length; offset += chunkSize) {
+    binary += String.fromCharCode(...data.subarray(offset, offset + chunkSize))
+  }
+  return btoa(binary)
+}
+
+function decodePackageFile(path: string, data: Uint8Array): string {
+  const extension = fileExtension(path)
+  if (TEXT_FILE_EXTENSIONS.has(extension)) return strFromU8(data)
+  const mediaType = BINARY_MEDIA_TYPES[extension] ?? "application/octet-stream"
+  return `data:${mediaType};base64,${bytesToBase64(data)}`
+}
+
 export function normalizeZipPaths(
   files: Record<string, string>,
 ): Record<string, string> {
@@ -32,7 +89,7 @@ export async function installFromZipBytes(
   for (const [path, data] of Object.entries(unzipped)) {
     if (path.endsWith("/")) continue
     const clean = path.replace(/^\/+/, "").replace(/\\/g, "/")
-    files[clean] = strFromU8(data)
+    files[clean] = decodePackageFile(clean, data)
   }
   return installPackageFromFiles(normalizeZipPaths(files))
 }

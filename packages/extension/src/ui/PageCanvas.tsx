@@ -151,6 +151,7 @@ export function PageCanvas(props: PageCanvasProps) {
                     widget={w}
                     pageTokens={tokens}
                     editMode={props.editMode}
+                    reducedMotion={reducedMotion}
                     onWidgetConfig={props.onWidgetConfig}
                   />
                 </div>
@@ -162,6 +163,7 @@ export function PageCanvas(props: PageCanvasProps) {
                 widget={w}
                 pageTokens={tokens}
                 editMode={props.editMode}
+                reducedMotion={reducedMotion}
                 onWidgetConfig={props.onWidgetConfig}
               />
             )}

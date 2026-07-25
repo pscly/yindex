@@ -27,6 +27,7 @@ export type WidgetMountProps = {
   readonly widget: WidgetInstance
   readonly pageTokens: StyleTokens
   readonly editMode: boolean
+  readonly reducedMotion: boolean
   readonly onWidgetConfig: (widgetId: string, config: unknown) => void
 }
 
@@ -72,6 +73,7 @@ export function WidgetMount(props: WidgetMountProps) {
         typeId={src.typeId}
         instanceId={props.widget.id}
         config={props.widget.config}
+        reducedMotion={props.reducedMotion}
       />
     )
   }

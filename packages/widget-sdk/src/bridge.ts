@@ -26,6 +26,22 @@ export const bridgeResponseSchema = z.object({
 export type BridgeRequest = z.infer<typeof bridgeRequestSchema>
 export type BridgeResponse = z.infer<typeof bridgeResponseSchema>
 
+export const packageHostInitMessageSchema = z.object({
+  channel: z.literal("yindex-host-init"),
+  instanceId: z.string().min(1),
+  config: z.unknown(),
+  reducedMotion: z.boolean(),
+  size: z.object({
+    width: z.number().nonnegative(),
+    height: z.number().nonnegative(),
+  }),
+  cssVars: z.record(z.string()),
+})
+
+export type PackageHostInitMessage = z.infer<
+  typeof packageHostInitMessageSchema
+>
+
 export type BridgeMethod =
   | "storage.get"
   | "storage.set"

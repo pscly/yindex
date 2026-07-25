@@ -8,6 +8,7 @@
       :root {
         color-scheme: dark light;
         font-family: "Noto Sans SC", system-ui, sans-serif;
+        color: var(--yindex-lens-ink, CanvasText);
       }
       html, body {
         margin: 0;
@@ -43,6 +44,7 @@
         cursor: pointer;
       }
       button:disabled { opacity: 0.45; cursor: not-allowed; }
+      :root[data-reduced-motion="true"] button { transition: none; }
       button.primary {
         background: color-mix(in srgb, currentColor 18%, transparent);
         font-weight: 600;
@@ -65,9 +67,30 @@
       let remaining = TOTAL
       let timer = null
       let running = false
+      let reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
       const el = document.getElementById("time")
       const statusEl = document.getElementById("status")
       const startBtn = document.getElementById("start")
+
+      window.addEventListener("message", (event) => {
+        const d = event.data
+        if (!d || d.channel !== "yindex-host-init") return
+        if (d.cssVars && typeof d.cssVars === "object") {
+          const foreground = d.cssVars["--yindex-lens-ink"]
+          if (typeof foreground === "string") {
+            document.documentElement.style.setProperty("--yindex-lens-ink", foreground)
+          }
+          for (const [name, value] of Object.entries(d.cssVars)) {
+            if (name === "--yindex-lens-ink") continue
+            if (!name.startsWith("--yindex-") || typeof value !== "string") continue
+            document.documentElement.style.setProperty(name, value)
+          }
+        }
+        if (typeof d.reducedMotion === "boolean") {
+          reducedMotion = d.reducedMotion
+          document.documentElement.dataset.reducedMotion = String(reducedMotion)
+        }
+      })
 
       function render() {
         const m = String(Math.floor(remaining / 60)).padStart(2, "0")

@@ -11,7 +11,6 @@ const config = {
       targets: [
         { src: "public/manifest.json", dest: "." },
         { src: "public/icons/*", dest: "icons" },
-        { src: "public/sandbox.html", dest: "." },
         { src: "../examples/pomodoro/*", dest: "examples/pomodoro" },
         {
           src: "node_modules/@fontsource-variable/noto-sans-sc/LICENSE",
@@ -42,12 +41,10 @@ const config = {
       input: {
         newtab: resolve(__dirname, "newtab.html"),
         background: resolve(__dirname, "src/background/service-worker.ts"),
-        sandbox: resolve(__dirname, "src/runtime/sandbox-frame.ts"),
       },
       output: {
         entryFileNames: (chunk: { readonly name: string }) => {
           if (chunk.name === "background") return "background.js"
-          if (chunk.name === "sandbox") return "sandbox.js"
           return "assets/[name]-[hash].js"
         },
         chunkFileNames: "assets/[name]-[hash].js",

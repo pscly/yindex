@@ -1,5 +1,5 @@
 import type { StyleTokens } from "@yindex/domain"
-import { WidgetSurface } from "@yindex/widgets"
+import { LensSurface } from "@yindex/widgets"
 
 export function MissingWidget(props: {
   readonly tokens: StyleTokens
@@ -8,8 +8,9 @@ export function MissingWidget(props: {
   readonly showTitle?: boolean
 }) {
   return (
-    <WidgetSurface
+    <LensSurface
       tokens={props.tokens}
+      shape="panel"
       title="缺失小组件"
       showTitle={props.showTitle !== false}
     >
@@ -17,7 +18,7 @@ export function MissingWidget(props: {
         style={{
           fontSize: 13,
           lineHeight: 1.5,
-          color: props.tokens.color.muted,
+          color: props.tokens.glass.adaptive.lens.mutedForeground,
         }}
       >
         <div>Package 未安装或类型不可用。</div>
@@ -34,6 +35,6 @@ export function MissingWidget(props: {
           重装同一 Package 后可恢复配置与布局。
         </div>
       </div>
-    </WidgetSurface>
+    </LensSurface>
   )
 }

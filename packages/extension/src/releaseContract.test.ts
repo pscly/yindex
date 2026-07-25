@@ -9,9 +9,10 @@ const manifestSchema = z.object({
   key: z.never().optional(),
   minimum_chrome_version: z.string(),
   permissions: z.array(z.string()),
+  sandbox: z.never().optional(),
   content_security_policy: z.object({
     extension_pages: z.string(),
-    sandbox: z.string(),
+    sandbox: z.never().optional(),
   }),
 })
 
@@ -84,6 +85,19 @@ describe("Task 6 release contract", () => {
     expect(directives["require-trusted-types-for"]).toEqual(["'script'"])
     expect(directives["trusted-types"]).toEqual(["yindex-packaged-workers"])
     expect(directives["trusted-types"]).not.toContain("'allow-duplicates'")
+    expect(manifest.sandbox).toBeUndefined()
+    expect(manifest.content_security_policy.sandbox).toBeUndefined()
+  })
+
+  test("does not build or copy the retired sandbox wrapper", () => {
+    // Given: package widgets mount directly in an isolated blob iframe
+    const viteConfig = readText("packages/extension/vite.config.cts")
+
+    // When: production inputs and static-copy targets are inspected
+    // Then: no second iframe wrapper or sandbox bundle remains in the build
+    expect(viteConfig).not.toContain("public/sandbox.html")
+    expect(viteConfig).not.toContain("src/runtime/sandbox-frame.ts")
+    expect(viteConfig).not.toContain('chunk.name === "sandbox"')
   })
 
   test("restricts the Worker policy to one packaged asset", () => {
