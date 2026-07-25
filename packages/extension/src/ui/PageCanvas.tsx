@@ -1,14 +1,17 @@
 import type {
+  AdaptiveGlassInput,
   HomeDocument,
   Page,
   PageId,
   StyleTokens,
   WidgetInstanceId,
 } from "@yindex/domain"
-import { resolvePageTokens } from "@yindex/domain"
-import type { CSSProperties } from "react"
+import { pageStyleToTokens, wallpaperCssBackground } from "@yindex/domain"
+import { type CSSProperties, useCallback, useState } from "react"
+import type { WallpaperAnalysisResult } from "../wallpaper/wallpaperAnalyzer"
 import { EditDragShell } from "./EditDragShell"
 import type { LayoutDraftEvent } from "./EditDragShell"
+import { WallpaperStage } from "./WallpaperStage"
 import { WidgetMount } from "./WidgetMount"
 import { localFontFamily } from "./localFontFamilies"
 
@@ -23,10 +26,15 @@ export type PageCanvasProps = {
   readonly onWidgetConfig: (widgetId: string, config: unknown) => void
   readonly onDeleteWidget?: (widgetId: WidgetInstanceId) => void
   readonly onWidgetLayoutDraft?: (event: LayoutDraftEvent) => void
+  readonly wallpaperActive?: boolean
+  readonly reducedMotion?: boolean
 }
 
-export function pageTokensOf(page: Page): StyleTokens {
-  const tokens = resolvePageTokens(page.style)
+export function pageTokensOf(
+  page: Page,
+  analysis?: AdaptiveGlassInput | null,
+): StyleTokens {
+  const tokens = pageStyleToTokens(page.style, analysis)
   return {
     ...tokens,
     typography: {
@@ -38,8 +46,26 @@ export function pageTokensOf(page: Page): StyleTokens {
 }
 
 export function PageCanvas(props: PageCanvasProps) {
-  const tokens = pageTokensOf(props.page)
-  const wallpaper = tokens.wallpaper.cssBackground || tokens.color.bg
+  const sourceKey = JSON.stringify(props.page.style.wallpaper)
+  const [published, setPublished] = useState<{
+    readonly sourceKey: string
+    readonly result: WallpaperAnalysisResult
+  } | null>(null)
+  const analysis =
+    published?.sourceKey === sourceKey ? published.result.analysis : null
+  const tokens = pageTokensOf(props.page, analysis)
+  const fallbackBackground =
+    props.page.style.wallpaper.kind === "generative"
+      ? tokens.wallpaper.cssBackground
+      : wallpaperCssBackground({
+          kind: "generative",
+          generativePreset: "moment",
+          dim: props.page.style.wallpaper.dim,
+        })
+  const onAnalysis = useCallback(
+    (result: WallpaperAnalysisResult) => setPublished({ sourceKey, result }),
+    [sourceKey],
+  )
 
   const rootStyle: CSSProperties = {
     position: "relative",
@@ -48,7 +74,7 @@ export function PageCanvas(props: PageCanvasProps) {
     overflow: "hidden",
     color: tokens.color.ink,
     fontFamily: tokens.typography.bodyFamily,
-    background: wallpaper,
+    background: fallbackBackground || tokens.color.bg,
   }
 
   return (
@@ -60,14 +86,13 @@ export function PageCanvas(props: PageCanvasProps) {
         if (props.editMode) props.onSelectWidget(null)
       }}
     >
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `color-mix(in oklch, ${tokens.color.bg} ${tokens.wallpaper.dim * 100}%, transparent)`,
-          pointerEvents: "none",
-        }}
+      <WallpaperStage
+        wallpaper={props.page.style.wallpaper}
+        active={props.wallpaperActive ?? true}
+        reducedMotion={props.reducedMotion ?? false}
+        fallbackBackground={fallbackBackground || tokens.color.bg}
+        dimColor={tokens.color.bg}
+        onAnalysis={onAnalysis}
       />
       {props.page.widgets.map((w) => {
         const selected = props.editMode && props.selectedWidgetId === w.id

@@ -10,10 +10,12 @@ import {
 } from "../ui/PageCanvas"
 import { PageDots } from "../ui/PageDots"
 import { SettingsPanel } from "../ui/SettingsPanel"
+import { centerMessageStyle, homeRootStyle } from "./appStyles"
 import { cyclicSlotCount } from "./pageTurnLayout"
 import { PageTurnStage } from "./pageTurnStage"
 import { useHomeState } from "./useHomeState"
 import { usePageTurn } from "./usePageTurn"
+import { activeWallpaperSlots } from "./wallpaperActivity"
 
 export function App() {
   const {
@@ -65,6 +67,11 @@ export function App() {
 
   const stripSlots = Math.max(cyclicSlotCount(orderedPages.length), 1)
   const currentPageId = turn.currentPageId
+  const wallpaperSlots = activeWallpaperSlots({
+    fadeLayers: turn.fadeLayers,
+    offsetY: turn.offsetY,
+    stripSlots,
+  })
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -155,7 +162,7 @@ export function App() {
 
   if (loading) {
     return (
-      <div style={centerMsg}>
+      <div style={centerMessageStyle}>
         <div style={{ opacity: 0.7 }}>yindex 加载中…</div>
       </div>
     )
@@ -163,21 +170,14 @@ export function App() {
 
   if (error || !doc) {
     return (
-      <div style={centerMsg}>
+      <div style={centerMessageStyle}>
         <div>加载失败：{error ?? "未知错误"}</div>
       </div>
     )
   }
 
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
+    <div style={homeRootStyle}>
       <PageTurnStage
         fadeLayers={turn.fadeLayers}
         isAnimating={turn.isAnimating}
@@ -200,12 +200,12 @@ export function App() {
                 doc={doc}
                 page={page}
                 editMode={isEditable}
+                wallpaperActive={wallpaperSlots.has(slot)}
+                reducedMotion={turn.reducedMotion}
                 selectedWidgetId={selectedWidgetId}
                 onSelectWidget={setSelectedWidgetId}
                 onWidgetConfig={onWidgetConfig}
-                {...(isEditable
-                  ? { onWidgetLayoutDraft, onDeleteWidget }
-                  : {})}
+                {...(isEditable ? { onWidgetLayoutDraft, onDeleteWidget } : {})}
               />
             </div>
           )
@@ -258,12 +258,3 @@ export function App() {
     </div>
   )
 }
-
-const centerMsg = {
-  width: "100%",
-  height: "100%",
-  display: "grid",
-  placeItems: "center",
-  color: "#ddd",
-  background: "#111",
-} as const

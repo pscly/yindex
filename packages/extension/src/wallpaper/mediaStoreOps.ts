@@ -64,6 +64,7 @@ export async function readAsset(input: {
       mimeType: metaR.value.mimeType,
       bytes: blobBytes,
       byteLength: blobBytes.byteLength,
+      contentHash: metaR.value.contentHash,
     })
   } catch (e) {
     if (isNotFoundError(e)) {

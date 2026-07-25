@@ -45,6 +45,7 @@ describe("MediaStore public seam", () => {
     expect(readImg.ok).toBe(true)
     if (!readImg.ok) return
     expect([...readImg.value.bytes]).toEqual([...imgBytes])
+    expect(readImg.value.contentHash).toMatch(/^[0-9a-f]{64}$/)
 
     const delR = await store.delete(imgR.value.ref)
     expect(delR.ok).toBe(true)

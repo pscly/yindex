@@ -35,6 +35,7 @@ export type MediaBlob = {
   readonly mimeType: string
   readonly bytes: Uint8Array
   readonly byteLength: number
+  readonly contentHash: string
 }
 
 export type MediaStoreError =
