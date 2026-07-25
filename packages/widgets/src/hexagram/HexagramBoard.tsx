@@ -1,6 +1,6 @@
 import type { StyleTokens } from "@yindex/domain"
 import { type CSSProperties, useMemo, useState } from "react"
-import { WidgetSurface } from "../shell/surface"
+import { LensSurface } from "../shell/surface"
 import {
   HEXAGRAMS,
   type Hexagram,
@@ -65,9 +65,13 @@ export function HexagramBoard(props: HexagramBoardProps) {
 
   const detail = selected ?? drawn ?? null
 
+  const lensInk = props.tokens.glass.adaptive.lens.foreground
+  const lensMuted = props.tokens.glass.adaptive.lens.mutedForeground
+
   return (
-    <WidgetSurface
+    <LensSurface
       tokens={props.tokens}
+      shape="panel"
       title="六十四卦"
       showTitle={props.showTitle}
     >
@@ -102,7 +106,7 @@ export function HexagramBoard(props: HexagramBoardProps) {
           {drawn ? (
             <span
               style={{
-                color: props.tokens.color.muted,
+                color: lensMuted,
                 fontSize: 12,
                 alignSelf: "center",
               }}
@@ -119,10 +123,11 @@ export function HexagramBoard(props: HexagramBoardProps) {
             style={{
               padding: 10,
               borderRadius: props.tokens.radius.sm,
-              background: `color-mix(in oklch, ${props.tokens.color.accent} 10%, transparent)`,
+              background: "transparent",
               overflow: "auto",
               maxHeight: libraryOpen ? 120 : "none",
               flex: libraryOpen ? "0 0 auto" : 1,
+              color: lensInk,
             }}
           >
             <div
@@ -135,20 +140,20 @@ export function HexagramBoard(props: HexagramBoardProps) {
               {detail.index}. {detail.name}（上{trigramName(detail.upper)}下
               {trigramName(detail.lower)}）
             </div>
-            <div style={{ fontSize: 13, lineHeight: 1.55 }}>
+            <div style={{ fontSize: 16.5, lineHeight: 1.55, maxWidth: "60ch" }}>
               <div>
                 <strong>卦辞</strong> {detail.judgment}
               </div>
               <div>
                 <strong>象曰</strong> {detail.image}
               </div>
-              <div style={{ color: props.tokens.color.muted, marginTop: 4 }}>
+              <div style={{ color: lensMuted, marginTop: 4 }}>
                 {detail.note}
               </div>
             </div>
           </div>
         ) : (
-          <div style={{ color: props.tokens.color.muted, fontSize: 13 }}>
+          <div style={{ color: lensMuted, fontSize: 13 }}>
             点击矩阵查询，或抽取今日一卦。
           </div>
         )}
@@ -180,7 +185,7 @@ export function HexagramBoard(props: HexagramBoardProps) {
                       detail?.index === h?.index
                         ? `color-mix(in oklch, ${props.tokens.color.accent} 28%, transparent)`
                         : "transparent",
-                    color: props.tokens.color.ink,
+                    color: lensInk,
                     fontSize: 10,
                     cursor: "pointer",
                     borderRadius: 4,
@@ -195,12 +200,12 @@ export function HexagramBoard(props: HexagramBoardProps) {
         ) : null}
 
         {!libraryOpen && !detail ? (
-          <div style={{ color: props.tokens.color.muted, fontSize: 12 }}>
+          <div style={{ color: lensMuted, fontSize: 12 }}>
             共 {HEXAGRAMS.length} 卦 · 仅展示经典原文与简注，不做吉凶断言
           </div>
         ) : null}
       </div>
-    </WidgetSurface>
+    </LensSurface>
   )
 }
 

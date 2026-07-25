@@ -1,6 +1,6 @@
 import type { StyleTokens } from "@yindex/domain"
 import { type CSSProperties, useEffect, useState } from "react"
-import { WidgetSurface } from "../shell/surface"
+import { LensSurface } from "../shell/surface"
 
 export type WeatherWidgetConfig = {
   readonly mode: "auto" | "manual"
@@ -129,20 +129,22 @@ export function WeatherWidget(props: WeatherWidgetProps) {
     }
   }, [props.config.latitude, props.config.longitude, props.config.mode, tick])
 
+  const lensInk = props.tokens.glass.adaptive.lens.foreground
+  const lensMuted = props.tokens.glass.adaptive.lens.mutedForeground
+
   return (
-    <WidgetSurface
+    <LensSurface
       tokens={props.tokens}
+      shape="capsule"
       title="天气"
       showTitle={props.showTitle}
     >
       {state.status === "loading" ? (
-        <div style={{ color: props.tokens.color.muted }}>加载中…</div>
+        <div style={{ color: lensMuted }}>加载中…</div>
       ) : null}
       {state.status === "error" ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ color: props.tokens.color.muted, fontSize: 13 }}>
-            {state.message}
-          </div>
+          <div style={{ color: lensMuted, fontSize: 13 }}>{state.message}</div>
           <button
             type="button"
             onClick={() => setTick((t) => t + 1)}
@@ -164,22 +166,23 @@ export function WeatherWidget(props: WeatherWidgetProps) {
         >
           <div
             style={{
-              fontFamily: props.tokens.typography.displayFamily,
+              fontFamily: props.tokens.typography.monoFamily,
               fontSize: "clamp(1.6rem, 4vw, 2rem)",
               fontWeight: props.tokens.typography.displayWeight,
               lineHeight: 1.1,
               fontVariantNumeric: "tabular-nums",
+              color: lensInk,
             }}
           >
             {Math.round(state.tempC)}°
           </div>
-          <div>
+          <div style={{ color: lensInk }}>
             {state.label}
             {props.config.cityLabel ? ` · ${props.config.cityLabel}` : ""}
           </div>
           <div
             style={{
-              color: props.tokens.color.muted,
+              color: lensMuted,
               fontSize: 12,
               display: "flex",
               justifyContent: "space-between",
@@ -194,7 +197,7 @@ export function WeatherWidget(props: WeatherWidgetProps) {
               style={{
                 border: "none",
                 background: "transparent",
-                color: props.tokens.color.muted,
+                color: lensMuted,
                 cursor: "pointer",
                 fontSize: 11,
                 padding: 0,
@@ -206,6 +209,6 @@ export function WeatherWidget(props: WeatherWidgetProps) {
           </div>
         </div>
       ) : null}
-    </WidgetSurface>
+    </LensSurface>
   )
 }

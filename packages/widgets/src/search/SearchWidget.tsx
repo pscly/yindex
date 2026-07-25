@@ -1,6 +1,6 @@
 import type { StyleTokens } from "@yindex/domain"
 import { type CSSProperties, type FormEvent, useState } from "react"
-import { WidgetSurface } from "../shell/surface"
+import { LensSurface } from "../shell/surface"
 
 export type SearchEngineId =
   | "google"
@@ -53,14 +53,15 @@ export function SearchWidget(props: SearchWidgetProps) {
   const [q, setQ] = useState("")
   const canSubmit = q.trim().length > 0
   const engineLabel = ENGINE_LABEL[props.config.engine] ?? "搜索"
+  const lensInk = props.tokens.glass.adaptive.lens.foreground
   const field: CSSProperties = {
     flex: 1,
     height: "100%",
     minHeight: 40,
-    borderRadius: props.tokens.radius.sm,
-    border: `1px solid color-mix(in oklch, ${props.tokens.color.ink} 12%, transparent)`,
-    background: `color-mix(in oklch, ${props.tokens.color.bg} 35%, transparent)`,
-    color: props.tokens.color.ink,
+    borderRadius: 999,
+    border: "1px solid color-mix(in oklch, white 12%, transparent)",
+    background: "transparent",
+    color: lensInk,
     padding: "0 16px",
     fontSize: 15,
     outline: "none",
@@ -74,11 +75,11 @@ export function SearchWidget(props: SearchWidgetProps) {
   }
 
   return (
-    <WidgetSurface
+    <LensSurface
       tokens={props.tokens}
+      shape="capsule"
       title={`搜索 · ${engineLabel}`}
       showTitle={props.showTitle}
-      style={{ background: props.tokens.color.surface }}
     >
       <form
         onSubmit={onSubmit}
@@ -106,13 +107,10 @@ export function SearchWidget(props: SearchWidgetProps) {
             minHeight: 40,
             minWidth: 72,
             padding: "0 18px",
-            borderRadius: props.tokens.radius.sm,
+            borderRadius: 999,
             border: "none",
             background: props.tokens.color.accent,
-            color:
-              props.tokens.elevation.mode === "flat"
-                ? "oklch(0.99 0 0)"
-                : props.tokens.color.bg,
+            color: props.tokens.color.bg,
             fontWeight: 600,
             cursor: canSubmit ? "pointer" : "not-allowed",
             opacity: canSubmit ? 1 : 0.45,
@@ -122,6 +120,6 @@ export function SearchWidget(props: SearchWidgetProps) {
           搜索
         </button>
       </form>
-    </WidgetSurface>
+    </LensSurface>
   )
 }

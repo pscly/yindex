@@ -1,5 +1,5 @@
 import type { StyleTokens } from "@yindex/domain"
-import { WidgetSurface } from "../shell/surface"
+import { LensSurface } from "../shell/surface"
 
 export type ShortcutItem = {
   readonly id: string
@@ -31,14 +31,18 @@ export function faviconForUrl(url: string): string | undefined {
 export function ShortcutsWidget(props: ShortcutsWidgetProps) {
   const items = props.config.items
 
+  const lensInk = props.tokens.glass.adaptive.lens.foreground
+  const lensMuted = props.tokens.glass.adaptive.lens.mutedForeground
+
   return (
-    <WidgetSurface
+    <LensSurface
       tokens={props.tokens}
+      shape="shelf"
       title="快捷方式"
       showTitle={props.showTitle}
     >
       {items.length === 0 ? (
-        <div style={{ color: props.tokens.color.muted, fontSize: 13 }}>
+        <div style={{ color: lensMuted, fontSize: 13 }}>
           暂无快捷方式。进入编辑态选中后可添加链接。
         </div>
       ) : (
@@ -75,7 +79,7 @@ export function ShortcutsWidget(props: ShortcutsWidgetProps) {
                   alignItems: "center",
                   gap: 8,
                   textDecoration: "none",
-                  color: props.tokens.color.ink,
+                  color: lensInk,
                   fontSize: 12,
                   minWidth: 0,
                 }}
@@ -84,12 +88,12 @@ export function ShortcutsWidget(props: ShortcutsWidgetProps) {
                   style={{
                     width: 48,
                     height: 48,
-                    borderRadius: 12,
+                    borderRadius: 14,
                     display: "grid",
                     placeItems: "center",
-                    background: props.tokens.color.bg,
-                    border: `1px solid color-mix(in oklch, ${props.tokens.color.ink} 10%, transparent)`,
-                    boxShadow: `0 1px 0 color-mix(in oklch, ${props.tokens.color.ink} 4%, transparent)`,
+                    background: "transparent",
+                    border:
+                      "1px solid color-mix(in oklch, white 12%, transparent)",
                     overflow: "hidden",
                     flex: "0 0 auto",
                     fontWeight: 600,
@@ -133,6 +137,6 @@ export function ShortcutsWidget(props: ShortcutsWidgetProps) {
           })}
         </div>
       )}
-    </WidgetSurface>
+    </LensSurface>
   )
 }

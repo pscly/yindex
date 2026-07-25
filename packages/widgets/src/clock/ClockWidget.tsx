@@ -1,6 +1,6 @@
 import type { StyleTokens } from "@yindex/domain"
 import { useEffect, useState } from "react"
-import { WidgetSurface } from "../shell/surface"
+import { ContentDirectSurface } from "../shell/surface"
 
 export type ClockWidgetProps = {
   readonly tokens: StyleTokens
@@ -29,24 +29,19 @@ export function ClockWidget(props: ClockWidgetProps) {
   const date = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`
   const week = `星期${WEEKDAYS[now.getDay()] ?? ""}`
   const time = props.showSeconds === false ? `${h}:${m}` : `${h}:${m}:${s}`
-  const glass = props.tokens.glass.enabled
-
-  const surfaceProps = !glass
-    ? {
-        style: {
-          background: "transparent",
-          border: "none",
-          boxShadow: "none" as const,
-        },
-      }
-    : {}
+  const ink = props.tokens.glass.adaptive.contentDirect.foreground
+  const muted = props.tokens.glass.adaptive.contentDirect.mutedForeground
+  const scrim = props.tokens.glass.adaptive.contentDirect.scrim
+  const displayWeight = Math.min(
+    200,
+    Math.max(100, props.tokens.typography.displayWeight),
+  )
 
   return (
-    <WidgetSurface
+    <ContentDirectSurface
       tokens={props.tokens}
       title="时钟"
       showTitle={props.showTitle === true}
-      {...surfaceProps}
     >
       <div
         style={{
@@ -58,21 +53,20 @@ export function ClockWidget(props: ClockWidgetProps) {
           gap: props.compact ? 2 : 14,
           textAlign: "center",
           userSelect: "none",
+          color: ink,
         }}
       >
         <div
           style={{
             fontFamily: props.tokens.typography.displayFamily,
-            fontWeight: props.tokens.typography.displayWeight,
+            fontWeight: displayWeight,
             fontSize: props.compact
               ? "clamp(1.75rem, 8vw, 2rem)"
-              : "clamp(3rem, 11vw, 7rem)",
+              : "clamp(4.5rem, 14vw, 9rem)",
             letterSpacing: "-0.03em",
             lineHeight: 0.95,
             fontVariantNumeric: "tabular-nums",
-            textShadow: glass
-              ? "0 0 40px color-mix(in oklch, white 18%, transparent)"
-              : undefined,
+            textShadow: `0 1px 24px ${scrim}`,
           }}
           aria-live="polite"
           aria-label={`当前时间 ${time}`}
@@ -81,7 +75,7 @@ export function ClockWidget(props: ClockWidgetProps) {
         </div>
         <div
           style={{
-            color: props.tokens.color.muted,
+            color: muted,
             fontSize: props.compact
               ? "clamp(11px, 1.2vw, 12px)"
               : "clamp(13px, 1.4vw, 16px)",
@@ -89,11 +83,12 @@ export function ClockWidget(props: ClockWidgetProps) {
             fontWeight: 400,
             lineHeight: props.compact ? 1.2 : undefined,
             whiteSpace: props.compact ? "nowrap" : undefined,
+            textShadow: `0 1px 24px ${scrim}`,
           }}
         >
           {date} · {week}
         </div>
       </div>
-    </WidgetSurface>
+    </ContentDirectSurface>
   )
 }

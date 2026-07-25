@@ -1,6 +1,6 @@
 import type { StyleTokens } from "@yindex/domain"
 import { useEffect, useState } from "react"
-import { WidgetSurface } from "../shell/surface"
+import { ContentDirectSurface } from "../shell/surface"
 
 export type QuoteWidgetConfig = {
   readonly source: "hitokoto" | "static"
@@ -86,8 +86,12 @@ export function QuoteWidget(props: QuoteWidgetProps) {
       ? { text: "…", from: "" }
       : { text: state.text, from: state.from }
 
+  const ink = props.tokens.glass.adaptive.contentDirect.foreground
+  const muted = props.tokens.glass.adaptive.contentDirect.mutedForeground
+  const scrim = props.tokens.glass.adaptive.contentDirect.scrim
+
   return (
-    <WidgetSurface
+    <ContentDirectSurface
       tokens={props.tokens}
       title="每日一句"
       showTitle={props.showTitle}
@@ -100,28 +104,31 @@ export function QuoteWidget(props: QuoteWidgetProps) {
           flexDirection: "column",
           justifyContent: "center",
           gap: 12,
+          color: ink,
         }}
       >
         <p
           style={{
             margin: 0,
             fontFamily: props.tokens.typography.displayFamily,
-            fontSize: "clamp(1.05rem, 2.4vw, 1.4rem)",
-            lineHeight: 1.65,
-            letterSpacing: "0.01em",
-            fontWeight: 500,
+            fontSize: "clamp(1.4rem, 3vw, 2.2rem)",
+            lineHeight: 1.8,
+            letterSpacing: "0.02em",
+            fontWeight: 550,
+            textShadow: `0 1px 24px ${scrim}`,
           }}
         >
           {body.text}
         </p>
         <footer
           style={{
-            color: props.tokens.color.muted,
+            color: muted,
             fontSize: 12,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             gap: 8,
+            textShadow: `0 1px 24px ${scrim}`,
           }}
         >
           <span>{body.from ? `— ${body.from}` : "\u00a0"}</span>
@@ -132,7 +139,7 @@ export function QuoteWidget(props: QuoteWidgetProps) {
               style={{
                 border: "none",
                 background: "transparent",
-                color: props.tokens.color.muted,
+                color: muted,
                 cursor: "pointer",
                 fontSize: 11,
                 padding: 0,
@@ -144,6 +151,6 @@ export function QuoteWidget(props: QuoteWidgetProps) {
           ) : null}
         </footer>
       </blockquote>
-    </WidgetSurface>
+    </ContentDirectSurface>
   )
 }
