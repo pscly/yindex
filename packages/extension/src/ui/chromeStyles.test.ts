@@ -6,6 +6,7 @@ import {
   PANEL_OPEN_REDUCED_MS,
   PRESS_MS,
   PRESS_SCALE,
+  PRIMARY_TARGET_PX,
   accentActionStyle,
   borrowAccentFill,
   chromeControlLine,
@@ -13,8 +14,10 @@ import {
   chromeStyleVars,
   dockStyle,
   ghostBtn,
+  iconBtn,
   inputStyle,
   panelStyle,
+  primaryBtn,
   selectStyle,
   settingsOverlayStyle,
   settingsSheetStyle,
@@ -35,6 +38,16 @@ describe("graphite editor chrome contract", () => {
   test("uses the shared press response", () => {
     expect(PRESS_SCALE).toBe(0.97)
     expect(PRESS_MS).toBe(120)
+  })
+
+  test("Given primary chrome controls, When target dimensions are read, Then each exposes a 44 CSS-px hit area", () => {
+    expect(PRIMARY_TARGET_PX).toBe(44)
+    expect(iconBtn.width).toBe(PRIMARY_TARGET_PX)
+    expect(iconBtn.height).toBe(PRIMARY_TARGET_PX)
+    expect(primaryBtn.height).toBe(PRIMARY_TARGET_PX)
+    expect(Number(primaryBtn.minWidth)).toBeGreaterThanOrEqual(
+      PRIMARY_TARGET_PX,
+    )
   })
 
   test("locks chrome typography to a Sans family", () => {

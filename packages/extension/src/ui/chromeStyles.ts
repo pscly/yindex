@@ -6,6 +6,7 @@ export const PANEL_OPEN_MS = 200 as const
 export const PANEL_OPEN_REDUCED_MS = 120 as const
 export const PRESS_SCALE = 0.97 as const
 export const PRESS_MS = 120 as const
+export const PRIMARY_TARGET_PX = 44 as const
 export const chromeControlLine = "oklch(0.58 0.015 260)" as const
 export const chromeFontFamily =
   '"Noto Sans SC Variable", "Noto Sans SC", "Source Han Sans SC", system-ui, sans-serif' as const
@@ -171,6 +172,8 @@ export const ghostBtn: CSSProperties = {
   fontSize: 12,
   fontWeight: 500,
   fontFamily: chromeFontFamily,
+  minWidth: PRIMARY_TARGET_PX,
+  minHeight: PRIMARY_TARGET_PX,
 }
 
 export const inputStyle: CSSProperties = {
@@ -183,6 +186,7 @@ export const inputStyle: CSSProperties = {
   padding: "9px 11px",
   boxSizing: "border-box",
   fontFamily: chromeFontFamily,
+  minHeight: PRIMARY_TARGET_PX,
 }
 
 export const labelStyle: CSSProperties = {
@@ -237,12 +241,13 @@ export const selectStyle: CSSProperties = {
   padding: "10px 12px",
   fontSize: 13,
   fontFamily: chromeFontFamily,
+  minHeight: PRIMARY_TARGET_PX,
 }
 
 export const iconBtn: CSSProperties = {
   ...ghostBtn,
-  width: 36,
-  height: 36,
+  width: PRIMARY_TARGET_PX,
+  height: PRIMARY_TARGET_PX,
   borderRadius: 999,
   color: EDITOR_GRAPHITE.color.ink,
   display: "grid",
@@ -252,7 +257,7 @@ export const iconBtn: CSSProperties = {
 
 export const primaryBtn: CSSProperties = {
   ...ghostBtn,
-  height: 36,
+  height: PRIMARY_TARGET_PX,
   minWidth: 64,
   borderRadius: 999,
   color: "oklch(0.98 0.01 80)",

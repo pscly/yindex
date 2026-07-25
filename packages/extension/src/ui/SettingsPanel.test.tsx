@@ -21,4 +21,6 @@ test("Given open Settings, When the modal renders, Then its sheet exposes the re
 
   // Then
   expect(markup).toContain("data-settings-sheet=")
+  expect(markup).toContain('aria-modal="true"')
+  expect(markup).toContain('data-settings-initial-focus="true"')
 })

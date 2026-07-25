@@ -65,6 +65,8 @@ export function App() {
   }, [orderedPages])
 
   const stripSlots = Math.max(cyclicSlotCount(orderedPages.length), 1)
+  const activeSlot =
+    orderedPages.length > 1 ? turn.currentIndex + 1 : turn.currentIndex
   const currentPageId = turn.currentPageId
   const pageAccent =
     currentPageId && doc?.pages[currentPageId]
@@ -187,6 +189,7 @@ export function App() {
   return (
     <div style={homeRootStyle}>
       <PageTurnStage
+        activeSlot={activeSlot}
         fadeLayers={turn.fadeLayers}
         isAnimating={turn.isAnimating}
         offsetY={turn.offsetY}

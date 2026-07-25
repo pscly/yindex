@@ -1,11 +1,24 @@
-import { type CSSProperties, Children, type ReactNode } from "react"
+import {
+  type CSSProperties,
+  Children,
+  type HTMLAttributes,
+  type ReactNode,
+} from "react"
 
 export type PageTurnFadeLayers = {
   readonly outgoing: { readonly index: number; readonly opacity: number }
   readonly incoming: { readonly index: number; readonly opacity: number }
 }
 
+export function pageSlotFocusProps(
+  isActive: boolean,
+): Pick<HTMLAttributes<HTMLDivElement>, "aria-hidden" | "inert" | "tabIndex"> {
+  if (isActive) return {}
+  return { "aria-hidden": true, inert: true, tabIndex: -1 }
+}
+
 export function PageTurnStage(props: {
+  readonly activeSlot: number
   readonly children?: ReactNode
   readonly fadeLayers: PageTurnFadeLayers | null
   readonly isAnimating: boolean
@@ -29,6 +42,7 @@ export function PageTurnStage(props: {
   return (
     <div style={stageStyle}>
       {Children.map(props.children, (child, slot) => {
+        const isActive = slot === props.activeSlot
         const role =
           slot === outgoingSlot
             ? "outgoing"
@@ -56,9 +70,10 @@ export function PageTurnStage(props: {
         }
         return (
           <div
+            {...pageSlotFocusProps(isActive)}
             style={layerStyle}
             data-page-turn-role={role ?? undefined}
-            aria-hidden={props.fadeLayers && role === null ? true : undefined}
+            data-page-slot-active={isActive ? "true" : "false"}
           >
             {child}
           </div>

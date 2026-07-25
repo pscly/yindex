@@ -39,22 +39,36 @@ export function PageDots(props: {
             aria-current={active ? "true" : undefined}
             onClick={() => props.onSelect(index)}
             style={{
-              width: active ? 9 : 7,
-              height: active ? 9 : 7,
+              minWidth: 44,
+              minHeight: 44,
+              display: "grid",
+              placeItems: "center",
               borderRadius: 999,
-              border: active
-                ? "none"
-                : `1.5px solid color-mix(in oklch, ${accent} 55%, white)`,
+              border: "none",
               padding: 0,
-              background: active ? accent : "transparent",
-              boxShadow: active
-                ? `0 0 0 3px color-mix(in oklch, ${accent} 28%, transparent)`
-                : "none",
+              background: "transparent",
               cursor: "pointer",
-              transition: "transform 160ms ease, background 160ms ease",
-              transform: active ? "scale(1.05)" : "scale(1)",
             }}
-          />
+          >
+            <span
+              aria-hidden
+              data-page-dot-visual="true"
+              style={{
+                width: active ? 9 : 7,
+                height: active ? 9 : 7,
+                borderRadius: 999,
+                border: active
+                  ? "none"
+                  : `1.5px solid color-mix(in oklch, ${accent} 55%, white)`,
+                background: active ? accent : "transparent",
+                boxShadow: active
+                  ? `0 0 0 3px color-mix(in oklch, ${accent} 28%, transparent)`
+                  : "none",
+                transition: "transform 160ms ease, background 160ms ease",
+                transform: active ? "scale(1.05)" : "scale(1)",
+              }}
+            />
+          </button>
         )
       })}
     </nav>

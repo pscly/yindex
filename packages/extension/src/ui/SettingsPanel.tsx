@@ -16,6 +16,15 @@ import {
   settingsSheetStyle,
 } from "./settings/styles"
 
+const FOCUSABLE_SETTINGS_SELECTOR = [
+  "button:not([disabled])",
+  "input:not([disabled]):not([type='hidden'])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "a[href]",
+  "[tabindex]:not([tabindex='-1'])",
+].join(",")
+
 export function SettingsPanel(props: {
   readonly open: boolean
   readonly doc: HomeDocument
@@ -31,6 +40,7 @@ export function SettingsPanel(props: {
   const [msg, setMsg] = useState<string | null>(null)
   const [mediaRevision, setMediaRevision] = useState(0)
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const initialFocusRef = useRef<HTMLButtonElement>(null)
   const importInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -44,6 +54,7 @@ export function SettingsPanel(props: {
     if (!dialog) return
     const previousFocus = document.activeElement
     dialog.showModal()
+    initialFocusRef.current?.focus()
     return () => {
       dialog.close()
       if (previousFocus instanceof HTMLElement) previousFocus.focus()
@@ -104,6 +115,7 @@ export function SettingsPanel(props: {
       ref={dialogRef}
       data-chrome-root
       aria-label="设置"
+      aria-modal="true"
       style={overlay}
       onClick={(event) => {
         if (event.target === event.currentTarget) props.onClose()
@@ -113,7 +125,28 @@ export function SettingsPanel(props: {
         props.onClose()
       }}
       onKeyDown={(event) => {
-        if (event.key === "Escape") props.onClose()
+        if (event.key === "Escape") {
+          props.onClose()
+          return
+        }
+        if (event.key !== "Tab") return
+        const focusable = Array.from(
+          event.currentTarget.querySelectorAll<HTMLElement>(
+            FOCUSABLE_SETTINGS_SELECTOR,
+          ),
+        ).filter((element) => !element.hidden)
+        const first = focusable[0]
+        const last = focusable.at(-1)
+        if (first === undefined || last === undefined) return
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault()
+          last.focus()
+          return
+        }
+        if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault()
+          first.focus()
+        }
       }}
     >
       <div data-settings-sheet style={sheet}>
@@ -125,7 +158,13 @@ export function SettingsPanel(props: {
           }}
         >
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>设置</h2>
-          <button type="button" style={ghostBtn} onClick={props.onClose}>
+          <button
+            ref={initialFocusRef}
+            type="button"
+            data-settings-initial-focus="true"
+            style={ghostBtn}
+            onClick={props.onClose}
+          >
             关闭
           </button>
         </div>

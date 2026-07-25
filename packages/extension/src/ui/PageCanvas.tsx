@@ -9,8 +9,7 @@ import { wallpaperCssBackground } from "@yindex/domain"
 import { type CSSProperties, useCallback, useState } from "react"
 import { ambientHighlightStyle } from "../newtab/ambientMotion"
 import type { WallpaperAnalysisResult } from "../wallpaper/wallpaperAnalyzer"
-import { EditDragShell } from "./EditDragShell"
-import type { LayoutDraftEvent } from "./EditDragShell"
+import { EditDragShell, type LayoutDraftEvent } from "./EditDragShell"
 import { WallpaperStage } from "./WallpaperStage"
 import { WidgetMount } from "./WidgetMount"
 import {
@@ -151,6 +150,8 @@ export function PageCanvas(props: PageCanvasProps) {
                 y={w.layout.y}
                 w={w.layout.w}
                 h={w.layout.h}
+                selected={selected}
+                onSelect={() => props.onSelectWidget(w.id)}
                 {...(props.onWidgetLayoutDraft
                   ? { onDraft: props.onWidgetLayoutDraft }
                   : {})}
@@ -199,17 +200,17 @@ export function PageCanvas(props: PageCanvasProps) {
                 }}
                 style={{
                   position: "absolute",
-                  top: -11,
-                  right: -11,
-                  width: 26,
-                  height: 26,
+                  top: -22,
+                  right: -22,
+                  width: 44,
+                  height: 44,
                   borderRadius: 999,
                   border:
                     "1px solid color-mix(in oklch, white 18%, transparent)",
                   background: "oklch(0.42 0.14 25)",
                   color: "white",
                   fontSize: 15,
-                  lineHeight: "24px",
+                  lineHeight: "42px",
                   padding: 0,
                   cursor: "pointer",
                   zIndex: 5,
