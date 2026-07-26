@@ -10,6 +10,7 @@ import {
   analyzeGenerativeWallpaper,
 } from "../wallpaper/wallpaperAnalyzer"
 import { wallpaperMediaStyle } from "./wallpaperSurfaceStyles"
+import { useVisibleWallpaperActivity } from "./wallpaperVisibility"
 
 export function GenerativeWallpaperSurface(props: {
   readonly preset: GenerativePreset
@@ -19,6 +20,7 @@ export function GenerativeWallpaperSurface(props: {
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rendererRef = useRef<GenerativeRenderer | null>(null)
+  const wallpaperActive = useVisibleWallpaperActivity(props.active)
 
   useEffect(() => {
     if (!props.active) return
@@ -34,7 +36,7 @@ export function GenerativeWallpaperSurface(props: {
       renderer = createGenerativeRenderer({
         canvas,
         preset: props.preset,
-        active: props.active,
+        active: wallpaperActive,
         reducedMotion: props.reducedMotion,
       })
       renderer.start()
@@ -57,7 +59,10 @@ export function GenerativeWallpaperSurface(props: {
     }
   }, [])
 
-  useEffect(() => rendererRef.current?.setActive(props.active), [props.active])
+  useEffect(
+    () => rendererRef.current?.setActive(wallpaperActive),
+    [wallpaperActive],
+  )
   useEffect(
     () => rendererRef.current?.setReducedMotion(props.reducedMotion),
     [props.reducedMotion],

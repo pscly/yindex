@@ -8,6 +8,7 @@ import type { WallpaperMediaUrlLease } from "../wallpaper/wallpaperMediaUrl"
 import { captureWallpaperVideoFrame } from "../wallpaper/wallpaperVideoFrame"
 import type { WallpaperStageProps } from "./WallpaperStage"
 import { wallpaperMediaStyle } from "./wallpaperSurfaceStyles"
+import { useVisibleWallpaperActivity } from "./wallpaperVisibility"
 
 export type VideoWallpaperAnalysisMode = "inactive" | "single-frame" | "sampled"
 
@@ -28,11 +29,12 @@ export function VideoWallpaperSurface(props: {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
   const failed = props.lease !== null && failedUrl === props.lease.url
+  const wallpaperActive = useVisibleWallpaperActivity(props.active)
 
   useEffect(() => {
     const video = videoRef.current
     if (video === null || props.lease === null || failed) return
-    if (!props.active || props.reducedMotion) {
+    if (!wallpaperActive || props.reducedMotion) {
       video.pause()
       return
     }
@@ -49,12 +51,12 @@ export function VideoWallpaperSurface(props: {
       }
       throw error
     })
-  }, [failed, props.active, props.lease, props.reducedMotion])
+  }, [failed, props.lease, props.reducedMotion, wallpaperActive])
 
   useEffect(() => {
     const video = videoRef.current
     const analysisMode = videoWallpaperAnalysisMode(
-      props.active,
+      wallpaperActive,
       props.reducedMotion,
     )
     if (
@@ -92,7 +94,13 @@ export function VideoWallpaperSurface(props: {
     })
     sampler.start()
     return () => sampler.dispose()
-  }, [failed, props.active, props.lease, props.onAnalysis, props.reducedMotion])
+  }, [
+    failed,
+    props.lease,
+    props.onAnalysis,
+    props.reducedMotion,
+    wallpaperActive,
+  ])
 
   return (
     <video

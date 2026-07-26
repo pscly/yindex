@@ -10,6 +10,7 @@ import { ambientMotionAllowed } from "./ambientMotion"
 import { centerMessageStyle, homeRootStyle } from "./appStyles"
 import { cyclicSlotCount } from "./pageTurnLayout"
 import { PageTurnStage } from "./pageTurnStage"
+import { useChromeTabActive } from "./useChromeTabActive"
 import { useHomeState } from "./useHomeState"
 import { useOsPrefersReducedMotion } from "./useOsPrefersReducedMotion"
 import { usePageTurn } from "./usePageTurn"
@@ -34,6 +35,7 @@ export function App() {
   const [selectedWidgetId, setSelectedWidgetId] =
     useState<WidgetInstanceId | null>(null)
   const osPrefersReducedMotion = useOsPrefersReducedMotion()
+  const chromeTabActive = useChromeTabActive()
 
   const onPageChange = useCallback(
     (pageId: PageId) => {
@@ -187,7 +189,10 @@ export function App() {
   }
 
   return (
-    <div style={homeRootStyle}>
+    <div
+      style={homeRootStyle}
+      data-home-tab-active={chromeTabActive ? "true" : "false"}
+    >
       <PageTurnStage
         activeSlot={activeSlot}
         fadeLayers={turn.fadeLayers}
@@ -211,7 +216,7 @@ export function App() {
                 doc={doc}
                 page={page}
                 editMode={isEditable}
-                wallpaperActive={wallpaperSlots.has(slot)}
+                wallpaperActive={chromeTabActive && wallpaperSlots.has(slot)}
                 reducedMotion={turn.reducedMotion}
                 motionProfile={doc.settings.motionProfile}
                 ambientMotionAllowed={ambientAllowed}
