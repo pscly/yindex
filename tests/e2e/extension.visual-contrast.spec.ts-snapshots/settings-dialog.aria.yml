@@ -1,0 +1,43 @@
+- dialog "设置":
+  - heading "设置" [level=2]
+  - button "关闭"
+  - heading "导航" [level=3]
+  - checkbox "记住上次所在页（关闭则始终打开 Landing）"
+  - text: 记住上次所在页（关闭则始终打开 Landing）
+  - checkbox "允许每日重抽六十四卦"
+  - text: 允许每日重抽六十四卦
+  - checkbox "编辑时启用吸附" [checked]
+  - text: 编辑时启用吸附
+  - checkbox "显示小组件标题（左上角名称，全局）"
+  - text: 显示小组件标题（左上角名称，全局） 减少动态效果
+  - combobox "减少动态效果":
+    - option "跟随系统" [selected]
+    - option "始终减少"
+    - option "始终动画"
+  - text: 动态档位
+  - combobox "动态档位":
+    - option "舒缓"
+    - option "均衡" [selected]
+    - option "沉浸"
+  - text: Landing 页
+  - combobox:
+    - option "此刻" [selected]
+    - option "灵感"
+    - option "流光"
+  - group: 高级玻璃微调
+  - heading "配置导入导出" [level=3]
+  - button "导出 JSON"
+  - button "导入 JSON"
+  - heading "小组件包" [level=3]
+  - text: 导入 zip
+  - button "安装示例番茄钟"
+  - text: 尚未安装第三方 Package
+  - heading "壁纸资源" [level=3]
+  - text: /壁纸 0 个 · 0 B · 浏览器 [\d.]+ KB \/ \d+ GB 尚未导入壁纸资源/
+  - heading "重置" [level=3]
+  - button "仅重置主页配置"
+  - text: 恢复默认三页；壁纸与小组件包保留。
+  - button "清除全部本地数据"
+  - text: 永久清除主页、壁纸与小组件包，然后恢复默认主页。
+  - heading "关于" [level=3]
+  - text: yindex v0.1.3 · Chrome MV3 新标签页 · 配置仅存本机 滚轮翻页 · 编辑拖拽布局 · 设置中可导入小组件包 项目：github.com/pscly/yindex

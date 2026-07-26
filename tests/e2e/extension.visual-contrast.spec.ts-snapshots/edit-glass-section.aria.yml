@@ -1,0 +1,5 @@
+- region "玻璃档位":
+  - text: ""
+  - button "清透"
+  - button "均衡" [pressed]
+  - button "沉静"

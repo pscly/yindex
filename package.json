@@ -16,9 +16,12 @@
     "release:zip": "bash scripts/pack-extension.sh"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@biomejs/biome": "^1.9.4",
     "@playwright/test": "1.58.2",
     "@types/bun": "^1.2.0",
+    "@types/pngjs": "^6.0.5",
+    "pngjs": "^7.0.0",
     "typescript": "^5.8.2"
   }
 }
