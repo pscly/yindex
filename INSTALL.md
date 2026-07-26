@@ -1,15 +1,17 @@
 # yindex 安装说明（Chrome）
 
-本文适用于 GitHub Release 提供的 unpacked Chrome Extension。Chrome 不能直接安装 zip；必须解压后加载固定目录。
+本文定义 v0.2 GitHub Release 的 unpacked Chrome Extension 安装合同。Chrome 不能直接安装 zip；必须解压后加载固定目录。
 
 ## 1. 下载正确的产物
 
-从 [GitHub Releases](https://github.com/pscly/yindex/releases) 下载以下任一附件：
+目标 v0.2 版本发布且附件已经出现在 [GitHub Releases](https://github.com/pscly/yindex/releases) 后，下载以下任一附件：
 
 - `yindex-extension-vX.Y.Z.zip`
 - `yindex-extension-latest.zip`
 
 不要下载 GitHub 自动生成的 `Source code (zip)`：源码仓库不是 Chrome 可直接加载的 Extension 产物。
+
+如果 Releases 页面尚未提供目标 v0.2 附件，请不要用 v0.1.x 附件代替。发布前本地验收应运行 `bun run pack`，再直接加载 `release/yindex-extension/`。
 
 Release zip 与 `bun run pack` 使用同一结构：
 

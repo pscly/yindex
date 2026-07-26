@@ -4,11 +4,11 @@
 
 ## Platform
 
-Chrome Manifest V3 new tab Extension；当前通过 GitHub Release 提供 unpacked 安装包，不承诺 Chrome Web Store 分发。
+Chrome Manifest V3 new tab Extension；v0.2 的分发合同是通过 GitHub Release 提供 unpacked 安装包，不承诺 Chrome Web Store 分发。只有目标版本附件实际出现在 Releases 后，用户安装路径才成立。
 
 ## Users
 
-yindex v0.2 首先服务作者本人和愿意使用 Chrome 开发者模式的开发者朋友。他们需要高度可编排、可扩展、数据留在本机的个人新标签页，也愿意从本地 zip/目录导入高信任的第三方 Widget Package。
+yindex v0.2 首先服务作者本人和愿意使用 Chrome 开发者模式的开发者朋友。他们需要高度可编排、可扩展、数据留在本机的个人新标签页，也愿意从本地 zip 导入高信任的第三方 Widget Package。
 
 ## Product Purpose
 
@@ -30,8 +30,8 @@ yindex 不是固定仪表盘，也不是只换配色的单一主题新标签页�
 
 - 用户通过 Chrome 新标签页高频进入 Home
 - Browse Mode：纵向 Page Turn 与 Widget 交互
-- Edit Mode：拖放、缩放、Snap、层级、Style、Wallpaper 与 Page Sequence
-- Settings：Glass Profile、高级玻璃微调、Widget Catalog、Wallpaper 资源、重置与导入导出
+- Edit Mode：拖放、缩放、Snap、添加内置 Widget、Style、Wallpaper 与 Page Sequence
+- Settings：Glass Profile、高级玻璃微调、Widget Package 管理、Wallpaper 资源、重置与导入导出
 - 默认 Page Sequence：**此刻（Landing）→ 灵感 → 流光**
 - 原始素材 `1784710540_1784710529242_d.png` 服务 Hexagram Board，不是产品本体
 
@@ -52,7 +52,7 @@ yindex 不是固定仪表盘，也不是只换配色的单一主题新标签页�
 - v0.1.x 是内部开发快照，和 v0.2 的 Home schema、Style 与媒体引用不兼容；不保证 v0.1.x 导出文件可以导入 v0.2
 - Vite + React + TypeScript；Bun monorepo + Vite multi-entry；关键域 TDD
 - Page Sequence 有序可循环，至少一个 Page；Page 有名称和图标
-- Layout 使用视口百分比坐标、自由定位、Snap、可重叠与 z 层级、多选对齐；不旋转
+- Layout 使用视口百分比坐标、自由定位、Snap、可重叠与 z 层级；不旋转
 - Style 属于 Page；Style Pack 是预设起点，允许受保护的深度自定义；Wallpaper 属于 Style
 - 默认 Wallpaper 为本机实时渲染的 Generative Wallpaper；用户可导入本地图片或视频 Wallpaper
 - Home 配置存 `chrome.storage`；Widget Package 资源存 IndexedDB；Wallpaper 媒体存 OPFS
@@ -60,7 +60,7 @@ yindex 不是固定仪表盘，也不是只换配色的单一主题新标签页�
 - 支持轻量 JSON 导出；导入前验证 schema。配置导出不等于媒体与 Package 的跨设备备份
 - 内置：时钟、搜索、快捷方式、每日一句、天气、Hexagram Board
 - Hexagram Board：每日手动抽本卦、矩阵、公版卦辞/象传与简注；不做个性化吉凶断言
-- 第三方：本地导入；sandbox + 类型化宽能力桥；包声明权限并在导入时授权；Instance 级 iframe 与错误隔离
+- 第三方：本地 zip 导入；sandbox iframe + 类型化能力桥；Package manifest 声明能力范围，Instance 级 iframe 与错误隔离
 - UI 仅中文；WCAG 2.2 AA 自检；reduced-motion 降级 Page Turn、动态 Wallpaper 与视频 Wallpaper
 - 暖启动目标：本地配置下 Landing 首屏可交互 < 300ms
 

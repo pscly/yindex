@@ -2,9 +2,9 @@
 
 Chrome 新标签页 Extension：可上下循环翻页的可组装主页。Home 由 Page Sequence、Widget Layout 与每页独立的 Style 组成。
 
-## v0.2 · Liquid Glass
+## v0.2 · Living Glass
 
-yindex 的视觉母语是统一的 **Liquid Glass（液态玻璃）**：Wallpaper 是窗外的世界，Widget 是浮在窗上的玻璃透镜。所有 Page 共用同一套半透明、模糊、边缘高光与 Adaptive Glass 可读性保护；场景差异来自 Wallpaper 光场、色调、字体与构图，而不是切换材质系统。
+yindex 的 Creative North Star 是 **Living Glass**，视觉母语是统一的 **Liquid Glass（液态玻璃）**：Wallpaper 是窗外的世界，Widget 是浮在窗上的玻璃透镜。所有 Page 共用同一套半透明、模糊、边缘高光与 Adaptive Glass 可读性保护；场景差异来自 Wallpaper 光场、色调、字体与构图，而不是切换材质系统。
 
 默认 Home 有三个 Page：
 
@@ -16,9 +16,11 @@ yindex 的视觉母语是统一的 **Liquid Glass（液态玻璃）**：Wallpape
 
 玻璃档位为 **清透 / 均衡（默认）/ 沉静**。Adaptive Glass 会根据 Wallpaper 明暗与细节自动守住内容对比度；高级微调不会关闭最低可读性保护。
 
-## 普通用户：从 GitHub 安装
+## 普通用户：v0.2 发布后从 GitHub 安装
 
 Chrome **不能**直接把 zip 当作 Extension 安装。Release 压缩包固定展开为 `yindex-extension/`，这也是打包脚本的输出目录名。
+
+> 仅当目标 v0.2 版本的 `yindex-extension-*.zip` 已出现在 Releases 附件中时，才按下列流程安装；GitHub 自动生成的「Source code」压缩包不是可加载产物。发布前本地验收请使用 `bun run pack` 生成的 `release/yindex-extension/`。
 
 1. 打开 [GitHub Releases](https://github.com/pscly/yindex/releases)
 2. 下载 `yindex-extension-vX.Y.Z.zip`（或 `yindex-extension-latest.zip`）
@@ -28,8 +30,6 @@ Chrome **不能**直接把 zip 当作 Extension 安装。Release 压缩包固定
 6. 开启右上角 **开发者模式**
 7. 点击 **加载已解压的扩展程序**，选择固定的 `yindex-extension/` 文件夹
 8. 打开新标签页
-
-> 从 GitHub 下载的「Source code」压缩包不是可加载产物。请使用 Release 附件中的 `yindex-extension-*.zip`。
 
 ### 更新：覆盖同一个文件夹
 
@@ -72,7 +72,7 @@ bun run pack
 # Release 压缩包：release/yindex-extension-vX.Y.Z.zip
 ```
 
-开发构建可在 Chrome → 扩展程序 → 开发者模式中加载 `packages/extension/dist/`。`bun run pack` 会先测试和构建，再生成与 GitHub Release 相同结构的 `release/yindex-extension/` 及 zip。
+开发构建可在 Chrome → 扩展程序 → 开发者模式中加载 `packages/extension/dist/`。`bun run pack` 会先测试和构建，再生成与预定 GitHub Release 相同结构的 `release/yindex-extension/` 及 zip。
 
 ### 包结构
 
@@ -83,9 +83,9 @@ bun run pack
 | `@yindex/widget-sdk` | Widget Package manifest 与能力桥协议 |
 | `@yindex/widgets` | 内置 Widget |
 | `@yindex/extension` | Chrome MV3 壳与 new tab 宿主 |
-| `examples/pomodoro` | 第三方示例 Widget Package |
+| `packages/examples/pomodoro` | 第三方示例 Widget Package |
 
-当前产品与设计权威见 [`PRODUCT.md`](./PRODUCT.md)、[`docs/product-spec.md`](./docs/product-spec.md)、[`DESIGN.md`](./DESIGN.md) 与 [`docs/adr/`](./docs/adr/)。
+当前产品与设计权威见 [`PRODUCT.md`](./PRODUCT.md)、[`docs/product-spec.md`](./docs/product-spec.md) 与 [`DESIGN.md`](./DESIGN.md)；文档入口及 ADR 历史的适用边界见 [`docs/README.md`](./docs/README.md)。
 
 ### 发版
 

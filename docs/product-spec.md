@@ -1,6 +1,6 @@
-# yindex v0.2 产品规格（当前）
+# yindex v0.2 发布合同
 
-> 本文描述当前 v0.2 产品与实现边界。领域词汇以 [`CONTEXT.md`](../CONTEXT.md) 为准，视觉规则以 [`DESIGN.md`](../DESIGN.md) v0.2 为准，架构取舍以 [`docs/adr/`](./adr/) 为准。
+> 本文定义 v0.2 发布时必须成立的产品合同，不表示尚未发布的 GitHub 附件已经可下载。领域词汇以 [`CONTEXT.md`](../CONTEXT.md) 为准，视觉规则以 [`DESIGN.md`](../DESIGN.md) v0.2 为准。ADR 是决策历史；当前状态与适用边界见 [`docs/README.md`](./README.md) 的 ADR 索引，若旧 ADR 的实现细节与本文或更晚 ADR 冲突，以更晚决策和已验证实现为准。
 
 ## 1. 产品定义
 
@@ -12,13 +12,13 @@ yindex 是接管 **Chrome 新标签页** 的可组装 **Home**。Home 由有序 
 |---|---|
 | 首批用户 | 作者本人与开发者朋友 |
 | 浏览器 | Chrome 120+，Manifest V3 |
-| 安装 | GitHub Release zip 解压后，以开发者模式加载固定 `yindex-extension/` 文件夹 |
+| 安装 | 目标 v0.2 附件发布后，将 GitHub Release zip 解压并以开发者模式加载固定 `yindex-extension/` 文件夹 |
 | 更新 | 用新 Release 覆盖 Chrome 已加载的同一 `yindex-extension/` 文件夹，再点「重新加载」 |
 | 打包输出 | `release/yindex-extension/` 与 `release/yindex-extension-vX.Y.Z.zip` |
 | 语言 | 产品 UI 仅中文；Hexagram 经典原文保持传统文本 |
 | 账号/云 | 无自建账号与云同步；配置与资源仅留在本机 |
 
-GitHub 自动生成的源码 zip 不是可加载产物。完整步骤见 [`INSTALL.md`](../INSTALL.md)。
+GitHub 自动生成的源码 zip 不是可加载产物；目标 v0.2 附件出现前，本地验收使用 `bun run pack` 生成的 `release/yindex-extension/`。完整步骤见 [`INSTALL.md`](../INSTALL.md)。
 
 ### 1.2 v0.1.x 兼容边界
 
@@ -35,16 +35,15 @@ v0.1.x 是内部开发快照，不构成兼容承诺。v0.2 可以替换旧 Home
 
 ## 2. Page 与导航
 
-- Page Sequence：有序、可增删、复制与重排；至少一个 Page
-- Page 元数据：用户可编辑名称与图标
-- 新建可选：空白 Page、MOMENT、MUSE、FLOW 或复制当前 Page
+- Page Sequence：有序、可增删与重排；至少一个 Page
+- Edit Mode 可添加空白 Page、上移/下移、删除与设置 Landing；Style Pack 在 Page Style 区域单独应用
 - Page Turn：整页纵向切换，不是连续长页滚动
 - Loop：末页下一页为首页，首页上一页为末页
 - Landing：默认固定为「此刻」；Settings 可改为记住上次所在 Page
 - 指示器：右侧点状指示器，可点击跳转
 - 滚轮：悬停可滚动 Widget 时优先交给 Widget，否则触发 Page Turn；累积阈值、冷却与惯性抑制防止连翻
 - Edit Mode 禁用滚轮翻页
-- 键盘：↑↓ 或 PageUp/PageDown 翻相邻 Page；数字 1 到 9 跳序号；Esc 关闭全屏层
+- 键盘：↑↓ 或 PageUp/PageDown 翻相邻 Page；Esc 关闭全屏层
 - reduced-motion：Page Turn 使用 120ms 淡入；动态/视频 Wallpaper 停为静态帧；非必要高光漂移关闭
 
 ### 2.1 默认三个 Page
@@ -62,7 +61,7 @@ v0.1.x 是内部开发快照，不构成兼容承诺。v0.2 可以替换旧 Home
 - 坐标系：相对视口百分比 `x / y / w / h` 与显式 `z`
 - 自由定位；Edit Mode 支持拖放、缩放与 Snap
 - Snap 参考：安全边距、逻辑网格、其他 Widget 边/中心、三分线与黄金分割线；按住 Alt/Option 临时关闭
-- 允许重叠；支持多选、对齐、分布与统一尺寸；不支持旋转
+- 允许重叠并使用显式 z 层级；不支持旋转
 - 编辑后矩形必须留在 Page 安全区；窗口变化时保留百分比并执行最小尺寸与边界修正
 - 同一 Widget Type 可在同一 Page 上存在多个 Instance，各自保有配置与 Layout
 - 键盘可选择、移动与缩放 Widget，作为指针拖拽的等价路径
@@ -80,9 +79,9 @@ v0.1.x 是内部开发快照，不构成兼容承诺。v0.2 可以替换旧 Home
 ### 4.2 Unified Liquid Glass
 
 - Liquid Glass 是全产品默认材质语言：半透明 tint、背景 blur/saturation/brightness、边缘高光与受控投影
-- 内容型信息可使用 Content Direct（如大时钟、每日一句），工具型 Widget 使用 panel / capsule / shelf 玻璃透镜
+- 内容型信息可使用**内容直排**（如大时钟、每日一句），工具型 Widget 使用面板、胶囊或横架形态的玻璃透镜
 - 所有透镜由同一材质解析器生成；Page 不拥有独立材质体系
-- Adaptive Glass 读取 Wallpaper 平均亮度、主色/彩度与细节密度，选择前景极性并增加必要 scrim
+- Adaptive Glass 读取 Wallpaper 平均亮度、彩度与细节密度，选择前景极性并增加必要 scrim
 - 正文对比底线为 4.5:1；关键非文本控件为 3:1
 
 ### 4.3 Glass Profile
@@ -110,11 +109,10 @@ Settings 中可对透光、模糊、饱和与高光做受限高级微调；最�
 |---|---|
 | Browse Mode | Page Turn 与 Widget 交互 |
 | Edit Mode | Layout、Style、Widget 与 Page Sequence；主入口为「编辑」 |
-| Settings | Glass Profile、高级玻璃微调、导航、Widget Catalog、Wallpaper 资源、重置与导入导出 |
+| Settings | Glass Profile、高级玻璃微调、导航、Widget Package 管理、Wallpaper 资源、重置与导入导出 |
 
-- 编辑实时自动保存，并提供会话内撤销/重做
+- 编辑结果实时保存
 - 侧栏管理当前 Page 的属性、顺序、Widget 与 Wallpaper
-- Overview 提供全 Page 缩略、跳转、拖拽重排、复制与删除
 - 编辑器结构和控件语义稳定；使用石墨壳，只借当前 Page accent 与最多 8% 环境 tint
 - 编辑器字体、文字色、语义色和交互边界不跟随 Page Style 任意变化
 
@@ -129,23 +127,22 @@ Settings 中可对透光、模糊、饱和与高光做受限高级微调；最�
 
 ### 6.2 行为摘要
 
-- **日期时钟**：此刻使用紧凑日期伴随形态；流光使用超大 Content Direct 时钟
+- **日期时钟**：此刻使用紧凑日期伴随形态；流光使用超大内容直排时钟
 - **搜索**：可选引擎，默认 Google；可自定义搜索 URL
-- **天气**：默认 Open-Meteo；支持定位或手动城市
-- **快捷方式**：独立启动台列表；可从 Chrome 书签导入
-- **每日一句**：默认 Hitokoto；支持自定义源、刷新周期、手动刷新与失败缓存
+- **天气**：默认 Open-Meteo；支持定位或手动经纬度（可填写城市标签）
+- **快捷方式**：独立启动台列表；用户在编辑器中增删名称与 URL
+- **每日一句**：提供 Hitokoto 网络来源与静态回退句
 - **Hexagram Board**：8×8 上下卦矩阵；每日手动抽本卦；展示公版卦辞/象传与项目简注；不做个性化吉凶断言
 
 ## 7. 第三方 Widget Package
 
-- 导入：本地 zip 或目录
+- 导入：本地 zip
 - 信任：导入即高度信任其经能力桥获得的授权；sandbox 是执行边界，不代表无能力
-- 每个 Instance 使用独立 sandbox iframe；不可见时默认挂起，邻页可预热
-- 故障使用 Instance 级占位，提供重试、禁用、日志与移除
+- 每个 Instance 使用独立 sandbox iframe
+- Package 缺失时保留 Missing Widget、配置与 Layout；重装相同 `packageId` 后恢复
 - 身份：`packageId` + semver；一包可定义多个 Widget Type
 - Manifest 至少声明 `packageId`、`name`、`version`、`engines`、`yindexApiVersion`、`types[]` 与 `permissions[]`
-- 权限由包声明并在导入时授权；未声明或未授权请求由能力桥拒绝
-- 升级失败回滚；卸载保留 Missing Widget、配置与 Layout，重装相同 `packageId` 后恢复
+- Manifest 声明 Package 使用的宿主能力；能力桥只暴露受支持且通过消息校验的调用
 - 示例验收包：番茄钟 / 专注计时
 
 ## 8. 数据、权限与恢复
