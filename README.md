@@ -89,6 +89,8 @@ bun run pack
 
 ### 发版
 
+> **人工发布门禁：** 创建 tag、推送 tag 与发布 GitHub Release 都必须先获得明确人工确认。自动化只响应已确认的 tag push，不得自行创建或推送 tag。
+
 ```bash
 # 本地生成固定根目录与 zip
 bun run pack

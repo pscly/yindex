@@ -40,7 +40,7 @@ Chrome 跟踪的是首次加载的文件夹路径。为了让「重新加载」�
 
 1. 关闭正在打开的 yindex Home。
 2. 下载并解压新版 Release zip。
-3. 把新包中的文件**覆盖到原来的 `yindex-extension/` 文件夹**。
+3. 把新包中的文件**覆盖到原先加载的同一个 `yindex-extension/` 文件夹**。
    - 不要创建 `yindex-extension-v0.2.1/` 一类新目录。
    - 不要删除旧目录后把新目录放到另一路径。
    - 覆盖完成后，原路径仍须直接包含新版 `manifest.json`。

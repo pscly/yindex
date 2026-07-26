@@ -1,5 +1,8 @@
 name: Release extension zip
 
+# HUMAN GATE: creating/pushing a tag and publishing its GitHub Release all
+# require explicit confirmation. This workflow never creates or pushes tags;
+# only an already-confirmed tag push may publish a release.
 on:
   push:
     tags:
@@ -27,7 +30,7 @@ jobs:
       - name: Install
         run: bun install
 
-      - name: Pack
+      - name: Verify and pack
         run: |
           VERSION="${{ github.event.inputs.version }}"
           if [ -z "$VERSION" ]; then
@@ -36,7 +39,7 @@ jobs:
           if [ -z "$VERSION" ] || [ "$VERSION" = "$GITHUB_REF_NAME" ]; then
             VERSION="$(python3 -c "import json; print(json.load(open('package.json'))['version'])")"
           fi
-          bash scripts/pack-extension.sh "$VERSION"
+          bun run verify "$VERSION"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -44,6 +47,7 @@ jobs:
           name: yindex-extension
           path: release/yindex-extension-*.zip
 
+      # Publication remains tag-driven and requires the human gate above.
       - name: Create GitHub Release (on tag)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
