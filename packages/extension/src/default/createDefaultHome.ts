@@ -56,7 +56,7 @@ export function createDefaultHome(): HomeDocument {
   const moment = page("page_moment", "此刻", "时", MOMENT.pageStyle, [
     w(
       "builtin.weather",
-      { x: 53, y: 6, w: 22, h: 8, z: 3 },
+      { x: 53, y: 6, w: 22, h: 12, z: 3 },
       {
         mode: "auto",
         cityLabel: "本地",

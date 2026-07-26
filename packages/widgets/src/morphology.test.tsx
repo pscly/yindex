@@ -118,6 +118,10 @@ describe("Builtin Widget fixed morphology", () => {
     // Then
     expect(weather).toContain('shape="capsule"')
     expect(weather).toContain("LensSurface")
+    // Secondary row must stay inset from capsule ends so overflow:hidden cannot mid-glyph clip.
+    expect(weather).toContain("paddingInline: 6")
+    expect(weather).toContain('textOverflow: "ellipsis"')
+    expect(weather).toContain("clamp(1.25rem, 2.6vw, 1.55rem)")
     expect(shortcuts).toContain('shape="shelf"')
     expect(shortcuts).toContain("LensSurface")
     expect(shortcuts).not.toContain("background: props.tokens.color.bg")

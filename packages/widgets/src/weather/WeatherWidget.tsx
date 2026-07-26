@@ -159,38 +159,67 @@ export function WeatherWidget(props: WeatherWidgetProps) {
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: 4,
+            gap: 2,
             height: "100%",
             justifyContent: "center",
+            minHeight: 0,
+            minWidth: 0,
+            overflow: "hidden",
           }}
         >
           <div
             style={{
               fontFamily: props.tokens.typography.monoFamily,
-              fontSize: "clamp(1.6rem, 4vw, 2rem)",
+              fontSize: "clamp(1.25rem, 2.6vw, 1.55rem)",
               fontWeight: props.tokens.typography.displayWeight,
-              lineHeight: 1.1,
+              lineHeight: 1,
               fontVariantNumeric: "tabular-nums",
               color: lensInk,
+              flex: "0 0 auto",
             }}
           >
             {Math.round(state.tempC)}°
           </div>
-          <div style={{ color: lensInk }}>
+          <div
+            style={{
+              color: lensInk,
+              fontSize: 13,
+              lineHeight: 1.15,
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              flex: "0 0 auto",
+            }}
+          >
             {state.label}
             {props.config.cityLabel ? ` · ${props.config.cityLabel}` : ""}
           </div>
           <div
             style={{
               color: lensMuted,
-              fontSize: 12,
+              fontSize: 11,
+              lineHeight: 1.15,
               display: "flex",
               justifyContent: "space-between",
               gap: 8,
               alignItems: "center",
+              minWidth: 0,
+              flex: "0 0 auto",
+              // Keep secondary row clear of capsule endcaps (overflow:hidden clips mid-glyph there).
+              paddingInline: 6,
             }}
           >
-            <span>风速 {Math.round(state.windKmh)} km/h</span>
+            <span
+              style={{
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              风速 {Math.round(state.windKmh)} km/h
+            </span>
             <button
               type="button"
               onClick={() => setTick((t) => t + 1)}
@@ -199,9 +228,10 @@ export function WeatherWidget(props: WeatherWidgetProps) {
                 background: "transparent",
                 color: lensMuted,
                 cursor: "pointer",
-                fontSize: 11,
+                fontSize: 10,
                 padding: 0,
                 textDecoration: "underline",
+                flex: "0 0 auto",
               }}
             >
               刷新
