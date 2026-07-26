@@ -9,6 +9,7 @@ const noWidget = (): void => {}
 function renderMotionPage(input: {
   readonly ambientMotionAllowed: boolean
   readonly pageActive: boolean
+  readonly wallpaperMotionAllowed?: boolean
 }): string {
   const original = createDefaultHome()
   const doc = {
@@ -29,6 +30,7 @@ function renderMotionPage(input: {
       page,
       editMode: false,
       wallpaperActive: input.pageActive,
+      wallpaperMotionAllowed: input.wallpaperMotionAllowed,
       motionProfile: "immersive",
       ambientMotionAllowed: input.ambientMotionAllowed,
       selectedWidgetId: null,
@@ -69,6 +71,20 @@ describe("PageCanvas ambient motion host", () => {
 
     expect(markup).not.toContain("data-ambient-motion=")
     expect(markup).not.toContain("--yindex-highlight-drift-sec")
+    expect(markup).toContain('data-wallpaper-reduced-motion="true"')
+  })
+
+  test("Given an incoming Page participates in a turn, When another Page owns Wallpaper motion, Then its Wallpaper stays static", () => {
+    // Given / When
+    const markup = renderMotionPage({
+      ambientMotionAllowed: true,
+      pageActive: true,
+      wallpaperMotionAllowed: false,
+    })
+
+    // Then
+    expect(markup).toContain('data-ambient-motion="running"')
+    expect(markup).toContain('data-wallpaper-active="true"')
     expect(markup).toContain('data-wallpaper-reduced-motion="true"')
   })
 })

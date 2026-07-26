@@ -217,6 +217,9 @@ export function App() {
                 page={page}
                 editMode={isEditable}
                 wallpaperActive={chromeTabActive && wallpaperSlots.has(slot)}
+                wallpaperMotionAllowed={
+                  chromeTabActive && ambientAllowed && slot === activeSlot
+                }
                 reducedMotion={turn.reducedMotion}
                 motionProfile={doc.settings.motionProfile}
                 ambientMotionAllowed={ambientAllowed}

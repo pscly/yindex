@@ -37,6 +37,7 @@ export type PageCanvasProps = {
   readonly reducedMotion?: boolean
   readonly motionProfile?: MotionProfile
   readonly ambientMotionAllowed?: boolean
+  readonly wallpaperMotionAllowed?: boolean
 }
 
 export function PageCanvas(props: PageCanvasProps) {
@@ -44,7 +45,8 @@ export function PageCanvas(props: PageCanvasProps) {
   const reducedMotion = props.reducedMotion ?? false
   const motionProfile = props.motionProfile ?? props.doc.settings.motionProfile
   const ambientAllowed = props.ambientMotionAllowed ?? !reducedMotion
-  const wallpaperReducedMotion = !ambientAllowed || !wallpaperActive
+  const wallpaperMotionAllowed = props.wallpaperMotionAllowed ?? ambientAllowed
+  const wallpaperReducedMotion = !wallpaperMotionAllowed || !wallpaperActive
   const sourceKey = wallpaperAnalysisKey(props.page.style.wallpaper)
   const [published, setPublished] = useState<PageAnalysisPublication | null>(
     null,
