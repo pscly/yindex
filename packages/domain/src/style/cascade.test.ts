@@ -5,10 +5,12 @@ import {
   pageStyleToTokens,
   resolvePageTokens,
   resolveWidgetTokens,
+  wallpaperCssBackground,
   withGlassProfile,
 } from "./cascade"
 import { DEFAULT_GLASS_TUNING } from "./glass"
 import { createGenerativePageStyle } from "./pageStyle"
+import { createImageWallpaper, createVideoWallpaper } from "./wallpaper"
 
 function samplePageStyle() {
   const r = createGenerativePageStyle({
@@ -142,6 +144,22 @@ describe("Style cascade (v2 liquid glass)", () => {
     }
     expect(tokens.color.accent).toBe("accent")
     expect("motion" in tokens).toBe(false)
+  })
+
+  test("Given media wallpapers, When CSS fallbacks resolve, Then WallpaperStage owns their rendering", () => {
+    // Given
+    const wallpapers = [
+      createImageWallpaper({ mediaRef: "image-ref", dim: 0.1 }),
+      createVideoWallpaper({ mediaRef: "video-ref", dim: 0.1 }),
+    ]
+
+    // When / Then
+    for (const wallpaper of wallpapers) {
+      expect(wallpaper.ok).toBe(true)
+      if (wallpaper.ok) {
+        expect(wallpaperCssBackground(wallpaper.value)).toBe("")
+      }
+    }
   })
 
   test("page typography mood selects the display family", () => {

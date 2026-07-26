@@ -36,9 +36,9 @@ export function wallpaperCssBackground(wallpaper: Wallpaper): string {
       return presetCss ?? momentCss ?? ""
     }
     case "image":
-      return `url(media:${wallpaper.mediaRef})`
     case "video":
-      return `url(media:${wallpaper.mediaRef})`
+      // Media wallpapers render through WallpaperStage object URLs; the CSS placeholder is retired.
+      return ""
     default:
       return assertNever(wallpaper)
   }

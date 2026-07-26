@@ -71,8 +71,8 @@ export function editPanelStyle(opts: ChromeSurfaceOpts = {}): CSSProperties {
     background: borrowAccentFill(opts.pageAccent),
     color: EDITOR_GRAPHITE.color.ink,
     border: "1px solid color-mix(in oklch, white 11%, transparent)",
-    backdropFilter: "blur(18px) saturate(1.15)",
-    WebkitBackdropFilter: "blur(18px) saturate(1.15)",
+    backdropFilter: "blur(18px)",
+    WebkitBackdropFilter: "blur(18px)",
     boxShadow: "0 18px 50px color-mix(in oklch, black 42%, transparent)",
     fontSize: 13,
     animation: panelAnimation(opts.reducedMotion),
@@ -95,8 +95,8 @@ export function fabDockStyle(opts: ChromeSurfaceOpts = {}): CSSProperties {
     background: borrowAccentFill(opts.pageAccent, 6),
     color: EDITOR_GRAPHITE.color.ink,
     border: "1px solid color-mix(in oklch, white 12%, transparent)",
-    backdropFilter: "blur(16px) saturate(1.2)",
-    WebkitBackdropFilter: "blur(16px) saturate(1.2)",
+    backdropFilter: "blur(16px)",
+    WebkitBackdropFilter: "blur(16px)",
     boxShadow: "0 12px 40px color-mix(in oklch, black 35%, transparent)",
   }
 }
@@ -138,8 +138,8 @@ export function settingsSheetStyle(
     color: EDITOR_GRAPHITE.color.ink,
     border: "1px solid color-mix(in oklch, white 10%, transparent)",
     boxShadow: "0 28px 80px color-mix(in oklch, black 48%, transparent)",
-    backdropFilter: "blur(18px) saturate(1.15)",
-    WebkitBackdropFilter: "blur(18px) saturate(1.15)",
+    backdropFilter: "blur(18px)",
+    WebkitBackdropFilter: "blur(18px)",
     animation: panelAnimation(opts.reducedMotion),
   }
 }

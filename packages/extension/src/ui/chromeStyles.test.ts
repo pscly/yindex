@@ -72,6 +72,21 @@ describe("graphite editor chrome contract", () => {
     expect(borrowAccentFill(PAGE_ACCENT, 40)).not.toContain("60%")
   })
 
+  test("Given chrome glass surfaces, When backdrop filters resolve, Then they keep blur without hardcoded saturation", () => {
+    // Given
+    const surfaces = [
+      [panelStyle(), "blur(18px)"],
+      [dockStyle(), "blur(16px)"],
+      [settingsSheetStyle(), "blur(18px)"],
+    ] as const
+
+    // When / Then
+    for (const [surface, filter] of surfaces) {
+      expect(surface.backdropFilter).toBe(filter)
+      expect(surface.WebkitBackdropFilter).toBe(filter)
+    }
+  })
+
   test("shortens panel opening when reduced motion is active", () => {
     const normal = panelStyle({ reducedMotion: false })
     const reduced = panelStyle({ reducedMotion: true })

@@ -61,7 +61,7 @@ describe("WallpaperStage PageCanvas mount", () => {
 
     // Then
     expect(markup).toContain('data-wallpaper-kind="image"')
-    expect(markup).not.toContain("url(media:")
+    expect(markup).not.toContain("fixture-image")
     expect(markup).toContain('data-wallpaper-fallback="true"')
   })
 
@@ -74,7 +74,7 @@ describe("WallpaperStage PageCanvas mount", () => {
     expect(markup).toContain("muted")
     expect(markup).toContain("loop")
     expect(markup).toContain("playsInline")
-    expect(markup).not.toContain("url(media:")
+    expect(markup).not.toContain("fixture-video")
   })
 })
 
