@@ -1,11 +1,14 @@
-# 视觉世界审批记录
+# HISTORICAL / SUPERSEDED：v1 视觉审批记录
 
-- **方向**: 三材质三联画（墨石 / 卡尺 / 露珠 + 石墨编辑器壳）
-- **状态**: **已批准**（用户 2026-07-23）
-- **权威文件**: [`../../DESIGN.md`](../../DESIGN.md)、[`style-packs.md`](./style-packs.md)
-- **构图 comps（结构草图）**:
-  - [`comps/comp-a-landing-caliper.html`](./comps/comp-a-landing-caliper.html) / `.png` — Landing 卡尺台
-  - [`comps/comp-b-knowledge-inkstone.html`](./comps/comp-b-knowledge-inkstone.html) / `.png` — 知识墨石
-  - [`comps/comp-c-atmosphere-dew.html`](./comps/comp-c-atmosphere-dew.html) / `.png` — 氛围露珠
-- **说明**: comps 为构图与材质对照，非最终像素稿；实现以 DESIGN.md token 与规则为准。
-- **后置**: 高保真壁纸资产、字体子集打包、实现阶段 token CSS 变量落地
+> **本文件不是当前设计权威。** 这里记录的「三材质三联画」方向已被 2026-07-24 的统一 Liquid Glass 决策取代。当前实现与验收必须遵循 [`../../DESIGN.md`](../../DESIGN.md) v0.2、[`style-packs.md`](./style-packs.md) 以及 [ADR 0009](../adr/0009-unified-liquid-glass-material-language.md)。
+
+## 历史记录（2026-07-23）
+
+- **旧方向**：三材质三联画（墨石 / 卡尺 / 露珠 + 石墨编辑器壳）
+- **当时状态**：已批准；该批准现已撤销，并由 v0.2 取代
+- **历史 comps**：
+  - [`comps/comp-a-landing-caliper.html`](./comps/comp-a-landing-caliper.html) / `.png`，旧 Landing 卡尺台
+  - [`comps/comp-b-knowledge-inkstone.html`](./comps/comp-b-knowledge-inkstone.html) / `.png`，旧知识墨石
+  - [`comps/comp-c-atmosphere-dew.html`](./comps/comp-c-atmosphere-dew.html) / `.png`，旧氛围露珠
+
+这些 HTML/PNG 只保留用于追溯材质转向，不可用作当前 token、构图、视觉 QA 或实现依据。当前默认场景为 **此刻 / 灵感 / 流光**，三者共用一套 Liquid Glass 材质系统。
