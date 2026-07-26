@@ -103,10 +103,25 @@ async function expectMomentComposition(
   viewport: Viewport,
 ): Promise<void> {
   const weather = await widgetBox(scene, "page_moment_w0")
+  const weatherContent = scene.locator(
+    '[data-widget-id="page_moment_w0"] [data-widget-surface] > div',
+  )
+  const weatherOverflow = await weatherContent.evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    clientWidth: element.clientWidth,
+    scrollHeight: element.scrollHeight,
+    scrollWidth: element.scrollWidth,
+  }))
   const clock = await widgetBox(scene, "page_moment_w1")
   const search = await widgetBox(scene, "page_moment_w2")
   const shortcuts = await widgetBox(scene, "page_moment_w3")
 
+  expect(weatherOverflow.scrollWidth).toBeLessThanOrEqual(
+    weatherOverflow.clientWidth,
+  )
+  expect(weatherOverflow.scrollHeight).toBeLessThanOrEqual(
+    weatherOverflow.clientHeight,
+  )
   expect(Math.abs(weather.y - clock.y)).toBeLessThan(1)
   expect(
     Math.max(weather.y + weather.height, clock.y + clock.height),
