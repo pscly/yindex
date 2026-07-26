@@ -1,5 +1,5 @@
 import { BALANCED_SAFE_ANALYSIS } from "@yindex/domain"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import {
   analyzePixelFrame,
   createVideoWallpaperSampler,
@@ -25,15 +25,15 @@ export function VideoWallpaperSurface(props: {
   readonly active: boolean
   readonly reducedMotion: boolean
   readonly onAnalysis: WallpaperStageProps["onAnalysis"]
+  readonly failed: boolean
+  readonly onMediaError: () => void
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [failedUrl, setFailedUrl] = useState<string | null>(null)
-  const failed = props.lease !== null && failedUrl === props.lease.url
   const wallpaperActive = useVisibleWallpaperActivity(props.active)
 
   useEffect(() => {
     const video = videoRef.current
-    if (video === null || props.lease === null || failed) return
+    if (video === null || props.lease === null || props.failed) return
     if (!wallpaperActive || props.reducedMotion) {
       video.pause()
       return
@@ -46,12 +46,18 @@ export function VideoWallpaperSurface(props: {
         return
       }
       if (error instanceof Error) {
-        setFailedUrl(props.lease?.url ?? null)
+        props.onMediaError()
         return
       }
       throw error
     })
-  }, [failed, props.lease, props.reducedMotion, wallpaperActive])
+  }, [
+    props.failed,
+    props.lease,
+    props.onMediaError,
+    props.reducedMotion,
+    wallpaperActive,
+  ])
 
   useEffect(() => {
     const video = videoRef.current
@@ -62,7 +68,7 @@ export function VideoWallpaperSurface(props: {
     if (
       video === null ||
       props.lease === null ||
-      failed ||
+      props.failed ||
       analysisMode === "inactive"
     ) {
       return
@@ -95,7 +101,7 @@ export function VideoWallpaperSurface(props: {
     sampler.start()
     return () => sampler.dispose()
   }, [
-    failed,
+    props.failed,
     props.lease,
     props.onAnalysis,
     props.reducedMotion,
@@ -115,9 +121,9 @@ export function VideoWallpaperSurface(props: {
       height={1080}
       style={{
         ...wallpaperMediaStyle,
-        opacity: props.lease === null || failed ? 0 : 1,
+        opacity: props.lease === null || props.failed ? 0 : 1,
       }}
-      onError={() => setFailedUrl(props.lease?.url ?? null)}
+      onError={props.onMediaError}
     />
   )
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { createStaticImageAnalyzer } from "../wallpaper/wallpaperAnalyzer"
 import type { WallpaperMediaUrlLease } from "../wallpaper/wallpaperMediaUrl"
 import type { WallpaperStageProps } from "./WallpaperStage"
@@ -10,10 +10,9 @@ export function ImageWallpaperSurface(props: {
   readonly lease: WallpaperMediaUrlLease | null
   readonly active: boolean
   readonly onAnalysis: WallpaperStageProps["onAnalysis"]
+  readonly failed: boolean
+  readonly onMediaError: () => void
 }) {
-  const [failedUrl, setFailedUrl] = useState<string | null>(null)
-  const failed = props.lease !== null && failedUrl === props.lease.url
-
   useEffect(() => {
     const lease = props.lease
     if (lease === null || !props.active) return
@@ -28,7 +27,7 @@ export function ImageWallpaperSurface(props: {
     }
   }, [props.active, props.lease, props.onAnalysis])
 
-  if (props.lease === null || failed) return null
+  if (props.lease === null || props.failed) return null
   return (
     <img
       src={props.lease.url}
@@ -37,7 +36,7 @@ export function ImageWallpaperSurface(props: {
       width={1920}
       height={1080}
       style={wallpaperMediaStyle}
-      onError={() => setFailedUrl(props.lease?.url ?? null)}
+      onError={props.onMediaError}
     />
   )
 }

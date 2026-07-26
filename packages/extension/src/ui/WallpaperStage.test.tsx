@@ -11,6 +11,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { createDefaultHome } from "../default/createDefaultHome"
 import { createWallpaperMediaUrlPool } from "../wallpaper/wallpaperMediaUrl"
 import { PageCanvas } from "./PageCanvas"
+import { WallpaperRecoveryAction } from "./WallpaperStage"
 
 const noWidget = (): void => {}
 
@@ -45,6 +46,19 @@ function renderFirstPage(wallpaperKind: "generative" | "image" | "video") {
 }
 
 describe("WallpaperStage PageCanvas mount", () => {
+  test("Given missing Wallpaper media, When recovery renders, Then it exposes a keyboard-native Settings action without motion", () => {
+    // Given / When
+    const markup = renderToStaticMarkup(
+      createElement(WallpaperRecoveryAction, { onOpenSettings: noWidget }),
+    )
+
+    // Then
+    expect(markup).toContain('<button type="button"')
+    expect(markup).toContain('data-wallpaper-recovery="true"')
+    expect(markup).toContain("壁纸缺失 · 打开设置重新选择")
+    expect(markup).toContain("animation:none;transition:none")
+  })
+
   test("Given the default Home, When its first Page renders, Then a real generative canvas sits beneath Widgets", () => {
     // Given / When
     const markup = renderFirstPage("generative")
@@ -63,6 +77,7 @@ describe("WallpaperStage PageCanvas mount", () => {
     expect(markup).toContain('data-wallpaper-kind="image"')
     expect(markup).not.toContain("fixture-image")
     expect(markup).toContain('data-wallpaper-fallback="true"')
+    expect(markup).not.toContain("data-wallpaper-recovery=")
   })
 
   test("Given a video Wallpaper, When its Page renders, Then the media element has ambient playback attributes", () => {
@@ -75,6 +90,7 @@ describe("WallpaperStage PageCanvas mount", () => {
     expect(markup).toContain("loop")
     expect(markup).toContain("playsInline")
     expect(markup).not.toContain("fixture-video")
+    expect(markup).not.toContain("data-wallpaper-recovery=")
   })
 })
 

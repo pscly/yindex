@@ -36,6 +36,7 @@ export function App() {
     useState<WidgetInstanceId | null>(null)
   const osPrefersReducedMotion = useOsPrefersReducedMotion()
   const chromeTabActive = useChromeTabActive()
+  const openSettings = useCallback(() => setSettingsOpen(true), [])
 
   const onPageChange = useCallback(
     (pageId: PageId) => {
@@ -226,6 +227,9 @@ export function App() {
                 selectedWidgetId={selectedWidgetId}
                 onSelectWidget={setSelectedWidgetId}
                 onWidgetConfig={onWidgetConfig}
+                {...(slot === activeSlot
+                  ? { onOpenSettings: openSettings }
+                  : {})}
                 {...(isEditable ? { onWidgetLayoutDraft, onDeleteWidget } : {})}
               />
             </div>
@@ -246,7 +250,7 @@ export function App() {
         canRedo={canRedo}
         onUndo={undo}
         onRedo={redo}
-        onSettings={() => setSettingsOpen(true)}
+        onSettings={openSettings}
         onToggleEdit={() => {
           setEditMode((v) => !v)
           setSelectedWidgetId(null)

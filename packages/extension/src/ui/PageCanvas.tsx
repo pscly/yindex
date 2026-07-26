@@ -31,6 +31,7 @@ export type PageCanvasProps = {
   readonly selectedWidgetId: WidgetInstanceId | null
   readonly onSelectWidget: (id: WidgetInstanceId | null) => void
   readonly onWidgetConfig: (widgetId: string, config: unknown) => void
+  readonly onOpenSettings?: () => void
   readonly onDeleteWidget?: (widgetId: WidgetInstanceId) => void
   readonly onWidgetLayoutDraft?: (event: LayoutDraftEvent) => void
   readonly wallpaperActive?: boolean
@@ -116,6 +117,9 @@ export function PageCanvas(props: PageCanvasProps) {
         fallbackBackground={fallbackBackground || tokens.color.bg}
         dimColor={tokens.color.bg}
         onAnalysis={onAnalysis}
+        {...(props.onOpenSettings === undefined
+          ? {}
+          : { onOpenSettings: props.onOpenSettings })}
       />
       {props.page.widgets.map((w) => {
         const selected = props.editMode && props.selectedWidgetId === w.id

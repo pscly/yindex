@@ -5,9 +5,14 @@ import {
   wallpaperMediaUrlPool,
 } from "../wallpaper/wallpaperMediaUrl"
 
+export type WallpaperMediaLeaseResult = {
+  readonly lease: WallpaperMediaUrlLease | null
+  readonly missing: boolean
+}
+
 export function useWallpaperMediaLease(
   wallpaper: Wallpaper,
-): WallpaperMediaUrlLease | null {
+): WallpaperMediaLeaseResult {
   const source = wallpaper.kind === "generative" ? null : wallpaper
   const sourceKey =
     source === null ? "generative" : `${source.kind}:${source.mediaRef}`
@@ -36,5 +41,8 @@ export function useWallpaperMediaLease(
     }
   }, [source, sourceKey])
 
-  return loaded?.sourceKey === sourceKey ? loaded.lease : null
+  if (source === null || loaded?.sourceKey !== sourceKey) {
+    return { lease: null, missing: false }
+  }
+  return { lease: loaded.lease, missing: loaded.lease === null }
 }
