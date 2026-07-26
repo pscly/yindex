@@ -100,7 +100,7 @@ Settings 中可对透光、模糊、饱和与高光做受限高级微调；最�
 - 每个 Page 独立拥有 Wallpaper；Wallpaper 不是普通 Widget
 - 默认使用本机实时渲染的 Generative Wallpaper：`moment` / `muse` / `flow`
 - 用户可导入本地图片或短循环视频；不支持远程视频流
-- 本地媒体导入验证扩展名、声明 MIME、字节签名与大小；图片上限 50 MiB，视频上限 100 MiB
+- 本地媒体导入验证扩展名、声明 MIME、字节签名与大小；视频上限 100 MiB，图片仍受浏览器可用存储与解码能力约束
 - 仅可见 Page 播放视频或渲染生成式 Wallpaper；离开时暂停；reduced-motion 时显示静态帧
 - Settings 提供 Wallpaper 资源占用、引用提示和删除；仍被 Page 引用的资源不可删除
 
