@@ -12,17 +12,35 @@ import {
   BRIGHT_FIXTURE,
   DARK_FIXTURE,
   EVIDENCE_ROOT,
+  acquireVisualEvidenceLock,
   captureEvidence,
   closeEdit,
   openEdit,
   openVisualHome,
+  resetVisualEvidence,
   selectGlassProfile,
   selectScene,
   uploadWallpaper,
 } from "./extension.visual-harness"
+import {
+  MATRIX_CELLS,
+  captureFullMatrix,
+  writeVisualMatrixEvidence,
+} from "./extension.visual-matrix"
 
 test.describe.configure({ mode: "serial" })
 test.setTimeout(180_000)
+
+let releaseVisualEvidenceLock: (() => Promise<void>) | undefined
+
+test.beforeAll(async () => {
+  releaseVisualEvidenceLock = await acquireVisualEvidenceLock()
+})
+
+test.afterAll(async () => {
+  await releaseVisualEvidenceLock?.()
+  releaseVisualEvidenceLock = undefined
+})
 
 const SCENES = [
   { id: "page_moment", name: "此刻", slug: "moment" },
@@ -51,11 +69,17 @@ test("captures the required scene, profile, motion, wallpaper, focus, and ARIA m
   extensionContext,
   extensionId,
 }, testInfo) => {
+  await resetVisualEvidence()
   const page = await openVisualHome(extensionContext, extensionId)
   try {
     for (const scene of SCENES) {
       await selectScene(page, scene.name, scene.id)
       await captureEvidence(page, `scene-default-${scene.slug}.png`, testInfo)
+      await saveAxeEvidence(page, `default-${scene.slug}`)
+      await page.keyboard.press("Tab")
+      await expect(page.locator(":focus-visible")).toHaveCount(1)
+      await expect(page.locator(":focus-visible")).toBeVisible()
+      await captureEvidence(page, `focus-default-${scene.slug}.png`, testInfo)
     }
 
     const moment = await selectScene(page, "此刻", "page_moment")
@@ -63,40 +87,35 @@ test("captures the required scene, profile, motion, wallpaper, focus, and ARIA m
       page.locator('[data-page-slot-active="true"]'),
     ).toMatchAriaSnapshot({ name: "active-moment.aria.yml" })
     const profilePanel = await openEdit(page)
-    for (const profile of [
-      { name: "清透", slug: "clear" },
-      { name: "沉静", slug: "deep" },
-      { name: "均衡", slug: "balanced" },
-    ] as const) {
-      await selectGlassProfile(profilePanel, profile.name)
-      await captureEvidence(
-        page,
-        `profile-${profile.slug}-moment.png`,
-        testInfo,
-      )
-    }
     await expect(
       profilePanel.locator('section[aria-labelledby="edit-glass-heading"]'),
     ).toMatchAriaSnapshot({ name: "edit-glass-section.aria.yml" })
     await closeEdit(profilePanel)
 
-    await page.emulateMedia({ reducedMotion: "reduce" })
-    for (const scene of SCENES) {
-      const active = await selectScene(page, scene.name, scene.id)
-      await expect(
-        active.locator('[data-wallpaper-active="true"]'),
-      ).toHaveAttribute("data-wallpaper-reduced-motion", "true")
-      await captureEvidence(page, `reduced-motion-${scene.slug}.png`, testInfo)
-    }
-    await page.emulateMedia({ reducedMotion: "no-preference" })
-
-    await selectScene(page, "此刻", "page_moment")
     await page.getByRole("button", { name: "设置" }).click()
     const settings = page.getByRole("dialog", { name: "设置" })
     await expect(settings).toBeVisible()
-    await expect(settings).toMatchAriaSnapshot({
-      name: "settings-dialog.aria.yml",
-    })
+    await expect(settings).toMatchAriaSnapshot(`
+      - dialog "设置":
+        - heading "设置" [level=2]
+        - button "关闭"
+        - heading "导航" [level=3]
+        - checkbox "记住上次所在页（关闭则始终打开 Landing）"
+        - checkbox "允许每日重抽六十四卦"
+        - checkbox "编辑时启用吸附" [checked]
+        - combobox "减少动态效果"
+        - combobox "动态档位"
+        - heading "配置导入导出" [level=3]
+        - button "导出 JSON"
+        - button "导入 JSON"
+        - heading "小组件包" [level=3]
+        - button "安装示例番茄钟"
+        - heading "壁纸资源" [level=3]
+        - heading "重置" [level=3]
+        - button "仅重置主页配置"
+        - button "清除全部本地数据"
+        - heading "关于" [level=3]
+    `)
     await expect(
       settings.locator('[data-settings-initial-focus="true"]'),
     ).toBeFocused()
@@ -110,16 +129,63 @@ test("captures the required scene, profile, motion, wallpaper, focus, and ARIA m
     await layoutShell.focus()
     await expect(layoutShell).toBeFocused()
     await captureEvidence(page, "focus-edit-widget-selected.png", testInfo)
-    await uploadWallpaper(editPanel, BRIGHT_FIXTURE)
     await closeEdit(editPanel)
-    await captureEvidence(page, "fixture-bright-moment.png", testInfo)
 
-    await selectScene(page, "流光", "page_flow")
-    const flowPanel = await openEdit(page)
-    await selectGlassProfile(flowPanel, "沉静")
-    await uploadWallpaper(flowPanel, DARK_FIXTURE)
-    await closeEdit(flowPanel)
-    await captureEvidence(page, "fixture-dark-flow.png", testInfo)
+    await expect(weather).toContainText("风速 8 km/h")
+    const weatherContent = weather.locator("[data-widget-surface] > div")
+    const overflow = await weatherContent.evaluate((element) => ({
+      clientHeight: element.clientHeight,
+      clientWidth: element.clientWidth,
+      scrollHeight: element.scrollHeight,
+      scrollWidth: element.scrollWidth,
+    }))
+    expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth)
+    expect(overflow.scrollHeight).toBeLessThanOrEqual(overflow.clientHeight)
+
+    await captureFullMatrix(page, testInfo)
+    expect(MATRIX_CELLS).toHaveLength(36)
+    await writeVisualMatrixEvidence()
+  } finally {
+    await page.close()
+  }
+})
+
+test("captures a deterministic reduced-motion Page Turn before, mid, and after", async ({
+  extensionContext,
+  extensionId,
+}, testInfo) => {
+  const page = await openVisualHome(extensionContext, extensionId, {
+    controlledClock: true,
+  })
+  try {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await selectScene(page, "此刻", "page_moment")
+    await page.clock.pauseAt(new Date("2026-07-26T08:09:00+08:00"))
+    await captureEvidence(page, "page-turn-rm-before-moment.png", testInfo)
+
+    await page.getByRole("button", { name: "灵感", exact: true }).click()
+    const outgoing = page.locator('[data-page-turn-role="outgoing"]')
+    const incoming = page.locator('[data-page-turn-role="incoming"]')
+    await expect(outgoing).toHaveCount(1)
+    await expect(incoming).toHaveCount(1)
+    await page.clock.runFor(60)
+    const midOpacity = await Promise.all([
+      outgoing.evaluate((element) => Number(getComputedStyle(element).opacity)),
+      incoming.evaluate((element) => Number(getComputedStyle(element).opacity)),
+    ])
+    expect(midOpacity[0]).toBeGreaterThan(0)
+    expect(midOpacity[0]).toBeLessThan(1)
+    expect(midOpacity[1]).toBeGreaterThan(0)
+    expect(midOpacity[1]).toBeLessThan(1)
+    expect(midOpacity[0] + midOpacity[1]).toBeCloseTo(1, 5)
+    await captureEvidence(page, "page-turn-rm-mid-moment-to-muse.png", testInfo)
+
+    await page.clock.runFor(80)
+    await expect(
+      page.getByRole("button", { name: "灵感", exact: true }),
+    ).toHaveAttribute("aria-current", "true")
+    await expect(outgoing).toHaveCount(0)
+    await captureEvidence(page, "page-turn-rm-after-muse.png", testInfo)
   } finally {
     await page.close()
   }
@@ -131,8 +197,6 @@ test("gates composited contrast and critical accessibility on required fixtures"
 }) => {
   const page = await openVisualHome(extensionContext, extensionId)
   try {
-    await saveAxeEvidence(page, "default-moment")
-
     const brightPanel = await openEdit(page)
     await uploadWallpaper(brightPanel, BRIGHT_FIXTURE)
     await closeEdit(brightPanel)
@@ -189,8 +253,6 @@ test("gates composited contrast and critical accessibility on required fixtures"
         floor: 4.5,
       }),
     )
-    await saveAxeEvidence(page, "dark-deep-flow")
-
     await writeContrastEvidence(
       resolve(EVIDENCE_ROOT, "contrast-samples.json"),
       samples,

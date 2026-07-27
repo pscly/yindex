@@ -1,4 +1,5 @@
-import { mkdir } from "node:fs/promises"
+import { randomUUID } from "node:crypto"
+import { mkdir, open, readdir, rename, rm } from "node:fs/promises"
 import { resolve } from "node:path"
 import type { BrowserContext, Locator, Page, TestInfo } from "@playwright/test"
 import { expect } from "./extension.fixture"
@@ -17,6 +18,32 @@ export const DARK_FIXTURE = resolve(
   "../fixtures/wallpapers/dark.png",
 )
 
+const FIXED_TIME = new Date("2026-07-26T08:08:00+08:00")
+const EVIDENCE_LOCK_PATH = resolve(EVIDENCE_ROOT, ".visual-suite.lock")
+const GENERATED_EVIDENCE = [
+  "screenshots",
+  "matrix.md",
+  "contrast-samples.json",
+  "axe-default-moment.json",
+  "axe-default-muse.json",
+  "axe-default-flow.json",
+  "axe-dark-deep-flow.json",
+] as const
+
+type VisualHomeOptions = {
+  readonly controlledClock?: boolean
+}
+
+class VisualEvidenceLockError extends Error {
+  override readonly name = "VisualEvidenceLockError"
+
+  constructor(readonly lockPath: string) {
+    super(
+      `Another visual evidence suite owns ${lockPath}. Wait for it to finish before starting a new run.`,
+    )
+  }
+}
+
 const CLEAR_EXTENSION_STATE = `(async () => {
   await chrome.storage.local.clear()
   const root = await navigator.storage?.getDirectory?.()
@@ -30,11 +57,16 @@ const CLEAR_EXTENSION_STATE = `(async () => {
 export async function openVisualHome(
   context: BrowserContext,
   extensionId: string,
+  options: VisualHomeOptions = {},
 ): Promise<Page> {
   await mkdir(SCREENSHOT_ROOT, { recursive: true })
   const page = await context.newPage()
   await page.setViewportSize({ width: 1280, height: 800 })
-  await page.clock.setFixedTime(new Date("2026-07-26T08:08:00+08:00"))
+  if (options.controlledClock) {
+    await page.clock.install({ time: FIXED_TIME })
+  } else {
+    await page.clock.setFixedTime(FIXED_TIME)
+  }
   await page.emulateMedia({ reducedMotion: "no-preference" })
   await page.route("https://api.open-meteo.com/**", (route) =>
     route.fulfill({
@@ -66,6 +98,47 @@ export async function openVisualHome(
   await page.evaluate(() => document.fonts.ready)
   await selectScene(page, "此刻", "page_moment")
   return page
+}
+
+export async function resetVisualEvidence(): Promise<void> {
+  await mkdir(EVIDENCE_ROOT, { recursive: true })
+  const existingNames = new Set(await readdir(EVIDENCE_ROOT))
+  const generatedNames = GENERATED_EVIDENCE.filter((name) =>
+    existingNames.has(name),
+  )
+  if (generatedNames.length > 0) {
+    const archiveRoot = resolve(
+      EVIDENCE_ROOT,
+      "attempts",
+      `visual-${Date.now()}-${randomUUID()}`,
+    )
+    await mkdir(archiveRoot, { recursive: true })
+    await Promise.all(
+      generatedNames.map((name) =>
+        rename(resolve(EVIDENCE_ROOT, name), resolve(archiveRoot, name)),
+      ),
+    )
+  }
+  await mkdir(SCREENSHOT_ROOT, { recursive: true })
+}
+
+export async function acquireVisualEvidenceLock(): Promise<
+  () => Promise<void>
+> {
+  await mkdir(EVIDENCE_ROOT, { recursive: true })
+  try {
+    const lock = await open(EVIDENCE_LOCK_PATH, "wx")
+    await lock.writeFile(`${process.pid}\n`)
+    return async () => {
+      await lock.close()
+      await rm(EVIDENCE_LOCK_PATH, { force: true })
+    }
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "EEXIST") {
+      throw new VisualEvidenceLockError(EVIDENCE_LOCK_PATH)
+    }
+    throw error
+  }
 }
 
 export async function selectScene(
@@ -126,9 +199,9 @@ export async function uploadWallpaper(
   panel: Locator,
   fixturePath: string,
 ): Promise<void> {
-  await panel
-    .locator('input[accept="image/*,video/*"]')
-    .setInputFiles(fixturePath)
+  const input = panel.locator('input[accept="image/*,video/*"]')
+  await expect(input).toBeEnabled({ timeout: 15_000 })
+  await input.setInputFiles(fixturePath)
   const page = panel.page()
   await expect(
     page.locator(
