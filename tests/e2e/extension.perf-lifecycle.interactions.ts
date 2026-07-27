@@ -2,13 +2,21 @@ import { expect } from "./extension.fixture"
 import {
   IDLE_WINDOW_MS,
   captureCdpTrace,
-  collectHeapBytes,
+  collectLifecycleMetrics,
   mebibytes,
   median,
   round,
 } from "./extension.perf-lifecycle.helpers"
+import {
+  WALLPAPER_JS_WINDOW_MS,
+  isMateriallyMonotonic,
+} from "./extension.perf-lifecycle.metrics"
 import { readRendererActivity } from "./extension.perf-lifecycle.page"
-import { measureTurns, readFrameProbe } from "./extension.perf-lifecycle.probe"
+import {
+  measureWallpaperJs,
+  readFrameProbe,
+} from "./extension.perf-lifecycle.probe"
+import { measureTurns } from "./extension.perf-lifecycle.turns"
 import type {
   InteractionProfile,
   ProfiledHome,
@@ -16,7 +24,7 @@ import type {
 
 const MATERIAL_HEAP_STEP_MIB = 1
 const STRESS_TURNS = 100
-const DIALOG_INTERVAL = 5
+const DIALOG_INTERVAL = 4
 const HEAP_SAMPLE_INTERVAL = 20
 
 export async function profileInteractions(
@@ -70,6 +78,22 @@ export async function profileInteractions(
   const visibleBefore = await readFrameProbe(page)
   await page.waitForTimeout(500)
   const visibleAfter = await readFrameProbe(page)
+  await expect(activeWallpaper).toBeVisible()
+  await expect(page.locator("[data-home-tab-active]")).toHaveAttribute(
+    "data-home-tab-active",
+    "true",
+  )
+  let wallpaperJsDurationsMs: readonly number[] = []
+  const wallpaperReferenceTraceEvents = await captureCdpTrace(
+    session,
+    `wallpaper-reference-${runId}.trace.json`,
+    async () => {
+      wallpaperJsDurationsMs = await measureWallpaperJs(
+        page,
+        WALLPAPER_JS_WINDOW_MS,
+      )
+    },
+  )
   let idleBefore = await readFrameProbe(page)
   let idleAfter = idleBefore
   let inactiveTabTransitions = 0
@@ -109,48 +133,62 @@ export async function profileInteractions(
     },
   )
 
-  const heapBytes: number[] = [await collectHeapBytes(session)]
+  const lifecycleSamples = [await collectLifecycleMetrics(session)]
+  let completedTurns = 0
+  let dialogCycles = 0
   const stressTraceEvents = await captureCdpTrace(
     session,
     `stress-${runId}.trace.json`,
     async () => {
       for (let turn = 1; turn <= STRESS_TURNS; turn += 1) {
         await measureTurns(page, "PageDown", 1)
-        if (turn % DIALOG_INTERVAL !== 0) continue
-        await page.getByRole("button", { name: "设置" }).click()
-        const dialog = page.getByRole("dialog", { name: "设置" })
-        await expect(dialog).toBeVisible()
-        await dialog.getByRole("button", { name: "关闭" }).click()
-        await expect(dialog).toBeHidden()
+        completedTurns += 1
+        if (turn % DIALOG_INTERVAL === 0) {
+          await page.getByRole("button", { name: "设置" }).click()
+          const dialog = page.getByRole("dialog", { name: "设置" })
+          await expect(dialog).toBeVisible()
+          await dialog.getByRole("button", { name: "关闭" }).click()
+          await expect(dialog).toBeHidden()
+          dialogCycles += 1
+        }
         if (turn % HEAP_SAMPLE_INTERVAL === 0) {
-          heapBytes.push(await collectHeapBytes(session))
+          lifecycleSamples.push(await collectLifecycleMetrics(session))
         }
       }
     },
   )
-  const heapMiB = heapBytes.map(mebibytes)
+  const heapMiB = lifecycleSamples.map((sample) => mebibytes(sample.heapBytes))
+  const domNodeSamples = lifecycleSamples.map((sample) => sample.domNodes)
+  const listenerSamples = lifecycleSamples.map(
+    (sample) => sample.jsEventListeners,
+  )
   const initialHeapMiB = heapMiB[0] ?? 0
-  const materiallyMonotonic = heapMiB
-    .slice(1)
-    .every(
-      (value, index) =>
-        value - (heapMiB[index] ?? value) >= MATERIAL_HEAP_STEP_MIB,
-    )
+  const materiallyMonotonic = isMateriallyMonotonic(
+    heapMiB,
+    MATERIAL_HEAP_STEP_MIB,
+  )
   const reducedMs = [
     ...reducedForward.durationsMs,
     ...reducedReverse.durationsMs,
   ]
 
   return {
+    hardware: home.hardware,
     heap: {
-      dialogCycles: STRESS_TURNS / DIALOG_INTERVAL,
+      dialogCycles,
+      domNodeSamples,
+      domNodesMateriallyMonotonic: isMateriallyMonotonic(domNodeSamples, 1),
       finalGrowthMiB: round(
         (heapMiB.at(-1) ?? initialHeapMiB) - initialHeapMiB,
       ),
       materiallyMonotonic,
+      listenerSamples,
+      listenersMateriallyMonotonic: isMateriallyMonotonic(listenerSamples, 1),
       materialStepMiB: MATERIAL_HEAP_STEP_MIB,
       peakGrowthMiB: round(Math.max(...heapMiB) - initialHeapMiB),
+      sampleEveryTurns: HEAP_SAMPLE_INTERVAL,
       samplesMiB: heapMiB,
+      turns: completedTurns,
     },
     pageTurns: {
       forwardMedianMs: median(forward.durationsMs),
@@ -172,6 +210,7 @@ export async function profileInteractions(
       reducedMotion: reducedTraceEvents,
       stress: stressTraceEvents,
       wallpaperIdle: idleTraceEvents,
+      wallpaperReference: wallpaperReferenceTraceEvents,
     },
     wallpaperFrames: {
       hiddenRafGrowth:
@@ -192,6 +231,10 @@ export async function profileInteractions(
         visibleAfter.rafCallbacks - visibleBefore.rafCallbacks,
       visibleWallpaperDrawGrowth:
         visibleAfter.activeWallpaperDraws - visibleBefore.activeWallpaperDraws,
+    },
+    wallpaperJs: {
+      durationsMs: wallpaperJsDurationsMs.map(round),
+      windowMs: WALLPAPER_JS_WINDOW_MS,
     },
   }
 }

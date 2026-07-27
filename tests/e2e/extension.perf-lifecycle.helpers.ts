@@ -1,7 +1,15 @@
 import { mkdir, writeFile } from "node:fs/promises"
-import { arch, cpus, platform, release, totalmem } from "node:os"
+import {
+  arch,
+  cpus,
+  type as osType,
+  platform,
+  release,
+  totalmem,
+} from "node:os"
 import { resolve } from "node:path"
 import type { CDPSession, Page } from "@playwright/test"
+import type { RuntimeHardwareProfile } from "./extension.perf-lifecycle.types"
 
 export const EVIDENCE_ROOT = resolve(
   __dirname,
@@ -14,8 +22,42 @@ export type CspViolation = {
   readonly text: string
 }
 
+export type LifecycleMetrics = {
+  readonly domNodes: number
+  readonly heapBytes: number
+  readonly jsEventListeners: number
+}
+
+export type HardwareMetadata = {
+  readonly arch: string
+  readonly chromium: string
+  readonly cpuModel: string
+  readonly cpus: number
+  readonly devicePixelRatio: number
+  readonly gpuRenderer: string
+  readonly memGB: number
+  readonly osName: string
+  readonly osRelease: string
+  readonly platform: NodeJS.Platform
+  readonly refreshRateHz: number | "unknown"
+  readonly refreshRateSampleCount: number
+  readonly userAgent: string
+  readonly viewport: {
+    readonly height: number
+    readonly width: number
+  }
+}
+
 const CSP_PATTERN =
   /content security policy|violat(?:e|es|ed).*directive|refused to (?:load|execute|connect)/i
+
+class LifecycleMetricUnavailableError extends Error {
+  override readonly name = "LifecycleMetricUnavailableError"
+
+  constructor(readonly metricName: string) {
+    super(`CDP performance metric is unavailable: ${metricName}`)
+  }
+}
 
 export function round(value: number): number {
   return Math.round(value * 1000) / 1000
@@ -38,18 +80,24 @@ export function mebibytes(bytes: number): number {
 export function hardwareMetadata(
   browserVersion: string,
   browserUserAgent: string,
-) {
+  runtime: RuntimeHardwareProfile,
+): HardwareMetadata {
   const processors = cpus()
   return {
-    platform: platform(),
     arch: arch(),
-    cpus: processors.length,
-    memGB: round(totalmem() / (1024 * 1024 * 1024)),
     chromium: browserVersion,
-    userAgent: browserUserAgent,
     cpuModel: processors[0]?.model ?? "unknown",
+    cpus: processors.length,
+    devicePixelRatio: runtime.devicePixelRatio,
+    gpuRenderer: runtime.gpuRenderer,
+    memGB: round(totalmem() / (1024 * 1024 * 1024)),
+    osName: osType(),
     osRelease: release(),
-    viewport: { height: 800, width: 1280 },
+    platform: platform(),
+    refreshRateHz: runtime.refreshRateHz,
+    refreshRateSampleCount: runtime.refreshRateSampleCount,
+    userAgent: browserUserAgent,
+    viewport: runtime.viewport,
   }
 }
 
@@ -116,10 +164,21 @@ export function observeCsp(
   })
 }
 
-export async function collectHeapBytes(session: CDPSession): Promise<number> {
+export async function collectLifecycleMetrics(
+  session: CDPSession,
+): Promise<LifecycleMetrics> {
   await session.send("HeapProfiler.collectGarbage")
   const { metrics } = await session.send("Performance.getMetrics")
-  return metrics.find((metric) => metric.name === "JSHeapUsedSize")?.value ?? 0
+  const metricValue = (name: string): number => {
+    const value = metrics.find((metric) => metric.name === name)?.value
+    if (value === undefined) throw new LifecycleMetricUnavailableError(name)
+    return value
+  }
+  return {
+    domNodes: metricValue("Nodes"),
+    heapBytes: metricValue("JSHeapUsedSize"),
+    jsEventListeners: metricValue("JSEventListeners"),
+  }
 }
 
 export async function writeJson(

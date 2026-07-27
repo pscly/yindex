@@ -4,11 +4,17 @@ import type { RendererActivity } from "./extension.perf-lifecycle.page"
 
 export type HeapProfile = {
   readonly dialogCycles: number
+  readonly domNodeSamples: readonly number[]
+  readonly domNodesMateriallyMonotonic: boolean
   readonly finalGrowthMiB: number
+  readonly listenerSamples: readonly number[]
+  readonly listenersMateriallyMonotonic: boolean
   readonly materiallyMonotonic: boolean
   readonly materialStepMiB: number
   readonly peakGrowthMiB: number
+  readonly sampleEveryTurns: number
   readonly samplesMiB: readonly number[]
+  readonly turns: number
 }
 
 export type PageTurnProfile = {
@@ -36,18 +42,37 @@ export type WallpaperFrameProfile = {
   readonly visibleWallpaperDrawGrowth: number
 }
 
+export type WallpaperJsProfile = {
+  readonly durationsMs: readonly number[]
+  readonly windowMs: number
+}
+
+export type RuntimeHardwareProfile = {
+  readonly devicePixelRatio: number
+  readonly gpuRenderer: string
+  readonly refreshRateHz: number | "unknown"
+  readonly refreshRateSampleCount: number
+  readonly viewport: {
+    readonly height: number
+    readonly width: number
+  }
+}
+
 export type InteractionProfile = {
+  readonly hardware: RuntimeHardwareProfile
   readonly heap: HeapProfile
   readonly pageTurns: PageTurnProfile
   readonly rendererActivity: RendererActivity
   readonly traces: Readonly<Record<string, number>>
   readonly wallpaperFrames: WallpaperFrameProfile
+  readonly wallpaperJs: WallpaperJsProfile
 }
 
 export type ProfiledHome = {
   readonly coldOpenMs: number
   readonly context: BrowserContext
   readonly cspViolations: CspViolation[]
+  readonly hardware: RuntimeHardwareProfile
   readonly page: Page
   readonly runId: string
   readonly session: CDPSession

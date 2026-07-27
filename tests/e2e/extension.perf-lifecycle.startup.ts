@@ -1,5 +1,6 @@
 import { performance } from "node:perf_hooks"
 import type { BrowserContext } from "@playwright/test"
+import { collectRuntimeHardware } from "./extension.perf-lifecycle.hardware"
 import {
   type CspViolation,
   captureCdpTrace,
@@ -60,6 +61,7 @@ export async function openProfiledHome(input: {
     },
   )
   const warmOpenMs = round(performance.now() - warmStartedAt)
+  const hardware = await collectRuntimeHardware(page)
   await coldSession.detach()
   await coldPage.close()
 
@@ -67,6 +69,7 @@ export async function openProfiledHome(input: {
     coldOpenMs,
     context: input.context,
     cspViolations,
+    hardware,
     page,
     runId: input.runId,
     session,
