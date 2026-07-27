@@ -23,6 +23,7 @@ const EVIDENCE_LOCK_PATH = resolve(EVIDENCE_ROOT, ".visual-suite.lock")
 const GENERATED_EVIDENCE = [
   "screenshots",
   "matrix.md",
+  "weather-moment-bounds.json",
   "contrast-samples.json",
   "axe-default-moment.json",
   "axe-default-muse.json",
@@ -89,6 +90,17 @@ export async function openVisualHome(
       }),
     }),
   )
+  await page.route("https://www.google.com/s2/favicons**", (route) => {
+    const requestedDomain = new URL(route.request().url()).searchParams.get(
+      "domain",
+    )
+    const initial = requestedDomain?.slice(0, 1).toUpperCase() ?? "?"
+    const glyph = /^[A-Z0-9]$/.test(initial) ? initial : "•"
+    return route.fulfill({
+      contentType: "image/svg+xml",
+      body: `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#e9f4ff"/><text x="32" y="41" text-anchor="middle" font-family="system-ui,sans-serif" font-size="30" font-weight="700" fill="#17324d">${glyph}</text></svg>`,
+    })
+  })
   await page.goto(`chrome-extension://${extensionId}/newtab.html`)
   await page.evaluate(CLEAR_EXTENSION_STATE)
   await page.reload()
@@ -164,6 +176,22 @@ export async function captureEvidence(
   name: string,
   testInfo: TestInfo,
 ): Promise<string> {
+  const activeImages = page.locator('[data-page-slot-active="true"] img')
+  await expect
+    .poll(
+      () =>
+        activeImages.evaluateAll((images) =>
+          images.every(
+            (image) =>
+              image instanceof HTMLImageElement &&
+              image.complete &&
+              image.naturalWidth > 0,
+          ),
+        ),
+      { timeout: 15_000 },
+    )
+    .toBe(true)
+  await page.evaluate(() => document.documentElement.getBoundingClientRect())
   const path = resolve(SCREENSHOT_ROOT, name)
   await page.screenshot({
     animations: "disabled",

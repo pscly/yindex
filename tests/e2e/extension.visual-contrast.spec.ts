@@ -1,4 +1,4 @@
-import { writeFile } from "node:fs/promises"
+import { readdir, writeFile } from "node:fs/promises"
 import { resolve } from "node:path"
 import AxeBuilder from "@axe-core/playwright"
 import type { Locator, Page } from "@playwright/test"
@@ -12,6 +12,7 @@ import {
   BRIGHT_FIXTURE,
   DARK_FIXTURE,
   EVIDENCE_ROOT,
+  SCREENSHOT_ROOT,
   acquireVisualEvidenceLock,
   captureEvidence,
   closeEdit,
@@ -29,7 +30,7 @@ import {
 } from "./extension.visual-matrix"
 
 test.describe.configure({ mode: "serial" })
-test.setTimeout(180_000)
+test.setTimeout(360_000)
 
 let releaseVisualEvidenceLock: (() => Promise<void>) | undefined
 
@@ -48,8 +49,15 @@ const SCENES = [
   { id: "page_flow", name: "流光", slug: "flow" },
 ] as const
 
-async function saveAxeEvidence(page: Page, name: string): Promise<void> {
-  const results = await new AxeBuilder({ page }).analyze()
+async function saveAxeEvidence(
+  page: Page,
+  name: string,
+  scope?: string,
+): Promise<void> {
+  const builder = new AxeBuilder({ page })
+  const results = await (scope
+    ? builder.include(scope).analyze()
+    : builder.analyze())
   await writeFile(
     resolve(EVIDENCE_ROOT, `axe-${name}.json`),
     `${JSON.stringify(results, null, 2)}\n`,
@@ -65,11 +73,39 @@ function activeClock(page: Page): Locator {
   return page.locator('[data-page-slot-active="true"] [aria-label^="当前时间"]')
 }
 
+async function exposeKeyboardFocus(page: Page, target: Locator): Promise<void> {
+  await target.focus()
+  await page.keyboard.press("Tab")
+  await page.keyboard.press("Shift+Tab")
+  await expect(target).toBeFocused()
+  await expect
+    .poll(() => target.evaluate((element) => element.matches(":focus-visible")))
+    .toBe(true)
+  await expect(target).toHaveCSS("outline-style", "solid")
+  await expect(target).toHaveCSS("outline-width", "2px")
+}
+
 test("captures the required scene, profile, motion, wallpaper, focus, and ARIA matrix", async ({
   extensionContext,
   extensionId,
 }, testInfo) => {
   await resetVisualEvidence()
+  const darkDeepAxePage = await openVisualHome(extensionContext, extensionId)
+  try {
+    await selectScene(darkDeepAxePage, "流光", "page_flow")
+    const darkDeepAxePanel = await openEdit(darkDeepAxePage)
+    await selectGlassProfile(darkDeepAxePanel, "沉静")
+    await uploadWallpaper(darkDeepAxePanel, DARK_FIXTURE)
+    await closeEdit(darkDeepAxePanel)
+    await saveAxeEvidence(
+      darkDeepAxePage,
+      "dark-deep-flow",
+      '[data-page-slot-active="true"]',
+    )
+  } finally {
+    await darkDeepAxePage.close()
+  }
+
   const page = await openVisualHome(extensionContext, extensionId)
   try {
     for (const scene of SCENES) {
@@ -92,7 +128,9 @@ test("captures the required scene, profile, motion, wallpaper, focus, and ARIA m
     ).toMatchAriaSnapshot({ name: "edit-glass-section.aria.yml" })
     await closeEdit(profilePanel)
 
-    await page.getByRole("button", { name: "设置" }).click()
+    const settingsButton = page.getByRole("button", { name: "设置" })
+    await exposeKeyboardFocus(page, settingsButton)
+    await page.keyboard.press("Enter")
     const settings = page.getByRole("dialog", { name: "设置" })
     await expect(settings).toBeVisible()
     await expect(settings).toMatchAriaSnapshot(`
@@ -116,18 +154,30 @@ test("captures the required scene, profile, motion, wallpaper, focus, and ARIA m
         - button "清除全部本地数据"
         - heading "关于" [level=3]
     `)
-    await expect(
-      settings.locator('[data-settings-initial-focus="true"]'),
-    ).toBeFocused()
+    const settingsInitialFocus = settings.locator(
+      '[data-settings-initial-focus="true"]',
+    )
+    await expect(settingsInitialFocus).toBeFocused()
+    await expect
+      .poll(() =>
+        settingsInitialFocus.evaluate((element) =>
+          element.matches(":focus-visible"),
+        ),
+      )
+      .toBe(true)
     await captureEvidence(page, "focus-settings.png", testInfo)
-    await settings.getByRole("button", { name: "关闭" }).click()
+    await page.keyboard.press("Escape")
+    await expect(settings).toBeHidden()
 
-    const editPanel = await openEdit(page)
+    const editButton = page.getByRole("button", { name: "编辑", exact: true })
+    await exposeKeyboardFocus(page, editButton)
+    await page.keyboard.press("Enter")
+    const editPanel = page.locator('aside[aria-label="编辑面板"]')
+    await expect(editPanel).toBeVisible()
     const weather = moment.locator('[data-widget-id="page_moment_w0"]')
     await weather.click()
     const layoutShell = weather.getByLabel("编辑小组件布局")
-    await layoutShell.focus()
-    await expect(layoutShell).toBeFocused()
+    await exposeKeyboardFocus(page, layoutShell)
     await captureEvidence(page, "focus-edit-widget-selected.png", testInfo)
     await closeEdit(editPanel)
 
@@ -141,9 +191,30 @@ test("captures the required scene, profile, motion, wallpaper, focus, and ARIA m
     }))
     expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth)
     expect(overflow.scrollHeight).toBeLessThanOrEqual(overflow.clientHeight)
+    await writeFile(
+      resolve(EVIDENCE_ROOT, "weather-moment-bounds.json"),
+      `${JSON.stringify(
+        {
+          text: await weather.innerText(),
+          ...overflow,
+          unclipped:
+            overflow.scrollWidth <= overflow.clientWidth &&
+            overflow.scrollHeight <= overflow.clientHeight,
+        },
+        null,
+        2,
+      )}\n`,
+    )
 
     await captureFullMatrix(page, testInfo)
     expect(MATRIX_CELLS).toHaveLength(36)
+    const matrixPattern =
+      /^scene-(moment|muse|flow)-(clear|balanced|deep)-(nomotion|rm)-(bright|dark)\.png$/
+    const producedMatrix = (await readdir(SCREENSHOT_ROOT))
+      .filter((name) => matrixPattern.test(name))
+      .sort()
+    const expectedMatrix = MATRIX_CELLS.map((cell) => cell.screenshot).sort()
+    expect(producedMatrix).toEqual(expectedMatrix)
     await writeVisualMatrixEvidence()
   } finally {
     await page.close()

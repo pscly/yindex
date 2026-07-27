@@ -71,6 +71,13 @@ export async function captureFullMatrix(
       await uploadWallpaper(panel, fixture.path)
       for (const [profileIndex, profile] of PROFILES.entries()) {
         await selectGlassProfile(panel, profile.name)
+        if (scene.slug === "flow") {
+          await captureEvidence(
+            page,
+            `profile-flow-${profile.slug}-${fixture.slug}.png`,
+            testInfo,
+          )
+        }
         await closeEdit(panel)
         for (const motion of MOTIONS) {
           await page.emulateMedia({ reducedMotion: motion.media })
@@ -93,6 +100,7 @@ export async function captureFullMatrix(
 }
 
 export async function writeVisualMatrixEvidence(): Promise<void> {
+  const generatedAt = new Date().toISOString()
   const rows = MATRIX_CELLS.map(
     (cell, index) =>
       `| ${index + 1} | ${cell.scene} | ${cell.profile} | ${cell.reducedMotion} | ${cell.fixture} | \`screenshots/${cell.screenshot}\` |`,
@@ -100,7 +108,7 @@ export async function writeVisualMatrixEvidence(): Promise<void> {
   const markdown = [
     "# Task 25 — Visual / contrast / a11y evidence matrix",
     "",
-    "Generated: 2026-07-26  ",
+    `Generated: ${generatedAt}  `,
     "Suite: `tests/e2e/extension.visual-contrast.spec.ts`  ",
     "Conformance: WCAG 2.x relative luminance (not Lighthouse; not v1 comps)",
     "",
@@ -122,6 +130,17 @@ export async function writeVisualMatrixEvidence(): Promise<void> {
     "",
     "Additional focus states: `screenshots/focus-settings.png`, `screenshots/focus-edit-widget-selected.png`.",
     "",
+    "## FLOW Glass Profile selection proof",
+    "",
+    "The sparse FLOW Browse Mode has no large Widget glass surface, so these Edit Mode captures visibly bind each selected Glass Profile to both fixtures:",
+    "",
+    "- `screenshots/profile-flow-clear-bright.png`",
+    "- `screenshots/profile-flow-balanced-bright.png`",
+    "- `screenshots/profile-flow-deep-bright.png`",
+    "- `screenshots/profile-flow-clear-dark.png`",
+    "- `screenshots/profile-flow-balanced-dark.png`",
+    "- `screenshots/profile-flow-deep-dark.png`",
+    "",
     "## Reduced-motion Page Turn frames",
     "",
     "| Frame | Screenshot | Mapping |",
@@ -139,8 +158,13 @@ export async function writeVisualMatrixEvidence(): Promise<void> {
     "- `axe-default-moment.json`",
     "- `axe-default-muse.json`",
     "- `axe-default-flow.json`",
+    "- `axe-dark-deep-flow.json`",
     "",
     "Every report is gated at critical/serious = 0.",
+    "",
+    "## Moment weather bounds",
+    "",
+    "`weather-moment-bounds.json` records the rendered weather content and proves scroll dimensions do not exceed client bounds.",
     "",
     "## Intentional ARIA snapshots",
     "",
