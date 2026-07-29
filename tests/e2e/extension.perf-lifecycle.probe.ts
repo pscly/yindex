@@ -1,7 +1,9 @@
 import type { Page } from "@playwright/test"
 
 export type FrameProbe = {
+  readonly activeWallpaperCanvas2dDraws: number
   readonly activeWallpaperDraws: number
+  readonly activeWallpaperWebglDraws: number
   readonly hiddenRafCallbacks: number
   readonly hiddenTransitions: number
   readonly hiddenWallpaperDraws: number
@@ -18,7 +20,9 @@ export type FrameProbe = {
 }
 
 type MutableFrameProbe = {
+  activeWallpaperCanvas2dDraws: number
   activeWallpaperDraws: number
+  activeWallpaperWebglDraws: number
   hiddenRafCallbacks: number
   hiddenTransitions: number
   hiddenWallpaperDraws: number
@@ -34,6 +38,8 @@ type MutableFrameProbe = {
   wallpaperJsRecording: boolean
 }
 
+type DrawChannel = "canvas2d" | "image" | "webgl2"
+
 declare global {
   interface Window {
     __yindexTask26FrameProbe: MutableFrameProbe
@@ -43,7 +49,9 @@ declare global {
 export async function installFrameProbe(page: Page): Promise<void> {
   await page.addInitScript(() => {
     const probe: MutableFrameProbe = {
+      activeWallpaperCanvas2dDraws: 0,
       activeWallpaperDraws: 0,
+      activeWallpaperWebglDraws: 0,
       hiddenRafCallbacks: 0,
       hiddenTransitions: 0,
       hiddenWallpaperDraws: 0,
@@ -56,6 +64,35 @@ export async function installFrameProbe(page: Page): Promise<void> {
       wallpaperJsRecording: false,
     }
     window.__yindexTask26FrameProbe = probe
+    const attributeWallpaperDraw = (
+      canvas: unknown,
+      channel: DrawChannel,
+    ): void => {
+      if (
+        typeof HTMLCanvasElement === "undefined" ||
+        !(canvas instanceof HTMLCanvasElement)
+      ) {
+        return
+      }
+      const stage = canvas.closest<HTMLElement>("[data-wallpaper-active]")
+      if (stage?.getAttribute("data-wallpaper-active") === "true") {
+        probe.activeWallpaperDraws += 1
+        if (channel === "webgl2") probe.activeWallpaperWebglDraws += 1
+        if (channel === "canvas2d") probe.activeWallpaperCanvas2dDraws += 1
+      } else if (stage !== null) {
+        probe.inactiveWallpaperDraws += 1
+      }
+      if (stage !== null && document.visibilityState === "hidden") {
+        probe.hiddenWallpaperDraws += 1
+      }
+      if (
+        document
+          .querySelector("[data-home-tab-active]")
+          ?.getAttribute("data-home-tab-active") === "false"
+      ) {
+        probe.inactiveTabWallpaperDraws += 1
+      }
+    }
     const requestFrame = window.requestAnimationFrame.bind(window)
     window.requestAnimationFrame = (callback: FrameRequestCallback): number =>
       requestFrame((timestamp) => {
@@ -82,47 +119,83 @@ export async function installFrameProbe(page: Page): Promise<void> {
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") probe.hiddenTransitions += 1
     })
-    const nativeDrawImage = CanvasRenderingContext2D.prototype.drawImage
-    function trackedDrawImage(
-      this: CanvasRenderingContext2D,
-      ...args:
-        | [CanvasImageSource, number, number]
-        | [CanvasImageSource, number, number, number, number]
-        | [
-            CanvasImageSource,
-            number,
-            number,
-            number,
-            number,
-            number,
-            number,
-            number,
-            number,
-          ]
-    ): void {
-      const stage = this.canvas.closest<HTMLElement>("[data-wallpaper-active]")
-      if (stage?.getAttribute("data-wallpaper-active") === "true") {
-        probe.activeWallpaperDraws += 1
-      } else if (stage !== null) {
-        probe.inactiveWallpaperDraws += 1
+    if (typeof CanvasRenderingContext2D !== "undefined") {
+      const nativeDrawImage = CanvasRenderingContext2D.prototype.drawImage
+      function trackedDrawImage(
+        this: CanvasRenderingContext2D,
+        ...args:
+          | [CanvasImageSource, number, number]
+          | [CanvasImageSource, number, number, number, number]
+          | [
+              CanvasImageSource,
+              number,
+              number,
+              number,
+              number,
+              number,
+              number,
+              number,
+              number,
+            ]
+      ): void {
+        attributeWallpaperDraw(this.canvas, "image")
+        Reflect.apply(nativeDrawImage, this, args)
       }
-      if (stage !== null && document.visibilityState === "hidden") {
-        probe.hiddenWallpaperDraws += 1
+      Object.defineProperty(CanvasRenderingContext2D.prototype, "drawImage", {
+        configurable: true,
+        value: trackedDrawImage,
+        writable: true,
+      })
+      const nativeFillRect = CanvasRenderingContext2D.prototype.fillRect
+      function trackedFillRect(
+        this: CanvasRenderingContext2D,
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+      ): void {
+        attributeWallpaperDraw(this.canvas, "canvas2d")
+        Reflect.apply(nativeFillRect, this, [x, y, width, height])
       }
-      if (
-        document
-          .querySelector("[data-home-tab-active]")
-          ?.getAttribute("data-home-tab-active") === "false"
-      ) {
-        probe.inactiveTabWallpaperDraws += 1
-      }
-      Reflect.apply(nativeDrawImage, this, args)
+      Object.defineProperty(CanvasRenderingContext2D.prototype, "fillRect", {
+        configurable: true,
+        value: trackedFillRect,
+        writable: true,
+      })
     }
-    Object.defineProperty(CanvasRenderingContext2D.prototype, "drawImage", {
-      configurable: true,
-      value: trackedDrawImage,
-      writable: true,
-    })
+    if (typeof WebGL2RenderingContext !== "undefined") {
+      const nativeDrawArrays = WebGL2RenderingContext.prototype.drawArrays
+      function trackedDrawArrays(
+        this: WebGL2RenderingContext,
+        mode: number,
+        first: number,
+        count: number,
+      ): void {
+        attributeWallpaperDraw(this.canvas, "webgl2")
+        Reflect.apply(nativeDrawArrays, this, [mode, first, count])
+      }
+      Object.defineProperty(WebGL2RenderingContext.prototype, "drawArrays", {
+        configurable: true,
+        value: trackedDrawArrays,
+        writable: true,
+      })
+      const nativeDrawElements = WebGL2RenderingContext.prototype.drawElements
+      function trackedDrawElements(
+        this: WebGL2RenderingContext,
+        mode: number,
+        count: number,
+        type: number,
+        offset: number,
+      ): void {
+        attributeWallpaperDraw(this.canvas, "webgl2")
+        Reflect.apply(nativeDrawElements, this, [mode, count, type, offset])
+      }
+      Object.defineProperty(WebGL2RenderingContext.prototype, "drawElements", {
+        configurable: true,
+        value: trackedDrawElements,
+        writable: true,
+      })
+    }
     probe.loafSupported = PerformanceObserver.supportedEntryTypes.includes(
       "long-animation-frame",
     )

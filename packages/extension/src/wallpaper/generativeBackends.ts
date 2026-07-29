@@ -3,10 +3,7 @@ import type {
   GenerativeCanvasPort,
 } from "./generativeCanvasPort"
 import { asCanvas2D } from "./generativeCanvasPort"
-import {
-  type FreshCanvasFactory,
-  createFreshCanvasSurface,
-} from "./generativeCanvasSurface"
+import type { GenerativeSurfacePair } from "./generativeCanvasSurface"
 import { createWebGL2Backend } from "./generativeGlBackend"
 import type { Rgb01 } from "./generativePresets"
 import type {
@@ -24,12 +21,9 @@ function rgbCss(c: Rgb01, a = 1): string {
 
 export function createCanvas2DBackend(
   visible: GenerativeCanvasPort,
-  createSurface: FreshCanvasFactory = createFreshCanvasSurface,
 ): FrameBackend {
-  const visibleCtx = asCanvas2D(visible.getContext("2d"))
-  const surface = createSurface()
-  const ctx = asCanvas2D(surface.canvas.getContext("2d"))
-  if (!visibleCtx || !ctx) {
+  const ctx = asCanvas2D(visible.getContext("2d"))
+  if (!ctx) {
     throw new GenerativeRendererError("canvas2d_unavailable", "2d missing")
   }
   return {
@@ -37,12 +31,9 @@ export function createCanvas2DBackend(
     resize(w: number, h: number) {
       if (visible.width !== w) visible.width = w
       if (visible.height !== h) visible.height = h
-      if (surface.canvas.width !== w) surface.canvas.width = w
-      if (surface.canvas.height !== h) surface.canvas.height = h
     },
     draw(input: FrameDrawInput) {
-      drawCanvas2D(ctx, surface.canvas.width, surface.canvas.height, input)
-      surface.compositeTo(visibleCtx, visible.width, visible.height)
+      drawCanvas2D(ctx, visible.width, visible.height, input)
     },
     dispose() {},
   }
@@ -94,25 +85,31 @@ export function drawCanvas2D(
 }
 
 export function createDefaultBackend(
-  canvas: GenerativeCanvasPort,
+  surfaces: GenerativeSurfacePair,
   prefer: BackendKind = "webgl2",
-  createSurface: FreshCanvasFactory = createFreshCanvasSurface,
 ): FrameBackend {
-  if (prefer === "canvas2d") return createCanvas2DBackend(canvas, createSurface)
+  if (prefer === "canvas2d") return createCanvas2DBackend(surfaces.canvas2d)
   try {
-    return createWebGL2Backend(canvas, createSurface)
+    return createWebGL2Backend(surfaces.gl)
   } catch (e) {
-    if (e instanceof Error) return createCanvas2DBackend(canvas, createSurface)
+    if (e instanceof Error) return createCanvas2DBackend(surfaces.canvas2d)
     throw e
   }
 }
 
 export function resolveBackend(
-  canvas: GenerativeCanvasPort,
+  surfaces: GenerativeSurfacePair | undefined,
   factory: ((prefer: BackendKind) => FrameBackend) | undefined,
-  createSurface?: FreshCanvasFactory,
 ): FrameBackend {
-  if (!factory) return createDefaultBackend(canvas, "webgl2", createSurface)
+  if (!factory) {
+    if (!surfaces) {
+      throw new GenerativeRendererError(
+        "canvas2d_unavailable",
+        "visible surfaces missing",
+      )
+    }
+    return createDefaultBackend(surfaces)
+  }
   try {
     return factory("webgl2")
   } catch (e) {

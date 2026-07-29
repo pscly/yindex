@@ -29,9 +29,6 @@ export function ClockWidget(props: ClockWidgetProps) {
   const date = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`
   const week = `星期${WEEKDAYS[now.getDay()] ?? ""}`
   const time = props.showSeconds === false ? `${h}:${m}` : `${h}:${m}:${s}`
-  const ink = props.tokens.glass.adaptive.contentDirect.foreground
-  const muted = props.tokens.glass.adaptive.contentDirect.mutedForeground
-  const scrim = props.tokens.glass.adaptive.contentDirect.scrim
   const displayWeight = Math.min(
     200,
     Math.max(100, props.tokens.typography.displayWeight),
@@ -53,7 +50,7 @@ export function ClockWidget(props: ClockWidgetProps) {
           gap: props.compact ? 2 : 14,
           textAlign: "center",
           userSelect: "none",
-          color: ink,
+          color: "var(--yindex-widget-foreground)",
         }}
       >
         <div
@@ -66,7 +63,6 @@ export function ClockWidget(props: ClockWidgetProps) {
             letterSpacing: "-0.03em",
             lineHeight: 0.95,
             fontVariantNumeric: "tabular-nums",
-            textShadow: `0 1px 24px ${scrim}`,
           }}
           aria-live="polite"
           aria-label={`当前时间 ${time}`}
@@ -75,7 +71,7 @@ export function ClockWidget(props: ClockWidgetProps) {
         </div>
         <div
           style={{
-            color: muted,
+            color: "var(--yindex-widget-muted-foreground)",
             fontSize: props.compact
               ? "clamp(11px, 1.2vw, 12px)"
               : "clamp(13px, 1.4vw, 16px)",
@@ -83,7 +79,6 @@ export function ClockWidget(props: ClockWidgetProps) {
             fontWeight: 400,
             lineHeight: props.compact ? 1.2 : undefined,
             whiteSpace: props.compact ? "nowrap" : undefined,
-            textShadow: `0 1px 24px ${scrim}`,
           }}
         >
           {date} · {week}

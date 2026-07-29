@@ -1,8 +1,13 @@
 import type { GenerativePreset } from "@yindex/domain"
 import type {
+  GenerativeCanvas2D,
+  GenerativeCanvasPort,
+  GenerativeGLContext,
+} from "./generativeCanvasPort"
+import type { DirectGLSurface } from "./generativeCanvasSurface"
+import type {
   FrameBackend,
   FrameScheduler,
-  GenerativeCanvasPort,
   GenerativeRenderer,
 } from "./generativeRenderer"
 import { TARGET_FPS, createGenerativeRenderer } from "./generativeRenderer"
@@ -84,6 +89,130 @@ export function stubCanvas(): GenerativeCanvasPort {
     width: 0,
     height: 0,
     getContext: () => null,
+  }
+}
+
+export class Fake2DContext implements GenerativeCanvas2D {
+  fillStyle: string | CanvasGradient | CanvasPattern = ""
+  fillRectCalls = 0
+  drawImageCalls = 0
+  fillRect(): void {
+    this.fillRectCalls += 1
+  }
+  createRadialGradient(): {
+    addColorStop(offset: number, color: string): void
+  } {
+    return { addColorStop() {} }
+  }
+  drawImage(
+    image: unknown,
+    dx?: number,
+    dy?: number,
+    dw?: number,
+    dh?: number,
+  ): void {
+    void image
+    void dx
+    void dy
+    void dw
+    void dh
+    this.drawImageCalls += 1
+  }
+}
+
+export class FakeGLContext implements GenerativeGLContext {
+  readonly VERTEX_SHADER = 0x8b31
+  readonly FRAGMENT_SHADER = 0x8b30
+  readonly COMPILE_STATUS = 0x8b81
+  readonly LINK_STATUS = 0x8b82
+  readonly ARRAY_BUFFER = 0x8892
+  readonly STATIC_DRAW = 0x88e4
+  readonly TRIANGLES = 0x0004
+  readonly FLOAT = 0x1406
+  drawArraysCalls = 0
+  constructor(private readonly loseContextCounter: { value: number }) {}
+  createShader(): object {
+    return {}
+  }
+  shaderSource(): void {}
+  compileShader(): void {}
+  getShaderParameter(): unknown {
+    return true
+  }
+  deleteShader(): void {}
+  createProgram(): object {
+    return {}
+  }
+  attachShader(): void {}
+  linkProgram(): void {}
+  getProgramParameter(): unknown {
+    return true
+  }
+  deleteProgram(): void {}
+  createBuffer(): object {
+    return {}
+  }
+  bindBuffer(): void {}
+  bufferData(): void {}
+  deleteBuffer(): void {}
+  getAttribLocation(): number {
+    return 0
+  }
+  getUniformLocation(): object {
+    return {}
+  }
+  useProgram(): void {}
+  enableVertexAttribArray(): void {}
+  vertexAttribPointer(): void {}
+  uniform1f(): void {}
+  uniform2f(): void {}
+  uniform3f(): void {}
+  viewport(): void {}
+  drawArrays(): void {
+    this.drawArraysCalls += 1
+  }
+  getExtension(name: string): { loseContext(): void } | null {
+    if (name !== "WEBGL_lose_context") return null
+    const counter = this.loseContextCounter
+    return {
+      loseContext() {
+        counter.value += 1
+      },
+    }
+  }
+}
+
+export class FakeSurfaceCanvas implements GenerativeCanvasPort {
+  width = 0
+  height = 0
+  readonly twoD = new Fake2DContext()
+  readonly gl: FakeGLContext | null
+  constructor(options: { readonly gl?: FakeGLContext | null } = {}) {
+    this.gl = options.gl ?? null
+  }
+  getContext(contextId: "2d", options?: unknown): GenerativeCanvas2D | null
+  getContext(contextId: "webgl2", options?: unknown): GenerativeGLContext | null
+  getContext(
+    contextId: string,
+    options?: unknown,
+  ): GenerativeCanvas2D | GenerativeGLContext | null
+  getContext(
+    contextId: string,
+  ): GenerativeCanvas2D | GenerativeGLContext | null {
+    if (contextId === "2d") return this.twoD
+    if (contextId === "webgl2") return this.gl
+    return null
+  }
+}
+
+export function fakeDirectGLSurface(
+  canvas: FakeSurfaceCanvas,
+): DirectGLSurface {
+  return {
+    canvas,
+    listenForContextChange() {
+      return () => {}
+    },
   }
 }
 

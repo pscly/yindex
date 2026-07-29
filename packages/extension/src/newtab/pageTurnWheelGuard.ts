@@ -46,7 +46,6 @@ export function prefersReducedMotion(
   matchMedia?: (query: string) => { readonly matches: boolean },
 ): boolean {
   if (setting === "force") return true
-  if (setting === "never") return false
   const mm =
     matchMedia ??
     (typeof window !== "undefined" ? window.matchMedia.bind(window) : undefined)

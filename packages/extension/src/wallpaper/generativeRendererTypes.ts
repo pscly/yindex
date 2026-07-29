@@ -1,10 +1,10 @@
 import type { GenerativePreset } from "@yindex/domain"
 import type { GenerativeCanvasPort } from "./generativeCanvasPort"
-import type { FreshCanvasFactory } from "./generativeCanvasSurface"
+import type { GenerativeSurfacePair } from "./generativeCanvasSurface"
 import type { GenerativePresetDescriptor } from "./generativePresets"
 
 export type BackendKind = "webgl2" | "canvas2d"
-export type { GenerativeCanvasPort }
+export type { GenerativeCanvasPort, GenerativeSurfacePair }
 
 export type FrameDrawInput = {
   readonly preset: GenerativePreset
@@ -40,8 +40,9 @@ export type GenerativeRendererOptions = {
   readonly scheduler?: FrameScheduler
   readonly now?: () => number
   readonly pixelRatio?: () => number
-  readonly createCanvas?: FreshCanvasFactory
+  readonly surfaces?: GenerativeSurfacePair
   readonly createBackend?: (prefer: BackendKind) => FrameBackend
+  readonly onBackendChange?: (kind: BackendKind) => void
 }
 
 export type GenerativeRenderer = {

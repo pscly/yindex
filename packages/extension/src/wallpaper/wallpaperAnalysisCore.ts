@@ -3,14 +3,15 @@ import {
   BALANCED_SAFE_ANALYSIS,
   parseAdaptiveGlassInput,
 } from "@yindex/domain"
-import { type PixelSample, analyzePixelSample } from "./wallpaperAnalysis"
+import {
+  type PixelAnalysisResult,
+  type PixelSample,
+  analyzePixelSample,
+} from "./wallpaperAnalysis"
 
 export type PixelFrame = PixelSample
 
-export type WallpaperAnalysisResult = {
-  readonly analysis: AdaptiveGlassInput
-  readonly usedFallback: boolean
-}
+export type WallpaperAnalysisResult = PixelAnalysisResult
 
 const FALLBACK_RESULT: WallpaperAnalysisResult = {
   analysis: BALANCED_SAFE_ANALYSIS,
@@ -27,8 +28,5 @@ export function normalizeWallpaperAnalysis(
 }
 
 export function analyzePixelFrame(frame: PixelFrame): WallpaperAnalysisResult {
-  const analysis = analyzePixelSample(frame)
-  return analysis === BALANCED_SAFE_ANALYSIS
-    ? FALLBACK_RESULT
-    : { analysis, usedFallback: false }
+  return analyzePixelSample(frame)
 }

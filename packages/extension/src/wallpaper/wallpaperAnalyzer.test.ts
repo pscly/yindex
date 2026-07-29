@@ -33,12 +33,13 @@ describe("Wallpaper pixel analysis", () => {
     const fixture = solidSample(255, 255, 255)
 
     // When
-    const analysis = analyzePixelSample(fixture)
+    const result = analyzePixelSample(fixture)
 
     // Then
-    expect(analysis.luminance).toBeCloseTo(1, 6)
-    expect(analysis.chroma).toBe(0)
-    expect(analysis.detail).toBe(0)
+    expect(result.analysis.luminance).toBeCloseTo(1, 6)
+    expect(result.analysis.chroma).toBe(0)
+    expect(result.analysis.detail).toBe(0)
+    expect(result.usedFallback).toBe(false)
   })
 
   test("reports low luminance for a dark fixture", () => {
@@ -46,12 +47,13 @@ describe("Wallpaper pixel analysis", () => {
     const fixture = solidSample(0, 0, 0)
 
     // When
-    const analysis = analyzePixelSample(fixture)
+    const result = analyzePixelSample(fixture)
 
     // Then
-    expect(analysis.luminance).toBe(0)
-    expect(analysis.chroma).toBe(0)
-    expect(analysis.detail).toBe(0)
+    expect(result.analysis.luminance).toBe(0)
+    expect(result.analysis.chroma).toBe(0)
+    expect(result.analysis.detail).toBe(0)
+    expect(result.usedFallback).toBe(false)
   })
 
   test("reports high edge energy for a detailed fixture", () => {
@@ -65,11 +67,12 @@ describe("Wallpaper pixel analysis", () => {
     }
 
     // When
-    const analysis = analyzePixelSample(fixture)
+    const result = analyzePixelSample(fixture)
 
     // Then
-    expect(analysis.luminance).toBeCloseTo(0.5, 6)
-    expect(analysis.detail).toBeCloseTo(1, 6)
+    expect(result.analysis.luminance).toBeCloseTo(0.5, 6)
+    expect(result.analysis.detail).toBeCloseTo(1, 6)
+    expect(result.usedFallback).toBe(false)
   })
 
   test("uses the Domain balanced-safe analysis for non-finite pixels", () => {
@@ -77,9 +80,23 @@ describe("Wallpaper pixel analysis", () => {
     const fixture = solidSample(Number.NaN, 32, 64)
 
     // When
-    const analysis = analyzePixelSample(fixture)
+    const result = analyzePixelSample(fixture)
 
     // Then
-    expect(analysis).toEqual(BALANCED_SAFE_ANALYSIS)
+    expect(result.analysis).toEqual(BALANCED_SAFE_ANALYSIS)
+  })
+
+  test("reports fallback provenance for an invalid pixel sample", () => {
+    // Given
+    const fixture = solidSample(Number.NaN, 32, 64)
+
+    // When
+    const result = analyzePixelSample(fixture)
+
+    // Then
+    expect(result).toEqual({
+      analysis: BALANCED_SAFE_ANALYSIS,
+      usedFallback: true,
+    })
   })
 })

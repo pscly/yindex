@@ -1,5 +1,6 @@
 import type { StyleTokens } from "@yindex/domain"
-import { type CSSProperties, type FormEvent, useState } from "react"
+import { type CSSProperties, type SyntheticEvent, useState } from "react"
+import { parseSafeNavigationUrl } from "../navigation/safeNavigationUrl"
 import { LensSurface } from "../shell/surface"
 
 export type SearchEngineId =
@@ -38,22 +39,40 @@ const ENGINE_LABEL: Record<SearchEngineId, string> = {
 export function resolveSearchUrl(
   config: SearchWidgetConfig,
   query: string,
-): string {
+): string | null {
   const q = encodeURIComponent(query.trim())
+  let candidate: string
   if (config.engine === "custom") {
     const template = config.customUrl ?? "https://www.google.com/search?q=%s"
-    return template.includes("%s")
+    candidate = template.includes("%s")
       ? template.replace("%s", q)
       : `${template}${q}`
+  } else {
+    candidate = ENGINE_URL[config.engine].replace("%s", q)
   }
-  return ENGINE_URL[config.engine].replace("%s", q)
+  const safe = parseSafeNavigationUrl(candidate)
+  return safe.ok ? safe.value : null
+}
+
+export type SearchNavigationAssign = (url: string) => void
+
+export function commitSearchNavigation(
+  config: SearchWidgetConfig,
+  query: string,
+  assign: SearchNavigationAssign = (url) => {
+    window.location.href = url
+  },
+): boolean {
+  const target = resolveSearchUrl(config, query)
+  if (!target) return false
+  assign(target)
+  return true
 }
 
 export function SearchWidget(props: SearchWidgetProps) {
   const [q, setQ] = useState("")
   const canSubmit = q.trim().length > 0
   const engineLabel = ENGINE_LABEL[props.config.engine] ?? "搜索"
-  const lensInk = props.tokens.glass.adaptive.lens.foreground
   const field: CSSProperties = {
     flex: 1,
     height: "100%",
@@ -61,17 +80,17 @@ export function SearchWidget(props: SearchWidgetProps) {
     borderRadius: 999,
     border: "1px solid color-mix(in oklch, white 12%, transparent)",
     background: "transparent",
-    color: lensInk,
+    color: "var(--yindex-widget-foreground)",
     padding: "0 16px",
     fontSize: 15,
     outline: "none",
   }
 
-  function onSubmit(e: FormEvent) {
+  function onSubmit(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     const query = q.trim()
     if (!query) return
-    window.location.href = resolveSearchUrl(props.config, query)
+    commitSearchNavigation(props.config, query)
   }
 
   return (
@@ -81,6 +100,7 @@ export function SearchWidget(props: SearchWidgetProps) {
       title={`搜索 · ${engineLabel}`}
       showTitle={props.showTitle}
     >
+      <style>{`input[data-yindex-search-input="true"]::placeholder { color: var(--yindex-widget-muted-foreground); opacity: 1; }`}</style>
       <form
         onSubmit={onSubmit}
         style={{
@@ -91,6 +111,7 @@ export function SearchWidget(props: SearchWidgetProps) {
         }}
       >
         <input
+          data-yindex-search-input="true"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="搜索或输入关键词…"
@@ -108,12 +129,14 @@ export function SearchWidget(props: SearchWidgetProps) {
             minWidth: 72,
             padding: "0 18px",
             borderRadius: 999,
-            border: "none",
-            background: props.tokens.color.accent,
-            color: props.tokens.color.bg,
+            border:
+              "1px solid color-mix(in oklch, var(--yindex-widget-foreground) 24%, transparent)",
+            background: "transparent",
+            color: canSubmit
+              ? "var(--yindex-widget-foreground)"
+              : "var(--yindex-widget-muted-foreground)",
             fontWeight: 600,
             cursor: canSubmit ? "pointer" : "not-allowed",
-            opacity: canSubmit ? 1 : 0.45,
             letterSpacing: "0.02em",
           }}
         >

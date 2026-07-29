@@ -7,3 +7,10 @@ export const wallpaperMediaStyle: CSSProperties = {
   height: "100%",
   objectFit: "cover",
 }
+
+export function wallpaperSurfaceCanvasStyle(visible: boolean): CSSProperties {
+  return {
+    ...wallpaperMediaStyle,
+    visibility: visible ? "visible" : "hidden",
+  }
+}

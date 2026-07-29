@@ -44,8 +44,10 @@ export function stripOffsetFraction(
   if (pageCount <= 0) return 0
   if (pageCount === 1) return 0
   const slots = cyclicSlotCount(pageCount)
+  // Clamp progress so the finite clone strip never translates past paintable range.
+  const p = Number.isFinite(progress) ? Math.max(-1, Math.min(1, progress)) : 0
   // Real page i lives at slot i+1; progress ±1 moves one Page toward a neighbor/clone.
-  const raw = -(baseIndex + 1 + progress) / slots
+  const raw = -(baseIndex + 1 + p) / slots
   return Object.is(raw, -0) ? 0 : raw
 }
 

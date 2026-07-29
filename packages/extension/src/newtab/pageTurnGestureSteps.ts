@@ -12,15 +12,27 @@ export function clampProgress(p: number): number {
   return Math.max(-1, Math.min(1, p))
 }
 
+/** True while cooldown duration or post-sample idle silence still blocks a new Page. */
+export function isCooldownBlocking(
+  state: GestureSnapshot,
+  now: number,
+): boolean {
+  if (now < state.cooldownUntil) return true
+  if (state.phase === "cooldown") {
+    return now - state.lastSampleAt < PAGE_TURN_POLICY.idleReleaseMs
+  }
+  return false
+}
+
 export function handleTick(state: GestureSnapshot, now: number): GestureStep {
   if (state.phase === "cooldown") {
-    if (now >= state.cooldownUntil) {
-      return {
-        state: createIdleGesture(state.baseIndex, now),
-        decision: { kind: "none" },
-      }
+    if (isCooldownBlocking(state, now)) {
+      return { state, decision: { kind: "none" } }
     }
-    return { state, decision: { kind: "none" } }
+    return {
+      state: createIdleGesture(state.baseIndex, now),
+      decision: { kind: "none" },
+    }
   }
 
   if (state.phase === "reduced_fade") {
@@ -91,6 +103,19 @@ function decideRelease(state: GestureSnapshot, now: number): GestureStep {
   }
 }
 
+function settleInputDir(deltaPx: number): TurnDirection | 0 {
+  if (deltaPx > 0) return 1
+  if (deltaPx < 0) return -1
+  return 0
+}
+
+function settleTargetDir(state: GestureSnapshot): TurnDirection {
+  if (state.settleTarget > 0) return 1
+  if (state.settleTarget < 0) return -1
+  if (state.lockedDir !== null) return state.lockedDir
+  return state.progress >= 0 ? 1 : -1
+}
+
 export function handleWheel(
   state: GestureSnapshot,
   deltaPx: number,
@@ -105,11 +130,11 @@ export function handleWheel(
     return { state, decision: { kind: "none" } }
   }
 
-  if (state.phase === "cooldown" || now < state.cooldownUntil) {
+  if (isCooldownBlocking(state, now)) {
     return {
       state: {
         ...state,
-        phase: state.phase === "idle" ? "cooldown" : state.phase,
+        phase: "cooldown",
         lastSampleAt: now,
       },
       decision: { kind: "none" },
@@ -120,16 +145,40 @@ export function handleWheel(
     return handleReducedWheel(state, deltaPx, now, opts.pageCount)
   }
 
-  if (state.phase === "settling" || state.phase === "reduced_fade") {
+  if (state.phase === "settling") {
+    const inputDir = settleInputDir(deltaPx)
+    const targetDir = settleTargetDir(state)
+    if (inputDir === 0 || inputDir === targetDir) {
+      return {
+        state: { ...state, lastSampleAt: now },
+        decision: { kind: "none" },
+      }
+    }
+    const acc = state.wheelAccPx + deltaPx
+    if (Math.abs(acc) < PAGE_TURN_POLICY.directionLockPx) {
+      return {
+        state: {
+          ...state,
+          wheelAccPx: acc,
+          lastSampleAt: now,
+        },
+        decision: { kind: "none" },
+      }
+    }
     const interrupted: GestureSnapshot = {
       ...state,
       phase: "tracking",
       targetIndex: null,
       settleTarget: 0,
       velocity: 0,
+      wheelAccPx: 0,
       lastSampleAt: now,
     }
     return applyTrackingDelta(interrupted, deltaPx, now, opts.viewportHeight)
+  }
+
+  if (state.phase === "reduced_fade") {
+    return { state, decision: { kind: "none" } }
   }
 
   if (state.phase === "idle") {

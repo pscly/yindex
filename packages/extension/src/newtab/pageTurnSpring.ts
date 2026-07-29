@@ -7,7 +7,7 @@ export type SpringState = {
 
 /**
  * Semi-implicit Euler spring step toward target.
- * With near-critical / slightly overdamped params, does not overshoot.
+ * Target-crossing clamp: never leave the closed interval from start toward target.
  */
 export function stepSpring(
   state: SpringState,
@@ -19,16 +19,27 @@ export function stepSpring(
   const { stiffness: k, damping: c, mass: m } = params
   if (!(m > 0) || !Number.isFinite(k) || !Number.isFinite(c)) return state
 
-  // Clamp dt to avoid instability if a frame is huge
+  // Already at target: kill outward/residual velocity instead of integrating past.
+  if (state.x === target || Object.is(state.x, target)) {
+    return { x: target, v: 0 }
+  }
+
   const dt = Math.min(dtSec, 1 / 30)
   const displacement = state.x - target
   const accel = (-k * displacement - c * state.v) / m
   const v = state.v + accel * dt
   const x = state.x + v * dt
-  return {
-    x: Number.isFinite(x) ? x : state.x,
-    v: Number.isFinite(v) ? v : 0,
+  if (!Number.isFinite(x) || !Number.isFinite(v)) {
+    return { x: state.x, v: 0 }
   }
+
+  // Step moved beyond target (or landed exactly): snap and clear velocity.
+  const startedBelow = state.x < target
+  const startedAbove = state.x > target
+  if (startedBelow && x >= target) return { x: target, v: 0 }
+  if (startedAbove && x <= target) return { x: target, v: 0 }
+
+  return { x, v }
 }
 
 export function springSettled(

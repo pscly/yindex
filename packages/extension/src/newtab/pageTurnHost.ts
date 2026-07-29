@@ -68,9 +68,9 @@ export function handleHostWheel(e: WheelEvent, deps: PageTurnHostDeps): void {
     viewportHeight: vh,
   })
   if (deltaPx === 0) return
-  if (deps.getGesture().phase === "settling") deps.stopSpringRaf()
+  const before = deps.getGesture()
   const step = stepGesture(
-    deps.getGesture(),
+    before,
     { kind: "wheel", deltaPx, now },
     {
       viewportHeight: vh,
@@ -78,6 +78,10 @@ export function handleHostWheel(e: WheelEvent, deps: PageTurnHostDeps): void {
       reducedMotion: deps.reducedMotion,
     },
   )
+  // Direction-selective: only stop spring when policy leaves settling.
+  if (before.phase === "settling" && step.state.phase !== "settling") {
+    deps.stopSpringRaf()
+  }
   deps.setGesture(step.state)
   if (step.state.phase === "tracking") {
     deps.setSpringFromTracking(step.state.progress, step.state.velocity)

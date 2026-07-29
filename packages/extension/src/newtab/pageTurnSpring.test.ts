@@ -89,4 +89,40 @@ describe("pageTurnSpring", () => {
     expect(springParamsForProfile("balanced")).toEqual(SPRING_BASE)
     expect(springParamsForProfile("immersive").stiffness).toBeCloseTo(207)
   })
+  test("Given production-reachable state at target with outward velocity, When stepping 1/60 across profiles, Then spring stays exactly at target", () => {
+    const dt = 1 / 60
+    const forward = { x: 1, v: 9.509998672048866 }
+    const reverse = { x: -1, v: -9.509998672048866 }
+    for (const profile of ["calm", "balanced", "immersive"] as const) {
+      const params = springParamsForProfile(profile)
+      const nextFwd = stepSpring(forward, 1, dt, params)
+      expect(nextFwd.x).toBe(1)
+      expect(nextFwd.v).toBe(0)
+      const nextRev = stepSpring(reverse, -1, dt, params)
+      expect(nextRev.x).toBe(-1)
+      expect(nextRev.v).toBe(0)
+    }
+  })
+
+  test("Given production-reachable outward velocity at target, When integrating a full settle, Then no sample crosses beyond target", () => {
+    for (const profile of ["calm", "balanced", "immersive"] as const) {
+      const params = springParamsForProfile(profile)
+      const forward = integrateSpringToSettle(
+        { x: 1, v: 9.509998672048866 },
+        1,
+        params,
+        { dtSec: 1 / 60 },
+      )
+      expect(trajectoryHasOvershoot(forward, 1, 1, 0)).toBe(false)
+      expect(Math.max(...forward)).toBe(1)
+      const reverse = integrateSpringToSettle(
+        { x: -1, v: -9.509998672048866 },
+        -1,
+        params,
+        { dtSec: 1 / 60 },
+      )
+      expect(trajectoryHasOvershoot(reverse, -1, -1, 0)).toBe(false)
+      expect(Math.min(...reverse)).toBe(-1)
+    }
+  })
 })

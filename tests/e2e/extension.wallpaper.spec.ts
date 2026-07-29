@@ -1,5 +1,7 @@
 import { resolve } from "node:path"
+import { PNG } from "pngjs"
 import { expect, test } from "./extension.fixture"
+import { installWallpaperCanvasInstrumentation } from "./extension.wallpaper-canvas-instrumentation.helpers"
 
 const WALLPAPER_FIXTURE = resolve(
   __dirname,
@@ -12,31 +14,98 @@ test("renders the default Home with a painted generative Wallpaper canvas", asyn
 }) => {
   // Given: a clean unpacked Extension profile with the default Home
   const page = await extensionContext.newPage()
+  await page.addInitScript(installWallpaperCanvasInstrumentation)
 
   // When: the packaged new-tab entry renders its active Page
   await page.goto(`chrome-extension://${extensionId}/newtab.html`)
   const stage = page
     .locator('[data-wallpaper-kind="generative"][data-wallpaper-active="true"]')
     .first()
-  const canvas = stage.locator("canvas")
 
-  // Then: WallpaperStage mounts a real, painted canvas instead of only CSS fallback
+  // Then: exactly one of the two stacked surfaces is visible with real pixels
   await expect(stage).toBeVisible()
-  await expect(canvas).toBeVisible()
-  const paint = await canvas.evaluate((element) => {
-    if (!(element instanceof HTMLCanvasElement)) return null
-    const context = element.getContext("2d")
-    const x = Math.max(0, Math.floor(element.width / 2))
-    const y = Math.max(0, Math.floor(element.height / 2))
-    return {
-      alpha: context?.getImageData(x, y, 1, 1).data[3] ?? 0,
-      height: element.height,
-      width: element.width,
-    }
-  })
-  expect(paint?.width).toBeGreaterThan(1)
-  expect(paint?.height).toBeGreaterThan(1)
-  expect(paint?.alpha).toBeGreaterThan(0)
+  await expect(stage.locator("canvas[data-wallpaper-surface]")).toHaveCount(2)
+  const visibleSurface = stage.locator(
+    'canvas[data-wallpaper-surface-visible="true"]',
+  )
+  await expect(visibleSurface).toHaveCount(1)
+  await expect(visibleSurface).toBeVisible()
+  await expect(
+    stage.locator(
+      "canvas[data-wallpaper-surface]:not([data-wallpaper-surface-visible])",
+    ),
+  ).toBeHidden()
+  const size = await visibleSurface.evaluate((element) =>
+    element instanceof HTMLCanvasElement
+      ? { height: element.height, width: element.width }
+      : null,
+  )
+  expect(size?.width).toBeGreaterThan(1)
+  expect(size?.height).toBeGreaterThan(1)
+
+  // And: the composited stage shows a painted, non-uniform Wallpaper
+  const bounds = await stage.boundingBox()
+  if (bounds === null) throw new Error("active Wallpaper stage has no bounds")
+  const screenshot = await page.screenshot({ clip: bounds })
+  const png = PNG.sync.read(screenshot)
+  const colors = new Set<number>()
+  for (let pixel = 0; pixel < png.width * png.height; pixel += 1) {
+    const offset = pixel * 4
+    const r = png.data[offset] ?? 0
+    const g = png.data[offset + 1] ?? 0
+    const b = png.data[offset + 2] ?? 0
+    const a = png.data[offset + 3] ?? 0
+    colors.add(((r << 24) | (g << 16) | (b << 8) | a) >>> 0)
+  }
+  expect(colors.size).toBeGreaterThan(16)
+
+  // And: every surface was revealed only after a draw landed on that same canvas
+  const sequence = await page.evaluate(() => window.__revealSequence ?? [])
+  expect(sequence.length).toBeGreaterThan(0)
+  const revealedCanvasIds = [
+    ...new Set(
+      sequence.filter((event) => event.kind === "visible").map((e) => e.canvas),
+    ),
+  ]
+  expect(revealedCanvasIds.length).toBeGreaterThan(0)
+  for (const canvasId of revealedCanvasIds) {
+    const firstDraw = sequence.findIndex(
+      (event) => event.kind === "draw" && event.canvas === canvasId,
+    )
+    const firstReveal = sequence.findIndex(
+      (event) => event.kind === "visible" && event.canvas === canvasId,
+    )
+    expect(firstDraw).toBeGreaterThanOrEqual(0)
+    expect(firstReveal).toBeGreaterThan(firstDraw)
+  }
+  expect(
+    sequence.filter(
+      (event) => event.kind === "visible" && event.role === "canvas2d",
+    ),
+  ).toEqual([])
+
+  // And: every mounted stage shows exactly one of its two stacked surfaces
+  const perStage = await page.evaluate(() =>
+    [...document.querySelectorAll("[data-wallpaper-kind]")].map((stage) => ({
+      surfaces: stage.querySelectorAll("canvas[data-wallpaper-surface]").length,
+      visible: stage.querySelectorAll(
+        'canvas[data-wallpaper-surface-visible="true"]',
+      ).length,
+    })),
+  )
+  for (const stage of perStage) {
+    expect(stage.surfaces).toBe(2)
+    expect(stage.visible).toBe(1)
+  }
+
+  // And: neither stacked canvas ever received the other backend's context request
+  const requests = await page.evaluate(
+    () => window.__canvasContextRequests ?? [],
+  )
+  for (const request of requests) {
+    if (request.role === "webgl2") expect(request.contextId).toBe("webgl2")
+    if (request.role === "canvas2d") expect(request.contextId).toBe("2d")
+  }
 })
 
 test("opens Settings from the missing Wallpaper recovery control by keyboard and pointer", async ({
@@ -50,9 +119,11 @@ test("opens Settings from the missing Wallpaper recovery control by keyboard and
   await expect(page.getByRole("button", { name: recoveryName })).toHaveCount(0)
 
   await page.getByRole("button", { name: "编辑", exact: true }).click()
-  await page
-    .locator('aside[aria-label="编辑面板"] input[accept="image/*,video/*"]')
-    .setInputFiles(WALLPAPER_FIXTURE)
+  const upload = page.locator(
+    'aside[aria-label="编辑面板"] input[accept="image/*,video/*"]',
+  )
+  await expect(upload).toBeEnabled()
+  await upload.setInputFiles(WALLPAPER_FIXTURE)
   const wallpaper = page.locator(
     '[data-page-slot-active="true"] [data-wallpaper-kind="image"][data-wallpaper-active="true"]',
   )

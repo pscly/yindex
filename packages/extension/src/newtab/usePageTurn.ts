@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { resolveGoByAction, resolveGoToAction } from "./pageTurnActions"
 import { syncPageTurnDocument } from "./pageTurnDocSync"
 import type { GestureSnapshot } from "./pageTurnGesture"
-import { attachPageTurnHost } from "./pageTurnHookBind"
+import { bindOrCancelPageTurnHost } from "./pageTurnHookBind"
 import { idleAt } from "./pageTurnNav"
 import { type SpringParams, springParamsForProfile } from "./pageTurnPolicy"
 import {
@@ -54,6 +54,7 @@ export function usePageTurn(
   const mountedRef = useRef(true)
   const generationRef = useRef(0)
   const lastSeqKeyRef = useRef("")
+  const lastDocRef = useRef<HomeDocument | null>(null)
 
   const pageCount = doc?.sequence.pageIds.length ?? 0
   const motionProfile: MotionProfile = doc?.settings.motionProfile ?? "balanced"
@@ -88,8 +89,8 @@ export function usePageTurn(
 
   const stopRaf = useCallback(() => springLoopRef.current.stop(), [])
 
-  const settleRt = useCallback((): SettleRuntime => {
-    return {
+  const settleRt = useCallback(
+    (): SettleRuntime => ({
       gestureRef,
       springRef,
       springParamsRef,
@@ -103,13 +104,13 @@ export function usePageTurn(
       stopRaf,
       setIndex: setCurrentIndex,
       notifyPage,
-    }
-  }, [bump, notifyPage, pageCount, reducedMotion, stopRaf])
+    }),
+    [bump, notifyPage, pageCount, reducedMotion, stopRaf],
+  )
 
   const startSettle = useCallback(
-    (targetProgress: number, targetIndex: number, now: number) => {
-      beginSettle(settleRt(), targetProgress, targetIndex, now)
-    },
+    (targetProgress: number, targetIndex: number, now: number) =>
+      beginSettle(settleRt(), targetProgress, targetIndex, now),
     [settleRt],
   )
 
@@ -123,9 +124,11 @@ export function usePageTurn(
       lastSeqKey: lastSeqKeyRef.current,
       generation: generationRef.current,
       gesture: gestureRef.current,
+      lastDocRef: lastDocRef.current,
     })
     initialized.current = synced.initialized
     lastSeqKeyRef.current = synced.lastSeqKey
+    lastDocRef.current = doc
     generationRef.current = synced.generation
     if (synced.invalidated) stopRaf()
     if (synced.indexChanged || synced.invalidated) {
@@ -139,10 +142,10 @@ export function usePageTurn(
     }
   }, [bump, currentIndex, doc, pageCount, stopRaf])
 
-  const currentPageId = useMemo(() => {
-    if (!doc) return null
-    return doc.sequence.pageIds[currentIndex] ?? null
-  }, [doc, currentIndex])
+  const currentPageId = useMemo(
+    () => (doc ? (doc.sequence.pageIds[currentIndex] ?? null) : null),
+    [doc, currentIndex],
+  )
 
   const goToIndex = useCallback(
     (index: number) => {
@@ -200,8 +203,10 @@ export function usePageTurn(
   )
 
   useEffect(() => {
-    if (!doc || options.editMode || options.settingsOpen) return
-    return attachPageTurnHost({
+    return bindOrCancelPageTurnHost({
+      docPresent: Boolean(doc),
+      editMode: options.editMode,
+      settingsOpen: options.settingsOpen,
       pageCount,
       reducedMotion,
       gestureRef,
@@ -217,6 +222,7 @@ export function usePageTurn(
       goBy,
       goToIndex,
       isMounted: () => mountedRef.current,
+      currentIndex: indexRef.current,
     })
   }, [
     bump,

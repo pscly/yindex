@@ -45,7 +45,7 @@ test("Given one Page, When the stage renders, Then its transform remains at the 
     ),
   )
 
-  expect(markup).toContain("translate3d(0, calc(0% + 0vh), 0)")
+  expect(markup).toContain("translate3d(0, 0%, 0)")
   expect(markup).not.toContain("-100%")
 })
 
@@ -89,4 +89,29 @@ test("Given Loop strip clones, When the stage renders, Then only the current Pag
   expect(markup.match(/data-page-slot-active="false"/g)?.length).toBe(2)
   expect(markup.match(/aria-hidden="true"/g)?.length).toBe(2)
   expect(markup.match(/inert=""/g)?.length).toBe(2)
+})
+
+test("Given immersive parallax, When the stage renders, Then strip translate stays strip-only and parallax is inner", () => {
+  const markup = renderToStaticMarkup(
+    createElement(
+      PageTurnStage,
+      {
+        fadeLayers: null,
+        isAnimating: true,
+        offsetY: -80,
+        parallaxY: -0.03,
+        stripSlots: 5,
+        activeSlot: 3,
+      },
+      createElement("section", { "data-page-id": "a" }),
+      createElement("section", { "data-page-id": "b" }),
+      createElement("section", { "data-page-id": "c" }),
+      createElement("section", { "data-page-id": "d" }),
+      createElement("section", { "data-page-id": "e" }),
+    ),
+  )
+  expect(markup).toContain("translate3d(0, -80%, 0)")
+  expect(markup).not.toContain("calc(-80% +")
+  expect(markup).toContain('data-page-turn-parallax="inner"')
+  expect(markup).toContain("translate3d(0, -3vh, 0)")
 })

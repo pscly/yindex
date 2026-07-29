@@ -4,7 +4,11 @@ import {
   createWebGL2Backend,
   resolveBackend,
 } from "./generativeBackends"
-import { getGenerativePresetDescriptor } from "./generativePresets"
+import {
+  createPixelRatioGovernor,
+  defaultScheduler,
+  frameDrawInput,
+} from "./generativeFramePolicy"
 import type {
   BackendKind,
   FrameBackend,
@@ -13,14 +17,12 @@ import type {
   GenerativeCanvasPort,
   GenerativeRenderer,
   GenerativeRendererOptions,
+  GenerativeSurfacePair,
 } from "./generativeRendererTypes"
 import { GenerativeRendererError } from "./generativeRendererTypes"
 
 export const TARGET_FPS = 30
 export const FRAME_INTERVAL_MS = 1000 / TARGET_FPS
-const MAX_DEVICE_PIXEL_RATIO = 1.5
-const DEVICE_PIXEL_RATIO_STEP = 0.25
-const SLOW_FRAME_LIMIT = 4
 
 export type {
   BackendKind,
@@ -30,14 +32,10 @@ export type {
   GenerativeCanvasPort,
   GenerativeRenderer,
   GenerativeRendererOptions,
+  GenerativeSurfacePair,
 }
 export { GenerativeRendererError }
 export { createDefaultBackend, createCanvas2DBackend, createWebGL2Backend }
-
-const defaultScheduler: FrameScheduler = {
-  schedule: (cb) => requestAnimationFrame((t) => cb(t)),
-  cancel: (id) => cancelAnimationFrame(id),
-}
 
 export function createGenerativeRenderer(
   options: GenerativeRendererOptions,
@@ -61,18 +59,14 @@ export function createGenerativeRenderer(
   let originMs = 0
   let width = Math.max(1, options.canvas.width || 1)
   let height = Math.max(1, options.canvas.height || 1)
-  const initialRatio = pixelRatio()
-  let renderRatio = Number.isFinite(initialRatio)
-    ? Math.min(MAX_DEVICE_PIXEL_RATIO, Math.max(1, initialRatio))
-    : 1
-  let slowFrames = 0
-  let backend = resolveBackend(
-    options.canvas,
-    options.createBackend,
-    options.createCanvas,
-  )
+  const governor = createPixelRatioGovernor({
+    frameIntervalMs: frameInterval,
+    initialRatio: pixelRatio(),
+  })
+  let backend = resolveBackend(options.surfaces, options.createBackend)
   let contextBackend: FrameBackend | null = null
   let detachContextLifecycle = (): void => {}
+  let pendingReveal: BackendKind | null = backend.kind
 
   const cancelLoop = (): void => {
     if (scheduleId !== null) {
@@ -83,25 +77,35 @@ export function createGenerativeRenderer(
 
   const resizeBackend = (target: FrameBackend): void => {
     target.resize(
-      Math.max(1, Math.floor(width * renderRatio)),
-      Math.max(1, Math.floor(height * renderRatio)),
+      Math.max(1, Math.floor(width * governor.ratio())),
+      Math.max(1, Math.floor(height * governor.ratio())),
     )
   }
 
-  const frameInput = (
-    staticFrame: boolean,
-    timeMs: number,
-  ): FrameDrawInput => ({
-    preset,
-    descriptor: getGenerativePresetDescriptor(preset),
-    timeSeconds: staticFrame ? 0 : Math.max(0, (timeMs - originMs) / 1000),
-    staticFrame,
-  })
+  const frameInput = (staticFrame: boolean, timeMs: number): FrameDrawInput =>
+    frameDrawInput(preset, { staticFrame, timeMs, originMs })
+
+  const revealDrawnBackend = (): void => {
+    if (pendingReveal === null || pendingReveal !== backend.kind) return
+    pendingReveal = null
+    options.onBackendChange?.(backend.kind)
+  }
+
+  const requireSurfaces = (): GenerativeSurfacePair => {
+    const surfaces = options.surfaces
+    if (!surfaces) {
+      throw new GenerativeRendererError(
+        "canvas2d_unavailable",
+        "visible surfaces missing",
+      )
+    }
+    return surfaces
+  }
 
   const createCanvasFallback = (): FrameBackend =>
     options.createBackend
       ? options.createBackend("canvas2d")
-      : createCanvas2DBackend(options.canvas, options.createCanvas)
+      : createCanvas2DBackend(requireSurfaces().canvas2d)
 
   const paint = (staticFrame: boolean, timeMs: number): void => {
     if (disposed) return
@@ -115,17 +119,14 @@ export function createGenerativeRenderer(
       contextBackend = null
       backend.dispose()
       backend = createCanvasFallback()
+      pendingReveal = backend.kind
       resizeBackend(backend)
       backend.draw(input)
     }
     const drawDurationMs = Math.max(0, now() - drawStartedMs)
-    slowFrames = drawDurationMs > frameInterval ? slowFrames + 1 : 0
-    if (slowFrames >= SLOW_FRAME_LIMIT && renderRatio > 1) {
-      renderRatio = Math.max(1, renderRatio - DEVICE_PIXEL_RATIO_STEP)
-      slowFrames = 0
-      resizeBackend(backend)
-    }
+    if (governor.recordDraw(drawDurationMs)) resizeBackend(backend)
     lastDrawMs = timeMs
+    revealDrawnBackend()
   }
 
   const tick = (timeMs: number): void => {
@@ -161,11 +162,14 @@ export function createGenerativeRenderer(
         resizeBackend(fallback)
         fallback.draw(frameInput(true, now()))
         backend = fallback
+        pendingReveal = fallback.kind
+        revealDrawnBackend()
       },
       restored() {
         if (disposed || contextBackend !== target) return
         if (backend !== target) backend.dispose()
         backend = target
+        pendingReveal = target.kind
         resizeBackend(backend)
         if (!started || !active) return
         const timeMs = now()

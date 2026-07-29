@@ -1,4 +1,4 @@
-import { faviconForUrl } from "@yindex/widgets"
+import { faviconForUrl, parseSafeNavigationUrl } from "@yindex/widgets"
 import type { ChangeEvent } from "react"
 import { ghostBtn, inputStyle } from "./editChromeStyles"
 
@@ -25,6 +25,33 @@ export function shortcutItemsOf(config: unknown): readonly ShortcutItem[] {
   return config.items.filter(isShortcutItem)
 }
 
+export function tryAddShortcutItem(input: {
+  readonly title: string
+  readonly url: string
+  readonly existing: readonly ShortcutItem[]
+  readonly now?: number | undefined
+}): readonly ShortcutItem[] | null {
+  const title = input.title.trim()
+  let url = input.url.trim()
+  if (!title || !url) return null
+  const hasScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url)
+  if (!hasScheme) url = `https://${url}`
+  const safe = parseSafeNavigationUrl(url)
+  if (!safe.ok) return null
+  url = safe.value
+  const favicon = faviconForUrl(url)
+  const now = input.now ?? Date.now()
+  return [
+    ...input.existing,
+    {
+      id: `s_${now.toString(36)}`,
+      title,
+      url,
+      ...(favicon ? { favicon } : {}),
+    },
+  ]
+}
+
 export function ShortcutsEditor(props: {
   readonly items: readonly ShortcutItem[]
   readonly onChange: (items: readonly ShortcutItem[]) => void
@@ -33,19 +60,14 @@ export function ShortcutsEditor(props: {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
     const title = String(formData.get("title") ?? "").trim()
-    let url = String(formData.get("url") ?? "").trim()
-    if (!title || !url) return
-    if (!/^https?:\/\//i.test(url)) url = `https://${url}`
-    const favicon = faviconForUrl(url)
-    props.onChange([
-      ...props.items,
-      {
-        id: `s_${Date.now().toString(36)}`,
-        title,
-        url,
-        ...(favicon ? { favicon } : {}),
-      },
-    ])
+    const url = String(formData.get("url") ?? "").trim()
+    const next = tryAddShortcutItem({
+      title,
+      url,
+      existing: props.items,
+    })
+    if (!next) return
+    props.onChange(next)
     event.currentTarget.reset()
   }
 

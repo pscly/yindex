@@ -19,12 +19,30 @@ describe("pageTurnWheelGuard", () => {
     expect(prefersReducedMotion("force")).toBe(true)
   })
 
-  test("Given never reducedMotion, When prefersReducedMotion, Then false", () => {
-    expect(prefersReducedMotion("never", () => ({ matches: true }))).toBe(false)
+  test("Given never without OS reduce, When prefersReducedMotion, Then false so animation may run", () => {
+    expect(prefersReducedMotion("never", () => ({ matches: false }))).toBe(
+      false,
+    )
+  })
+
+  test("Given never with OS reduce, When prefersReducedMotion, Then true because OS always wins", () => {
+    // Given stored “始终动画” / never, When OS prefers-reduced-motion is on
+    // Then Page Turn, chrome, Package flags, and any consumer of this seam must reduce
+    expect(prefersReducedMotion("never", () => ({ matches: true }))).toBe(true)
   })
 
   test("Given system + matchMedia reduce, When prefersReducedMotion, Then true", () => {
     expect(prefersReducedMotion("system", () => ({ matches: true }))).toBe(true)
+  })
+
+  test("Given system without OS reduce, When prefersReducedMotion, Then false", () => {
+    expect(prefersReducedMotion("system", () => ({ matches: false }))).toBe(
+      false,
+    )
+  })
+
+  test("Given force with OS not reducing, When prefersReducedMotion, Then true still", () => {
+    expect(prefersReducedMotion("force", () => ({ matches: false }))).toBe(true)
   })
 
   test("Given OS reduce and stored never, When ambient motion resolves, Then OS wins", () => {

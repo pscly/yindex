@@ -1,44 +1,25 @@
 import { describe, expect, test } from "bun:test"
-import type { GenerativeCanvas2D } from "./generativeCanvasPort"
+import type { GenerativeCanvasPort } from "./generativeCanvasPort"
+import { getGenerativePresetDescriptor } from "./generativePresets"
 import {
   FRAME_INTERVAL_MS,
   type FrameBackend,
+  type FrameDrawInput,
   type FrameScheduler,
-  type GenerativeCanvasPort,
   createDefaultBackend,
   createGenerativeRenderer,
 } from "./generativeRenderer"
+import {
+  FakeGLContext,
+  FakeSurfaceCanvas,
+  fakeDirectGLSurface,
+} from "./generativeRendererTestSupport"
 
-class TestCanvas implements GenerativeCanvasPort {
-  width: number
-  height: number
-  readonly contexts: string[] = []
-
-  constructor(context2d: GenerativeCanvas2D | null, width = 0, height = 0) {
-    this.context2d = context2d
-    this.width = width
-    this.height = height
-  }
-
-  private readonly context2d: GenerativeCanvas2D | null
-
-  getContext(contextId: "2d", options?: unknown): GenerativeCanvas2D | null
-  getContext(
-    contextId: "webgl2",
-    options?: unknown,
-  ): WebGL2RenderingContext | null
-  getContext(
-    contextId: string,
-    options?: unknown,
-  ): GenerativeCanvas2D | WebGL2RenderingContext | null
-  getContext(
-    contextId: string,
-    options?: unknown,
-  ): GenerativeCanvas2D | WebGL2RenderingContext | null {
-    this.contexts.push(contextId)
-    void options
-    return contextId === "2d" ? this.context2d : null
-  }
+const frameInput: FrameDrawInput = {
+  preset: "moment",
+  descriptor: getGenerativePresetDescriptor("moment"),
+  timeSeconds: 0,
+  staticFrame: false,
 }
 
 function fakeScheduler(): {
@@ -237,39 +218,42 @@ describe("generative production lifecycle", () => {
     renderer.dispose()
   })
 
-  test("WebGL and fallback Canvas2D request different fresh surfaces", () => {
-    // Given
-    const surfaces: TestCanvas[] = []
-    const visibleContext = {
-      fillStyle: "",
-      fillRect() {},
-      createRadialGradient: () => ({ addColorStop() {} }),
-      drawImage() {},
-    }
-    const visible = new TestCanvas(visibleContext, 20, 10)
-    const createSurface = () => {
-      const surface = new TestCanvas(visibleContext)
-      surfaces.push(surface)
-      return {
-        canvas: surface,
-        compositeTo() {},
-        listenForContextChange() {
-          return () => {}
-        },
-      }
-    }
+  test("WebGL binds the GL surface directly and Canvas2D fallback binds the 2D surface directly", () => {
+    // Given stacked visible surfaces with a failing GL request
+    const loseContextCalls = { value: 0 }
+    const gl = new FakeGLContext(loseContextCalls)
+    const glCanvas = new FakeSurfaceCanvas({ gl })
+    const failingGlCanvas = new FakeSurfaceCanvas({ gl: null })
+    const fallbackCanvas = new FakeSurfaceCanvas()
 
-    // When WebGL initialization fails and Canvas2D takes over
-    const backend = createDefaultBackend(visible, "webgl2", createSurface)
+    // When the GL context request succeeds, the backend binds the GL surface
+    const direct = createDefaultBackend({
+      gl: fakeDirectGLSurface(glCanvas),
+      canvas2d: fallbackCanvas,
+    })
 
-    // Then each backend attempted its own new surface
-    expect(backend.kind).toBe("canvas2d")
-    expect(surfaces).toHaveLength(2)
-    expect(surfaces[0]).not.toBe(surfaces[1])
-    expect(surfaces.map((surface) => surface.contexts)).toEqual([
-      ["webgl2"],
-      ["2d"],
-    ])
-    backend.dispose()
+    // Then the visible GL canvas itself supplies webgl2 and presents frames
+    expect(direct.kind).toBe("webgl2")
+    direct.resize(20, 10)
+    direct.draw(frameInput)
+    expect(gl.drawArraysCalls).toBe(1)
+    expect(glCanvas.twoD.drawImageCalls).toBe(0)
+    expect(fallbackCanvas.twoD.drawImageCalls).toBe(0)
+    direct.dispose()
+    expect(loseContextCalls.value).toBe(0)
+
+    // When the GL request fails, the fallback draws on the 2D surface itself
+    const fallback = createDefaultBackend({
+      gl: fakeDirectGLSurface(failingGlCanvas),
+      canvas2d: fallbackCanvas,
+    })
+
+    // Then fills land directly on the dedicated canvas with no composite
+    expect(fallback.kind).toBe("canvas2d")
+    fallback.resize(20, 10)
+    fallback.draw(frameInput)
+    expect(fallbackCanvas.twoD.fillRectCalls).toBeGreaterThan(0)
+    expect(fallbackCanvas.twoD.drawImageCalls).toBe(0)
+    fallback.dispose()
   })
 })

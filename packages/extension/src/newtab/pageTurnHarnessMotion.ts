@@ -2,6 +2,7 @@ import { createIdleGesture, stepGesture } from "./pageTurnGesture"
 import {
   HARNESS_PAGE_COUNT,
   HARNESS_SPAN,
+  blankStripVh,
   gestureOpts,
   logSection,
 } from "./pageTurnHarnessBase"
@@ -31,13 +32,21 @@ export function runMotionProfiles(): readonly {
     const samples = integrateSpringToSettle({ x: 0.2, v: 0 }, 1, params)
     const overshoot = trajectoryHasOvershoot(samples, 0.2, 1)
     const last = samples[samples.length - 1] ?? 0
+    const boundary = integrateSpringToSettle(
+      { x: 1, v: 9.509998672048866 },
+      1,
+      params,
+      { dtSec: 1 / 60 },
+    )
+    const boundaryOvershoot = trajectoryHasOvershoot(boundary, 1, 1, 0)
     return {
       profile,
       stiffness: params.stiffness,
       damping: params.damping,
       frames: samples.length,
       final: Number(last.toFixed(4)),
-      overshoot,
+      overshoot: overshoot || boundaryOvershoot,
+      boundaryMax: Math.max(...boundary),
       parallaxMax: profile === "immersive" ? 0.03 : 0,
       parallaxAt1: parallaxOffset(1, profile === "immersive" ? 0.03 : 0),
     }
@@ -177,10 +186,7 @@ export function runSinglePageNoop(): {
       staleIsTurning: staleVisual.isTurning,
     },
   ])
-  return {
-    wheelDecision: wheel.decision.kind,
-    goByWouldPlan: false,
-  }
+  return { wheelDecision: wheel.decision.kind, goByWouldPlan: false }
 }
 
 export function runLoopBoundary(): {
@@ -189,15 +195,29 @@ export function runLoopBoundary(): {
 } {
   const lastToFirst = stripOffsetFraction(2, 1, 3) * 100
   const firstToLast = stripOffsetFraction(0, -1, 3) * 100
+  const blankRows = ([2, 3] as const).flatMap((n) =>
+    ([1, -1] as const).map((progress) => {
+      const baseIndex = progress > 0 ? n - 1 : 0
+      return {
+        n,
+        progress,
+        blankVh: blankStripVh(baseIndex, progress, n),
+        stripOffsetY: stripOffsetFraction(baseIndex, progress, n) * 100,
+        parallaxInner: parallaxOffset(progress, 0.03),
+      }
+    }),
+  )
   logSection("loop-boundary-projection", [
     {
       n: 3,
       lastToFirstOffsetY: lastToFirst,
       firstToLastOffsetY: firstToLast,
       withinStrip: Math.abs(lastToFirst) < 100 && Math.abs(firstToLast) < 100,
+      blankProbes: blankRows,
+      maxBlankVh: Math.max(...blankRows.map((r) => r.blankVh)),
     },
   ])
-  return { lastToFirst, firstToLast }
+  return { lastToFirst, firstToLast } // loop offsets
 }
 
 export function runProbes(): void {
@@ -206,16 +226,28 @@ export function runProbes(): void {
     normalizeWheelDelta({ deltaY: Number.POSITIVE_INFINITY, deltaMode: 1 }),
     normalizeWheelDelta({ deltaY: 10, deltaMode: 99 }),
   ]
+  const extreme = [
+    normalizeWheelDelta({ deltaY: Number.MAX_VALUE, deltaMode: 1 }),
+    normalizeWheelDelta({
+      deltaY: Number.MAX_VALUE,
+      deltaMode: 2,
+      viewportHeight: Number.MAX_VALUE,
+    }),
+  ]
   logSection("probes-malformed-delta", [
     {
       nan: malformed[0],
       inf: malformed[1],
       badMode: malformed[2],
+      extremeLine: extreme[0],
+      extremePage: extreme[1],
       span: HARNESS_SPAN,
       policy: {
         directionLockPx: PAGE_TURN_POLICY.directionLockPx,
         commitProgress: PAGE_TURN_POLICY.commitProgress,
         cooldownMs: PAGE_TURN_POLICY.cooldownMs,
+        idleReleaseMs: PAGE_TURN_POLICY.idleReleaseMs,
+        reducedMotionMs: PAGE_TURN_POLICY.reducedMotionMs,
         spring: SPRING_BASE,
       },
     },

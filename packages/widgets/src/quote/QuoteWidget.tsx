@@ -86,10 +86,6 @@ export function QuoteWidget(props: QuoteWidgetProps) {
       ? { text: "…", from: "" }
       : { text: state.text, from: state.from }
 
-  const ink = props.tokens.glass.adaptive.contentDirect.foreground
-  const muted = props.tokens.glass.adaptive.contentDirect.mutedForeground
-  const scrim = props.tokens.glass.adaptive.contentDirect.scrim
-
   return (
     <ContentDirectSurface
       tokens={props.tokens}
@@ -104,7 +100,7 @@ export function QuoteWidget(props: QuoteWidgetProps) {
           flexDirection: "column",
           justifyContent: "center",
           gap: 12,
-          color: ink,
+          color: "var(--yindex-widget-foreground)",
         }}
       >
         <p
@@ -115,20 +111,18 @@ export function QuoteWidget(props: QuoteWidgetProps) {
             lineHeight: 1.8,
             letterSpacing: "0.02em",
             fontWeight: 550,
-            textShadow: `0 1px 24px ${scrim}`,
           }}
         >
           {body.text}
         </p>
         <footer
           style={{
-            color: muted,
+            color: "var(--yindex-widget-muted-foreground)",
             fontSize: 12,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             gap: 8,
-            textShadow: `0 1px 24px ${scrim}`,
           }}
         >
           <span>{body.from ? `— ${body.from}` : "\u00a0"}</span>
@@ -139,7 +133,7 @@ export function QuoteWidget(props: QuoteWidgetProps) {
               style={{
                 border: "none",
                 background: "transparent",
-                color: muted,
+                color: "var(--yindex-widget-muted-foreground)",
                 cursor: "pointer",
                 fontSize: 11,
                 padding: 0,

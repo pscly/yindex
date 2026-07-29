@@ -16,3 +16,7 @@ packages/extension/dist/
 release/
 playwright-report/
 test-results/
+# Local browser/semantic-index diagnostics and one-off visual captures.
+.playwright-mcp/
+.serena/
+task17-tablet-contact.png

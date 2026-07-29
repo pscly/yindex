@@ -1,23 +1,23 @@
 - region "此刻":
-  - text: /\d+° 多云 · 本地 风速 8 km\/h/
+  - text: /\d+° 多云 · (本地|上海（定位失败）) 风速 8 km\/h/
   - button "刷新"
   - text: /\d+:\d+ \d+年7月\d+日 · 星期日/
   - textbox "搜索":
     - /placeholder: 搜索或输入关键词…
   - button "搜索" [disabled]
   - link "GitHub":
-    - /url: https://github.com
+    - /url: https://github.com/
   - link "文档":
-    - /url: https://developer.mozilla.org
+    - /url: https://developer.mozilla.org/
   - link "邮箱":
-    - /url: https://mail.google.com
+    - /url: https://mail.google.com/
   - link "云盘":
-    - /url: https://drive.google.com
+    - /url: https://drive.google.com/
   - link "日历":
-    - /url: https://calendar.google.com
+    - /url: https://calendar.google.com/
   - link "翻译":
-    - /url: https://translate.google.com
+    - /url: https://translate.google.com/
   - link "笔记":
-    - /url: https://www.notion.so
+    - /url: https://www.notion.so/
   - link "B站":
-    - /url: https://www.bilibili.com
+    - /url: https://www.bilibili.com/

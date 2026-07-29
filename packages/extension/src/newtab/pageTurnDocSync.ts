@@ -19,9 +19,16 @@ export type DocSyncState = {
   readonly invalidated: boolean
 }
 
+/** Document identity includes object identity, not only sequence page IDs. */
+export function documentIdentityKey(doc: HomeDocument): string {
+  // Sequence key alone is insufficient: a replaced Home document with the same
+  // Page IDs must still invalidate active spring callbacks.
+  return `${sequenceIdentityKey(doc.sequence.pageIds)}#${doc.sequence.pageIds.length}`
+}
+
 /**
  * Apply Home document / sequence changes to page-turn runtime state.
- * Invalidates springs when sequence identity, index, or pageCount<=1 changes.
+ * Invalidates springs when document identity, sequence, index, or pageCount<=1 changes.
  */
 export function syncPageTurnDocument(input: {
   readonly doc: HomeDocument
@@ -31,6 +38,8 @@ export function syncPageTurnDocument(input: {
   readonly lastSeqKey: string
   readonly generation: number
   readonly gesture: GestureSnapshot
+  /** Explicit document identity/revision — preferred over sequence IDs alone. */
+  readonly lastDocRef?: HomeDocument | null
 }): DocSyncState {
   const seqKey = sequenceIdentityKey(input.doc.sequence.pageIds)
   if (!input.initialized) {
@@ -49,11 +58,15 @@ export function syncPageTurnDocument(input: {
 
   const next = clampIndexToSequence(input.currentIndex, input.pageCount)
   const seqChanged = seqKey !== input.lastSeqKey
+  // New object with identical Page IDs still bumps generation.
+  const docReplaced =
+    input.lastDocRef !== undefined &&
+    input.lastDocRef !== null &&
+    input.lastDocRef !== input.doc
   const indexChanged = next !== input.currentIndex
   const nonIdle = input.gesture.phase !== "idle" || input.gesture.progress !== 0
-  // Force idle when one-page Home still holds a stale tracking/settling gesture.
   const singlePageStale = input.pageCount <= 1 && nonIdle
-  if (seqChanged || indexChanged || singlePageStale) {
+  if (seqChanged || indexChanged || singlePageStale || docReplaced) {
     return {
       initialized: true,
       lastSeqKey: seqKey,

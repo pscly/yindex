@@ -43,7 +43,10 @@ export async function readRendererActivity(
     return {
       activeCanvasCount: active.reduce(
         (count, wallpaper) =>
-          count + wallpaper.querySelectorAll("canvas").length,
+          count +
+          wallpaper.querySelectorAll(
+            'canvas[data-wallpaper-surface-visible="true"]',
+          ).length,
         0,
       ),
       activeWallpaperCount: active.length,

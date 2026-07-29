@@ -17,6 +17,11 @@ export function pageSlotFocusProps(
   return { "aria-hidden": true, inert: true, tabIndex: -1 }
 }
 
+/**
+ * Finite clone strip: translation is strip-only (offsetY%).
+ * Immersive parallax is applied on a clipped per-Page inner layer so the
+ * strip never leaves its paintable clone range.
+ */
 export function PageTurnStage(props: {
   readonly activeSlot: number
   readonly children?: ReactNode
@@ -29,7 +34,7 @@ export function PageTurnStage(props: {
   const stageStyle: CSSProperties = {
     height: `${props.stripSlots * 100}%`,
     width: "100%",
-    transform: `translate3d(0, calc(${props.offsetY}% + ${props.parallaxY * 100}vh), 0)`,
+    transform: `translate3d(0, ${props.offsetY}%, 0)`,
     transition: "none",
     willChange: props.isAnimating ? "transform" : "auto",
   }
@@ -39,6 +44,10 @@ export function PageTurnStage(props: {
   const incomingSlot = props.fadeLayers
     ? props.fadeLayers.incoming.index + 1
     : null
+  const innerParallax =
+    props.fadeLayers === null && props.parallaxY !== 0
+      ? `translate3d(0, ${props.parallaxY * 100}vh, 0)`
+      : "none"
   return (
     <div style={stageStyle}>
       {Children.map(props.children, (child, slot) => {
@@ -52,6 +61,7 @@ export function PageTurnStage(props: {
         const layerStyle: CSSProperties = {
           height: `${100 / props.stripSlots}%`,
           width: "100%",
+          overflow: "hidden",
           opacity:
             role === "outgoing"
               ? props.fadeLayers?.outgoing.opacity
@@ -68,6 +78,13 @@ export function PageTurnStage(props: {
           transition: "none",
           willChange: props.fadeLayers ? "transform, opacity" : "auto",
         }
+        const contentStyle: CSSProperties = {
+          height: "100%",
+          width: "100%",
+          transform: props.fadeLayers ? "none" : innerParallax,
+          transition: "none",
+          willChange: innerParallax !== "none" ? "transform" : "auto",
+        }
         return (
           <div
             {...pageSlotFocusProps(isActive)}
@@ -75,7 +92,9 @@ export function PageTurnStage(props: {
             data-page-turn-role={role ?? undefined}
             data-page-slot-active={isActive ? "true" : "false"}
           >
-            {child}
+            <div style={contentStyle} data-page-turn-parallax="inner">
+              {child}
+            </div>
           </div>
         )
       })}

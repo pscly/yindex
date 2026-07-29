@@ -1,3 +1,4 @@
+import { createDirectGLSurface } from "../wallpaper/generativeCanvasSurface"
 import { probeBlockedExecutables } from "./executableSecurityProbe"
 import { createPackagedWorker } from "./packagedWorkerPolicy"
 
@@ -111,20 +112,29 @@ async function probeGenerativeRenderer(): Promise<GenerativeProbeResult> {
   const { createGenerativeRenderer } = await import(
     "../wallpaper/generativeRenderer"
   )
-  const canvas = document.createElement("canvas")
-  canvas.width = 64
-  canvas.height = 64
+  // The renderer presents directly on a visible WebGL canvas and keeps a
+  // separate Canvas2D fallback surface. The probe must mirror that production
+  // contract; a single canvas cannot acquire both contexts after the refactor.
+  const glCanvas = document.createElement("canvas")
+  const fallbackCanvas = document.createElement("canvas")
+  glCanvas.width = fallbackCanvas.width = 64
+  glCanvas.height = fallbackCanvas.height = 64
+  const blankFrame = fallbackCanvas.toDataURL()
   const renderer = createGenerativeRenderer({
-    canvas,
+    canvas: glCanvas,
     preset: "flow",
     reducedMotion: true,
+    surfaces: {
+      gl: createDirectGLSurface(glCanvas),
+      canvas2d: fallbackCanvas,
+    },
   })
   renderer.start()
-  const pixels = canvas.getContext("2d")?.getImageData(0, 0, 64, 64).data
-  const painted = pixels
-    ? pixels.some((channel, index) => index % 4 === 3 && channel > 0)
-    : false
   const backend = renderer.getBackendKind()
+  const painted =
+    backend === "webgl2"
+      ? glCanvas.toDataURL() !== blankFrame
+      : fallbackCanvas.toDataURL() !== blankFrame
   renderer.dispose()
   return { backend, painted }
 }

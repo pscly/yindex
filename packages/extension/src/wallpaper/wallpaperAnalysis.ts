@@ -6,7 +6,17 @@ export type PixelSample = {
   readonly data: readonly number[] | Uint8ClampedArray
 }
 
-export function analyzePixelSample(sample: PixelSample): AdaptiveGlassInput {
+export type PixelAnalysisResult = {
+  readonly analysis: AdaptiveGlassInput
+  readonly usedFallback: boolean
+}
+
+const FALLBACK_RESULT: PixelAnalysisResult = {
+  analysis: BALANCED_SAFE_ANALYSIS,
+  usedFallback: true,
+}
+
+export function analyzePixelSample(sample: PixelSample): PixelAnalysisResult {
   const pixelCount = sample.width * sample.height
   if (
     !Number.isSafeInteger(sample.width) ||
@@ -15,7 +25,7 @@ export function analyzePixelSample(sample: PixelSample): AdaptiveGlassInput {
     sample.height <= 0 ||
     sample.data.length !== pixelCount * 4
   ) {
-    return BALANCED_SAFE_ANALYSIS
+    return FALLBACK_RESULT
   }
 
   const luminances: number[] = []
@@ -37,7 +47,7 @@ export function analyzePixelSample(sample: PixelSample): AdaptiveGlassInput {
       !isChannel(blue) ||
       !isChannel(alpha)
     ) {
-      return BALANCED_SAFE_ANALYSIS
+      return FALLBACK_RESULT
     }
 
     const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255
@@ -52,16 +62,16 @@ export function analyzePixelSample(sample: PixelSample): AdaptiveGlassInput {
     for (let x = 0; x < sample.width; x += 1) {
       const index = y * sample.width + x
       const current = luminances[index]
-      if (current === undefined) return BALANCED_SAFE_ANALYSIS
+      if (current === undefined) return FALLBACK_RESULT
       if (x + 1 < sample.width) {
         const right = luminances[index + 1]
-        if (right === undefined) return BALANCED_SAFE_ANALYSIS
+        if (right === undefined) return FALLBACK_RESULT
         edgeEnergy += Math.abs(current - right)
         edgeCount += 1
       }
       if (y + 1 < sample.height) {
         const below = luminances[index + sample.width]
-        if (below === undefined) return BALANCED_SAFE_ANALYSIS
+        if (below === undefined) return FALLBACK_RESULT
         edgeEnergy += Math.abs(current - below)
         edgeCount += 1
       }
@@ -69,9 +79,12 @@ export function analyzePixelSample(sample: PixelSample): AdaptiveGlassInput {
   }
 
   return {
-    luminance: luminanceSum / pixelCount,
-    chroma: chromaSum / pixelCount,
-    detail: edgeCount === 0 ? 0 : edgeEnergy / edgeCount,
+    analysis: {
+      luminance: luminanceSum / pixelCount,
+      chroma: chromaSum / pixelCount,
+      detail: edgeCount === 0 ? 0 : edgeEnergy / edgeCount,
+    },
+    usedFallback: false,
   }
 }
 

@@ -32,3 +32,18 @@ export function gestureOpts(
     reducedMotion,
   }
 }
+
+export function blankStripVh(
+  baseIndex: number,
+  progress: number,
+  pageCount: number,
+): number {
+  const slots = pageCount <= 1 ? Math.max(pageCount, 0) : pageCount + 2
+  if (slots <= 0) return 0
+  const p = Number.isFinite(progress) ? Math.max(-1, Math.min(1, progress)) : 0
+  const stripFrac = -(baseIndex + 1 + p) / slots
+  const stripVh = stripFrac * 100 * slots
+  const blankTop = Math.max(0, stripVh)
+  const blankBottom = Math.max(0, 100 - (stripVh + slots * 100))
+  return blankTop + blankBottom
+}

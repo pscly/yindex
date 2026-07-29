@@ -12,6 +12,7 @@ const DEFAULT_VIEWPORT = 800
 /**
  * Normalize wheel deltaY to CSS pixels.
  * Malformed (NaN/±Inf) or unknown deltaMode → 0.
+ * After line/page multiplication, non-finite output → 0.
  */
 export function normalizeWheelDelta(input: WheelDeltaInput): number {
   const raw = input.deltaY
@@ -19,21 +20,20 @@ export function normalizeWheelDelta(input: WheelDeltaInput): number {
 
   const mode = input.deltaMode
   if (mode === 0 || mode === undefined) {
-    // DOM_DELTA_PIXEL — also treat undefined as pixels
     return raw
   }
   if (mode === 1) {
-    // DOM_DELTA_LINE
-    return raw * LINE_PX
+    const out = raw * LINE_PX
+    return Number.isFinite(out) ? out : 0
   }
   if (mode === 2) {
-    // DOM_DELTA_PAGE
     const vh = input.viewportHeight
     const page =
       typeof vh === "number" && Number.isFinite(vh) && vh > 0
         ? vh
         : DEFAULT_VIEWPORT
-    return raw * page
+    const out = raw * page
+    return Number.isFinite(out) ? out : 0
   }
   return 0
 }

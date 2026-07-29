@@ -3,6 +3,7 @@ import {
   type ImportResult,
   installPackageFromFiles,
 } from "../../storage/packageStore"
+import { parseSafePackageMemberPath } from "./safePackageMemberPath"
 
 const TEXT_FILE_EXTENSIONS = new Set([
   "css",
@@ -87,9 +88,16 @@ export async function installFromZipBytes(
   const files: Record<string, string> = {}
   const unzipped = unzipSync(buf)
   for (const [path, data] of Object.entries(unzipped)) {
+    const parsed = parseSafePackageMemberPath(path)
+    if (!parsed.ok) {
+      return {
+        ok: false,
+        message: "不安全的包路径",
+        pathError: parsed.error,
+      }
+    }
     if (path.endsWith("/")) continue
-    const clean = path.replace(/^\/+/, "").replace(/\\/g, "/")
-    files[clean] = decodePackageFile(clean, data)
+    files[parsed.value] = decodePackageFile(parsed.value, data)
   }
   return installPackageFromFiles(normalizeZipPaths(files))
 }

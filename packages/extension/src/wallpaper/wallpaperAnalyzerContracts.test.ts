@@ -3,8 +3,10 @@ import { BALANCED_SAFE_ANALYSIS } from "@yindex/domain"
 import {
   ANALYZER_VERSION,
   type PixelFrame,
+  WALLPAPER_ANALYSIS_SOURCE_BY_KIND,
   type WallpaperAnalysisResult,
   analyzeGenerativeWallpaper,
+  analyzePixelFrame,
   createStaticImageAnalyzer,
   createTemporalAnalysisFilter,
   createVideoWallpaperSampler,
@@ -59,6 +61,50 @@ describe("Wallpaper analyzer host contracts", () => {
       expect(result.analysis.chroma).toBeWithin(0, 1)
       expect(result.analysis.detail).toBeWithin(0, 1)
     }
+  })
+
+  test("publishes the analysis source for each Wallpaper kind", () => {
+    // Given / When / Then
+    expect(WALLPAPER_ANALYSIS_SOURCE_BY_KIND.generative).toBe(
+      "preset-descriptor",
+    )
+    expect(WALLPAPER_ANALYSIS_SOURCE_BY_KIND.image).toBe("pixel-sample")
+    expect(WALLPAPER_ANALYSIS_SOURCE_BY_KIND.video).toBe("pixel-sample")
+  })
+
+  test("does not mark a successful balanced-safe-valued frame as fallback", () => {
+    // Given
+    const frame: PixelFrame = {
+      width: 2,
+      height: 1,
+      data: [
+        65.78796000000001, 45.38796, 45.38796, 255, 129.53796, 109.13796,
+        109.13796, 255,
+      ],
+    }
+
+    // When
+    const result = analyzePixelFrame(frame)
+
+    // Then
+    expect(result).toEqual({
+      analysis: BALANCED_SAFE_ANALYSIS,
+      usedFallback: false,
+    })
+  })
+
+  test("marks an invalid pixel frame as fallback", () => {
+    // Given
+    const frame: PixelFrame = { width: 0, height: 0, data: [] }
+
+    // When
+    const result = analyzePixelFrame(frame)
+
+    // Then
+    expect(result).toEqual({
+      analysis: BALANCED_SAFE_ANALYSIS,
+      usedFallback: true,
+    })
   })
 
   test("defers static sampling, caps it at 64px, and caches by hash plus version", async () => {

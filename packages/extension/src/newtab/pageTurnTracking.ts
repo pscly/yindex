@@ -26,6 +26,46 @@ function emaVelocity(prevV: number, sampleV: number, dtMs: number): number {
   return Number.isFinite(next) ? next : prevV
 }
 
+/**
+ * Direction lock: once locked, crossing neutral starts a fresh opposite
+ * accumulator (wheelAccPx). Relock only after >= directionLockPx opposite.
+ */
+function resolveLockedDir(
+  state: GestureSnapshot,
+  progress: number,
+  span: number,
+): { readonly lockedDir: TurnDirection | null; readonly wheelAccPx: number } {
+  const lockPx = PAGE_TURN_POLICY.directionLockPx
+  let lockedDir = state.lockedDir
+  let wheelAccPx = state.wheelAccPx
+
+  if (lockedDir === null) {
+    if (Math.abs(progress) * span >= lockPx) {
+      lockedDir = progress >= 0 ? 1 : -1
+      wheelAccPx = 0
+    }
+    return { lockedDir, wheelAccPx }
+  }
+
+  const progressPx = progress * span
+  const sameSide =
+    (lockedDir === 1 && progressPx >= 0) ||
+    (lockedDir === -1 && progressPx <= 0)
+
+  if (sameSide) {
+    // Still on locked side (including neutral): keep lock; reset reverse acc.
+    return { lockedDir, wheelAccPx: 0 }
+  }
+
+  // Opposite side of neutral: accumulate reverse displacement from 0.
+  const oppositePx = Math.abs(progressPx)
+  if (oppositePx >= lockPx) {
+    lockedDir = progressPx > 0 ? 1 : -1
+    return { lockedDir, wheelAccPx: 0 }
+  }
+  return { lockedDir, wheelAccPx: progressPx }
+}
+
 export function applyTrackingDelta(
   state: GestureSnapshot,
   deltaPx: number,
@@ -38,16 +78,9 @@ export function applyTrackingDelta(
   const dtMs = Math.max(0, now - state.lastSampleAt)
   let progress = state.progress + deltaPx / span
 
-  let lockedDir = state.lockedDir
-  if (lockedDir === null) {
-    if (Math.abs(progress) * span >= PAGE_TURN_POLICY.directionLockPx) {
-      lockedDir = progress >= 0 ? 1 : -1
-    }
-  } else {
-    if (progress > 0 && lockedDir === -1) lockedDir = 1
-    if (progress < 0 && lockedDir === 1) lockedDir = -1
-    if (progress === 0) lockedDir = null
-  }
+  const lock = resolveLockedDir(state, progress, span)
+  const lockedDir = lock.lockedDir
+  const wheelAccPx = lock.wheelAccPx
 
   progress = clampProgress(progress)
   const sampleV = dtMs > 0 ? deltaPx / span / (dtMs / 1000) : 0
@@ -62,6 +95,7 @@ export function applyTrackingDelta(
         progress,
         velocity,
         lockedDir: dir,
+        wheelAccPx: 0,
         settleTarget: dir,
         lastSampleAt: now,
       },
@@ -82,6 +116,7 @@ export function applyTrackingDelta(
       progress,
       velocity,
       lockedDir,
+      wheelAccPx,
       lastSampleAt: now,
     },
     decision: { kind: "none" },

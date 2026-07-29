@@ -123,7 +123,20 @@ function memoryPackages(): readonly StoredPackage[] {
 
 export type ImportResult =
   | { readonly ok: true; readonly package: StoredPackage }
-  | { readonly ok: false; readonly message: string }
+  | {
+      readonly ok: false
+      readonly message: string
+      readonly pathError?: {
+        readonly kind: "unsafe_package_member_path"
+        readonly reason:
+          | "empty"
+          | "absolute"
+          | "backslash"
+          | "dot_segment"
+          | "windows_path"
+          | "invalid_characters"
+      }
+    }
 
 /** Import an unzipped map whose values are UTF-8 text or binary data URLs. */
 export async function installPackageFromFiles(

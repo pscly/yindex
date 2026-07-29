@@ -1,6 +1,7 @@
 import type { HomeDocument, PageId } from "@yindex/domain"
 import { migrateHomeDocument, serializeHomeDocument } from "@yindex/domain"
 import { type ChangeEvent, useEffect, useRef, useState } from "react"
+import { EXTENSION_VERSION } from "../extensionVersion"
 import { type StoredPackage, listPackages } from "../storage/packageStore"
 import type { MediaStore } from "../wallpaper/mediaStore"
 import { AdvancedGlassSection } from "./settings/AdvancedGlassSection"
@@ -228,7 +229,7 @@ export function SettingsPanel(props: {
         <section style={section}>
           <h3 style={h3}>关于</h3>
           <div style={{ fontSize: 12, opacity: 0.7, lineHeight: 1.5 }}>
-            yindex v0.1.3 · Chrome MV3 新标签页 · 配置仅存本机
+            yindex v{EXTENSION_VERSION} · Chrome MV3 新标签页 · 配置仅存本机
             <br />
             滚轮翻页 · 编辑拖拽布局 · 设置中可导入小组件包
             <br />

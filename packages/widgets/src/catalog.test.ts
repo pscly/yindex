@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import { BUILTIN_CATALOG, catalogEntryFor } from "./catalog"
+import * as catalog from "./catalog"
+
+const { BUILTIN_CATALOG, catalogEntryFor } = catalog
 
 describe("Builtin Widget catalog morphology", () => {
   test("Given the product catalog, When entries are listed, Then each type carries a fixed surface mode", () => {
@@ -19,6 +21,18 @@ describe("Builtin Widget catalog morphology", () => {
     expect(byId["builtin.shortcuts"]?.lensShape).toBe("shelf")
     expect(byId["builtin.hexagram"]?.surfaceMode).toBe("lens")
     expect(byId["builtin.hexagram"]?.lensShape).toBe("panel")
+  })
+
+  test("Given all builtin Widget Types, When the surface contract is inspected, Then the exhaustive map fixes each product variant", () => {
+    // Given / When / Then
+    expect(catalog).toHaveProperty("SURFACE_VARIANT_BY_TYPE", {
+      "builtin.clock": { kind: "content-direct" },
+      "builtin.quote": { kind: "content-direct" },
+      "builtin.weather": { kind: "lens", shape: "capsule" },
+      "builtin.search": { kind: "lens", shape: "capsule" },
+      "builtin.shortcuts": { kind: "lens", shape: "shelf" },
+      "builtin.hexagram": { kind: "lens", shape: "panel" },
+    })
   })
 
   test("Given a known type id, When catalogEntryFor resolves it, Then morphology metadata is present", () => {

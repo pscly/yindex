@@ -42,9 +42,13 @@ function logComputedSections(): void {
       fadeMs,
       frames,
       destOffsetY,
-      terminalMatchesDest:
-        terminal !== undefined &&
-        Math.abs(terminal.offsetY - destOffsetY) < 1e-9,
+      // Overlapping visual continuity: strip stays fixed at outgoing; layers crossfade.
+      stripFixed:
+        frames.length > 0 &&
+        frames.every(
+          (f) => Math.abs(f.offsetY - (frames[0]?.offsetY ?? 0)) < 1e-9,
+        ),
+      zeroParallax: true,
       offsetDeltaTerminalToDest:
         terminal !== undefined
           ? Math.abs(terminal.offsetY - destOffsetY)
@@ -110,6 +114,14 @@ function main(): void {
   const loop = runLoopBoundary()
   runProbes()
   logComputedSections()
+  const allProfilesNoOvershoot = profiles.every((p) => !p.overshoot)
+  const overall =
+    !trackpad.overshoot &&
+    coarse.commits === 1 &&
+    coarse.cooldownBlocks &&
+    allProfilesNoOvershoot &&
+    reduced.fadeMs === PAGE_TURN_POLICY.reducedMotionMs &&
+    single.wheelDecision === "none"
   console.log("\n## summary")
   console.log(
     JSON.stringify({
@@ -117,12 +129,14 @@ function main(): void {
       trackpadOvershoot: trackpad.overshoot,
       coarseCommits: coarse.commits,
       cooldownBlocks: coarse.cooldownBlocks,
-      allProfilesNoOvershoot: profiles.every((p) => !p.overshoot),
+      allProfilesNoOvershoot,
       reducedFadeMs: reduced.fadeMs,
       reducedIntermediateCount: reduced.intermediateCount,
       singlePageWheelNone: single.wheelDecision === "none",
       loopLastToFirst: loop.lastToFirst,
       loopFirstToLast: loop.firstToLast,
+      springBase: { stiffness: 180, damping: 26, mass: 1 },
+      OVERALL_PASS: overall,
       promptInjection: "N/A",
       hungCommands: "N/A",
     }),

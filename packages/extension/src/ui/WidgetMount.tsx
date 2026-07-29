@@ -4,22 +4,19 @@ import type {
   StyleTokens,
   WidgetInstance,
 } from "@yindex/domain"
-import { resolveWidgetTokens } from "@yindex/domain"
+import { assertNever, resolveWidgetTokens } from "@yindex/domain"
 import {
   ClockWidget,
   HexagramBoard,
-  type HexagramBoardConfig,
   QuoteWidget,
-  type QuoteWidgetConfig,
   SearchWidget,
-  type SearchWidgetConfig,
   ShortcutsWidget,
-  type ShortcutsWidgetConfig,
   WeatherWidget,
-  type WeatherWidgetConfig,
+  parseBuiltinWidgetConfig,
 } from "@yindex/widgets"
 import { MissingWidget } from "./MissingWidget"
 import { PackageWidgetFrame } from "./PackageWidgetFrame"
+import { WidgetErrorBoundary } from "./WidgetErrorBoundary"
 
 export type WidgetMountProps = {
   readonly doc: HomeDocument
@@ -31,33 +28,29 @@ export type WidgetMountProps = {
   readonly onWidgetConfig: (widgetId: string, config: unknown) => void
 }
 
-type WidgetConfigRecord = {
-  readonly compact?: unknown
-  readonly showSeconds?: unknown
-  readonly [key: string]: unknown
-}
-
-function asObject(config: unknown): WidgetConfigRecord {
-  if (typeof config === "object" && config !== null) {
-    return config as WidgetConfigRecord
-  }
-  return {}
-}
-
 export function WidgetMount(props: WidgetMountProps) {
   const tokens = resolveWidgetTokens(
     props.pageTokens,
     props.widget.styleOverride,
   )
+  return (
+    <WidgetErrorBoundary resetValue={props.widget} tokens={tokens}>
+      <WidgetContent {...props} tokens={tokens} />
+    </WidgetErrorBoundary>
+  )
+}
+
+function WidgetContent(
+  props: WidgetMountProps & { readonly tokens: StyleTokens },
+) {
   const src = props.widget.source
   const allowRedraw = props.doc.settings.allowHexagramRedraw
-  const cfg = asObject(props.widget.config)
   const showTitle = props.doc.settings.showWidgetTitles !== false
 
   if (src.kind === "missing") {
     return (
       <MissingWidget
-        tokens={tokens}
+        tokens={props.tokens}
         packageId={src.packageId}
         typeId={src.typeId}
         showTitle={showTitle}
@@ -68,7 +61,7 @@ export function WidgetMount(props: WidgetMountProps) {
   if (src.kind === "package") {
     return (
       <PackageWidgetFrame
-        tokens={tokens}
+        tokens={props.tokens}
         packageId={src.packageId}
         typeId={src.typeId}
         instanceId={props.widget.id}
@@ -78,56 +71,60 @@ export function WidgetMount(props: WidgetMountProps) {
     )
   }
 
-  const typeId = src.typeId
-  const hasCompact = "compact" in cfg
-  const hasShowSeconds = "showSeconds" in cfg
-  switch (typeId) {
+  const parsed = parseBuiltinWidgetConfig({
+    typeId: src.typeId,
+    config: props.widget.config,
+  })
+  if (parsed === null) {
+    return (
+      <MissingWidget
+        tokens={props.tokens}
+        packageId="builtin"
+        typeId={String(src.typeId)}
+        showTitle={showTitle}
+      />
+    )
+  }
+
+  switch (parsed.typeId) {
     case "builtin.clock":
       return (
         <ClockWidget
-          compact={hasCompact ? Boolean(cfg.compact) : false}
-          tokens={tokens}
-          showSeconds={hasShowSeconds ? Boolean(cfg.showSeconds) : true}
+          compact={parsed.config.compact ?? false}
+          tokens={props.tokens}
+          showSeconds={parsed.config.showSeconds ?? true}
           showTitle={showTitle}
         />
       )
     case "builtin.search":
       return (
         <SearchWidget
-          tokens={tokens}
-          config={
-            (props.widget.config as SearchWidgetConfig) ?? { engine: "google" }
-          }
+          tokens={props.tokens}
+          config={parsed.config}
           showTitle={showTitle}
         />
       )
     case "builtin.shortcuts":
       return (
         <ShortcutsWidget
-          tokens={tokens}
-          config={
-            (props.widget.config as ShortcutsWidgetConfig) ?? { items: [] }
-          }
+          tokens={props.tokens}
+          config={parsed.config}
           showTitle={showTitle}
         />
       )
     case "builtin.weather":
       return (
         <WeatherWidget
-          tokens={tokens}
-          config={
-            (props.widget.config as WeatherWidgetConfig) ?? { mode: "auto" }
-          }
+          tokens={props.tokens}
+          config={parsed.config}
           showTitle={showTitle}
         />
       )
     case "builtin.quote":
       return (
         <QuoteWidget
-          tokens={tokens}
-          config={
-            (props.widget.config as QuoteWidgetConfig) ?? { source: "hitokoto" }
-          }
+          tokens={props.tokens}
+          config={parsed.config}
           showTitle={showTitle}
         />
       )
@@ -135,8 +132,8 @@ export function WidgetMount(props: WidgetMountProps) {
       return (
         <div data-scrollable="true" style={{ width: "100%", height: "100%" }}>
           <HexagramBoard
-            tokens={tokens}
-            config={(props.widget.config as HexagramBoardConfig) ?? {}}
+            tokens={props.tokens}
+            config={parsed.config}
             allowRedraw={allowRedraw}
             showTitle={showTitle}
             onConfigChange={(next) =>
@@ -146,13 +143,6 @@ export function WidgetMount(props: WidgetMountProps) {
         </div>
       )
     default:
-      return (
-        <MissingWidget
-          tokens={tokens}
-          packageId="builtin"
-          typeId={String(typeId)}
-          showTitle={showTitle}
-        />
-      )
+      return assertNever(parsed)
   }
 }

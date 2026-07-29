@@ -1,13 +1,14 @@
 import type { StyleTokens } from "@yindex/domain"
 import { type CSSProperties, useEffect, useState } from "react"
 import { LensSurface } from "../shell/surface"
+import {
+  type WeatherState,
+  type WeatherWidgetConfig,
+  loadWeather,
+} from "./WeatherWidgetData"
 
-export type WeatherWidgetConfig = {
-  readonly mode: "auto" | "manual"
-  readonly cityLabel?: string
-  readonly latitude?: number
-  readonly longitude?: number
-}
+export { weatherLocationLabel } from "./WeatherWidgetData"
+export type { WeatherWidgetConfig }
 
 export type WeatherWidgetProps = {
   readonly tokens: StyleTokens
@@ -15,61 +16,12 @@ export type WeatherWidgetProps = {
   readonly showTitle?: boolean | undefined
 }
 
-type WeatherState =
-  | { readonly status: "loading" }
-  | { readonly status: "error"; readonly message: string }
-  | {
-      readonly status: "ok"
-      readonly tempC: number
-      readonly windKmh: number
-      readonly code: number
-      readonly label: string
-    }
-
-function weatherLabel(code: number): string {
-  if (code === 0) return "晴"
-  if (code <= 3) return "多云"
-  if (code <= 48) return "雾"
-  if (code <= 67) return "雨"
-  if (code <= 77) return "雪"
-  if (code <= 82) return "阵雨"
-  if (code <= 99) return "雷暴"
-  return "—"
-}
-
-async function fetchWeather(lat: number, lon: number): Promise<WeatherState> {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`
-  const res = await fetch(url)
-  if (!res.ok) {
-    return { status: "error", message: `天气请求失败 (${res.status})` }
-  }
-  const data = (await res.json()) as {
-    current?: {
-      temperature_2m?: number
-      weather_code?: number
-      wind_speed_10m?: number
-    }
-  }
-  const temp = data.current?.temperature_2m
-  const code = data.current?.weather_code ?? 0
-  const wind = data.current?.wind_speed_10m ?? 0
-  if (typeof temp !== "number") {
-    return { status: "error", message: "天气数据无效" }
-  }
-  return {
-    status: "ok",
-    tempC: temp,
-    windKmh: wind,
-    code,
-    label: weatherLabel(code),
-  }
-}
-
 function smallBtn(tokens: StyleTokens): CSSProperties {
   return {
-    border: `1px solid color-mix(in oklch, ${tokens.color.ink} 16%, transparent)`,
+    border:
+      "1px solid color-mix(in oklch, var(--yindex-widget-foreground) 16%, transparent)",
     background: "transparent",
-    color: tokens.color.ink,
+    color: "var(--yindex-widget-foreground)",
     borderRadius: tokens.radius.sm,
     padding: "6px 10px",
     cursor: "pointer",
@@ -80,6 +32,7 @@ function smallBtn(tokens: StyleTokens): CSSProperties {
 export function WeatherWidget(props: WeatherWidgetProps) {
   const [state, setState] = useState<WeatherState>({ status: "loading" })
   const [tick, setTick] = useState(0)
+  const { cityLabel, latitude, longitude, mode } = props.config
 
   useEffect(() => {
     void tick
@@ -88,30 +41,12 @@ export function WeatherWidget(props: WeatherWidgetProps) {
     async function run() {
       if (!cancelled) setState({ status: "loading" })
       try {
-        let lat = props.config.latitude
-        let lon = props.config.longitude
-        const needGeo =
-          props.config.mode === "auto" || lat === undefined || lon === undefined
-        if (needGeo) {
-          lat = 31.23
-          lon = 121.47
-          if (typeof navigator !== "undefined" && navigator.geolocation) {
-            const pos = await new Promise<GeolocationPosition | null>(
-              (resolve) => {
-                navigator.geolocation.getCurrentPosition(
-                  (p) => resolve(p),
-                  () => resolve(null),
-                  { timeout: 5000, maximumAge: 600_000 },
-                )
-              },
-            )
-            if (pos) {
-              lat = pos.coords.latitude
-              lon = pos.coords.longitude
-            }
-          }
-        }
-        const result = await fetchWeather(lat as number, lon as number)
+        const result = await loadWeather({
+          mode,
+          ...(cityLabel === undefined ? {} : { cityLabel }),
+          ...(latitude === undefined ? {} : { latitude }),
+          ...(longitude === undefined ? {} : { longitude }),
+        })
         if (!cancelled) setState(result)
       } catch (e) {
         if (!cancelled) {
@@ -127,10 +62,7 @@ export function WeatherWidget(props: WeatherWidgetProps) {
     return () => {
       cancelled = true
     }
-  }, [props.config.latitude, props.config.longitude, props.config.mode, tick])
-
-  const lensInk = props.tokens.glass.adaptive.lens.foreground
-  const lensMuted = props.tokens.glass.adaptive.lens.mutedForeground
+  }, [cityLabel, latitude, longitude, mode, tick])
 
   return (
     <LensSurface
@@ -140,11 +72,20 @@ export function WeatherWidget(props: WeatherWidgetProps) {
       showTitle={props.showTitle}
     >
       {state.status === "loading" ? (
-        <div style={{ color: lensMuted }}>加载中…</div>
+        <div style={{ color: "var(--yindex-widget-muted-foreground)" }}>
+          加载中…
+        </div>
       ) : null}
       {state.status === "error" ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ color: lensMuted, fontSize: 13 }}>{state.message}</div>
+          <div
+            style={{
+              color: "var(--yindex-widget-muted-foreground)",
+              fontSize: 13,
+            }}
+          >
+            {state.message}
+          </div>
           <button
             type="button"
             onClick={() => setTick((t) => t + 1)}
@@ -174,7 +115,7 @@ export function WeatherWidget(props: WeatherWidgetProps) {
               fontWeight: props.tokens.typography.displayWeight,
               lineHeight: 1,
               fontVariantNumeric: "tabular-nums",
-              color: lensInk,
+              color: "var(--yindex-widget-foreground)",
               flex: "0 0 auto",
             }}
           >
@@ -182,7 +123,7 @@ export function WeatherWidget(props: WeatherWidgetProps) {
           </div>
           <div
             style={{
-              color: lensInk,
+              color: "var(--yindex-widget-foreground)",
               fontSize: 13,
               lineHeight: 1.15,
               minWidth: 0,
@@ -193,11 +134,11 @@ export function WeatherWidget(props: WeatherWidgetProps) {
             }}
           >
             {state.label}
-            {props.config.cityLabel ? ` · ${props.config.cityLabel}` : ""}
+            {state.locationLabel ? ` · ${state.locationLabel}` : ""}
           </div>
           <div
             style={{
-              color: lensMuted,
+              color: "var(--yindex-widget-muted-foreground)",
               fontSize: 11,
               lineHeight: 1.15,
               display: "flex",
@@ -226,7 +167,7 @@ export function WeatherWidget(props: WeatherWidgetProps) {
               style={{
                 border: "none",
                 background: "transparent",
-                color: lensMuted,
+                color: "var(--yindex-widget-muted-foreground)",
                 cursor: "pointer",
                 fontSize: 10,
                 padding: 0,

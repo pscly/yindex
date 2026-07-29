@@ -99,24 +99,42 @@ export function runCoarseWheelBurst(): {
     parallax: 0,
   })
   g = enterCooldown(g, wrapPageIndex(1, HARNESS_PAGE_COUNT), 100)
-  const blocked = stepGesture(
+  for (const t of [120, 180, 240, 279] as const) {
+    const blocked = stepGesture(
+      g,
+      { kind: "wheel", deltaPx: 80, now: t },
+      gestureOpts(false),
+    )
+    if (blocked.decision.kind === "commit") commits++
+    g = blocked.state
+    frames.push({
+      t,
+      progress: blocked.state.progress,
+      index: blocked.state.baseIndex,
+      phase: blocked.state.phase,
+      overshoot: false,
+      parallax: 0,
+    })
+  }
+  g = stepGesture(g, { kind: "tick", now: 280 }, gestureOpts(false)).state
+  const trailing = stepGesture(
     g,
-    { kind: "wheel", deltaPx: 500, now: 120 },
+    { kind: "wheel", deltaPx: HARNESS_SPAN * 1.2, now: 281 },
     gestureOpts(false),
   )
-  if (blocked.decision.kind === "commit") commits++
+  if (trailing.decision.kind === "commit") commits++
   frames.push({
-    t: 120,
-    progress: blocked.state.progress,
-    index: blocked.state.baseIndex,
-    phase: blocked.state.phase,
+    t: 281,
+    progress: trailing.state.progress,
+    index: trailing.state.baseIndex,
+    phase: trailing.state.phase,
     overshoot: false,
     parallax: 0,
   })
   logSection("coarse-wheel-burst", frames)
   return {
     commits,
-    cooldownBlocks: blocked.decision.kind === "none",
+    cooldownBlocks: trailing.decision.kind === "none" && commits === 1,
   }
 }
 
@@ -133,18 +151,39 @@ export function runOppositeInterrupt(): void {
     { kind: "begin_settle", targetProgress: 1, targetIndex: 1, now: 20 },
     gestureOpts(false),
   ).state
+  const same = stepGesture(
+    g,
+    { kind: "wheel", deltaPx: 30, now: 25 },
+    gestureOpts(false),
+  )
   const interrupted = stepGesture(
     g,
     { kind: "wheel", deltaPx: -40, now: 30 },
     gestureOpts(false),
   )
+  // Direction lock reverse probe: +20 then -25 must keep lockedDir +1
+  let lock = createIdleGesture(0, 0)
+  lock = stepGesture(
+    lock,
+    { kind: "wheel", deltaPx: 20, now: 10 },
+    gestureOpts(false),
+  ).state
+  lock = stepGesture(
+    lock,
+    { kind: "wheel", deltaPx: -25, now: 20 },
+    gestureOpts(false),
+  ).state
   logSection("opposite-interrupt", [
     {
       beforeProgress: before,
+      sameDirPhase: same.state.phase,
+      sameDirAbsorbed: same.state.phase === "settling",
       afterPhase: interrupted.state.phase,
       afterProgress: interrupted.state.progress,
       resumedTracking: interrupted.state.phase === "tracking",
       progressDecreased: interrupted.state.progress < before,
+      reverseLockDir: lock.lockedDir,
+      reverseKeepsForward: lock.lockedDir === 1,
     },
   ])
 }

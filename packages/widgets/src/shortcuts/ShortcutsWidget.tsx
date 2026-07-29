@@ -1,4 +1,5 @@
 import type { StyleTokens } from "@yindex/domain"
+import { parseSafeNavigationUrl } from "../navigation/safeNavigationUrl"
 import { LensSurface } from "../shell/surface"
 
 export type ShortcutItem = {
@@ -28,11 +29,23 @@ export function faviconForUrl(url: string): string | undefined {
   }
 }
 
+export function safeShortcutHref(url: string): string | null {
+  const safe = parseSafeNavigationUrl(url)
+  return safe.ok ? safe.value : null
+}
+
+export function openShortcutIfSafe(
+  url: string,
+  onOpen?: ((url: string) => void) | undefined,
+): string | null {
+  const href = safeShortcutHref(url)
+  if (!href) return null
+  if (onOpen) onOpen(href)
+  return href
+}
+
 export function ShortcutsWidget(props: ShortcutsWidgetProps) {
   const items = props.config.items
-
-  const lensInk = props.tokens.glass.adaptive.lens.foreground
-  const lensMuted = props.tokens.glass.adaptive.lens.mutedForeground
 
   return (
     <LensSurface
@@ -42,7 +55,12 @@ export function ShortcutsWidget(props: ShortcutsWidgetProps) {
       showTitle={props.showTitle}
     >
       {items.length === 0 ? (
-        <div style={{ color: lensMuted, fontSize: 13 }}>
+        <div
+          style={{
+            color: "var(--yindex-widget-muted-foreground)",
+            fontSize: 13,
+          }}
+        >
           暂无快捷方式。进入编辑态选中后可添加链接。
         </div>
       ) : (
@@ -61,29 +79,21 @@ export function ShortcutsWidget(props: ShortcutsWidgetProps) {
         >
           {items.map((item) => {
             const icon = item.favicon ?? faviconForUrl(item.url)
-            return (
-              <a
-                key={item.id}
-                href={item.url}
-                rel="noopener noreferrer"
-                title={item.title}
-                onClick={(e) => {
-                  if (props.onOpen) {
-                    e.preventDefault()
-                    props.onOpen(item.url)
-                  }
-                }}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 8,
-                  textDecoration: "none",
-                  color: lensInk,
-                  fontSize: 12,
-                  minWidth: 0,
-                }}
-              >
+            const href = safeShortcutHref(item.url)
+            const tileStyle = {
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 8,
+              textDecoration: "none",
+              color: "var(--yindex-widget-foreground)",
+              fontSize: 12,
+              minWidth: 0,
+              opacity: href ? 1 : 0.45,
+              pointerEvents: href ? "auto" : "none",
+            } as const
+            const body = (
+              <>
                 <span
                   style={{
                     width: 48,
@@ -127,11 +137,39 @@ export function ShortcutsWidget(props: ShortcutsWidgetProps) {
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
-                    opacity: 0.88,
                   }}
                 >
                   {item.title}
                 </span>
+              </>
+            )
+            if (!href) {
+              return (
+                <span
+                  key={item.id}
+                  title={`${item.title}（不安全的链接，已禁用）`}
+                  aria-disabled="true"
+                  style={tileStyle}
+                >
+                  {body}
+                </span>
+              )
+            }
+            return (
+              <a
+                key={item.id}
+                href={href}
+                rel="noopener noreferrer"
+                title={item.title}
+                onClick={(e) => {
+                  if (props.onOpen) {
+                    e.preventDefault()
+                    openShortcutIfSafe(item.url, props.onOpen)
+                  }
+                }}
+                style={tileStyle}
+              >
+                {body}
               </a>
             )
           })}

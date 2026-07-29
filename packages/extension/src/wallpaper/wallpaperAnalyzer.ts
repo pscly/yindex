@@ -2,7 +2,7 @@
  * Public Wallpaper analysis API for WallpaperStage and Settings consumers.
  * Image/video work is asynchronous so callers can paint before analysis settles.
  */
-import type { GenerativePreset } from "@yindex/domain"
+import type { GenerativePreset, Wallpaper } from "@yindex/domain"
 import { getGenerativePreset } from "./generativePresets"
 import {
   type PixelFrame,
@@ -24,6 +24,20 @@ import {
   createTemporalAnalysisFilter,
   createVideoWallpaperSampler,
 } from "./wallpaperVideoAnalysis"
+
+export type WallpaperAnalysisSource = "preset-descriptor" | "pixel-sample"
+
+/**
+ * Analysis routing is intentionally static. Generative Wallpaper uses a stable
+ * one-shot preset-descriptor proxy without live canvas/GPU readback or temporal
+ * hysteresis. Image and video Wallpaper sample pixels; only video owns temporal
+ * smoothing through its sampler.
+ */
+export const WALLPAPER_ANALYSIS_SOURCE_BY_KIND = {
+  generative: "preset-descriptor",
+  image: "pixel-sample",
+  video: "pixel-sample",
+} as const satisfies Record<Wallpaper["kind"], WallpaperAnalysisSource>
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value))
