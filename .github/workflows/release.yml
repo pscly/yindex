@@ -30,6 +30,9 @@ jobs:
       - name: Install
         run: bun install
 
+      - name: Install Chromium for extension E2E
+        run: bunx playwright install --with-deps chromium
+
       - name: Verify and pack
         run: |
           VERSION="${{ github.event.inputs.version }}"
