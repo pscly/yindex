@@ -8,16 +8,63 @@ const WALLPAPER_FIXTURE = resolve(
   "../fixtures/wallpapers/bright.png",
 )
 
-test("renders the default Home with a painted generative Wallpaper canvas", async ({
+test("renders the landing 此刻 with the bundled image Wallpaper", async ({
   extensionContext,
   extensionId,
 }) => {
-  // Given: a clean unpacked Extension profile with the default Home
+  // Given: a clean unpacked Extension profile; first launch seeds the bundled
+  // 蓝天白云 image into the local media store and assigns it to 此刻
+  const page = await extensionContext.newPage()
+
+  // When
+  await page.goto(`chrome-extension://${extensionId}/newtab.html`)
+  const stage = page
+    .locator('[data-wallpaper-kind="image"][data-wallpaper-active="true"]')
+    .first()
+
+  // Then: the bundled image actually decoded and painted
+  await expect(stage).toBeVisible({ timeout: 15_000 })
+  const img = stage.locator("img")
+  await expect(img).toHaveCount(1)
+  const decoded = await img.evaluate((element) =>
+    element instanceof HTMLImageElement
+      ? { width: element.naturalWidth, height: element.naturalHeight }
+      : null,
+  )
+  expect(decoded?.width).toBeGreaterThan(1)
+  expect(decoded?.height).toBeGreaterThan(1)
+
+  // And: the composited stage shows a painted, non-uniform Wallpaper
+  const bounds = await stage.boundingBox()
+  if (bounds === null) throw new Error("active Wallpaper stage has no bounds")
+  const screenshot = await page.screenshot({ clip: bounds })
+  const png = PNG.sync.read(screenshot)
+  const colors = new Set<number>()
+  for (let pixel = 0; pixel < png.width * png.height; pixel += 1) {
+    const offset = pixel * 4
+    const r = png.data[offset] ?? 0
+    const g = png.data[offset + 1] ?? 0
+    const b = png.data[offset + 2] ?? 0
+    const a = png.data[offset + 3] ?? 0
+    colors.add(((r << 24) | (g << 16) | (b << 8) | a) >>> 0)
+  }
+  expect(colors.size).toBeGreaterThan(16)
+})
+
+test("renders a generative scene Page with a painted Wallpaper canvas", async ({
+  extensionContext,
+  extensionId,
+}) => {
+  // Given: a clean unpacked Extension profile with the default Home;
+  // 灵感 (one Page Turn down from the landing) keeps a generative Wallpaper
   const page = await extensionContext.newPage()
   await page.addInitScript(installWallpaperCanvasInstrumentation)
 
   // When: the packaged new-tab entry renders its active Page
   await page.goto(`chrome-extension://${extensionId}/newtab.html`)
+  const dot = page.getByRole("button", { name: "灵感", exact: true })
+  await dot.click()
+  await expect(dot).toHaveAttribute("aria-current", "true", { timeout: 15_000 })
   const stage = page
     .locator('[data-wallpaper-kind="generative"][data-wallpaper-active="true"]')
     .first()
@@ -84,14 +131,17 @@ test("renders the default Home with a painted generative Wallpaper canvas", asyn
     ),
   ).toEqual([])
 
-  // And: every mounted stage shows exactly one of its two stacked surfaces
+  // And: every mounted generative stage shows exactly one of its two stacked surfaces
   const perStage = await page.evaluate(() =>
-    [...document.querySelectorAll("[data-wallpaper-kind]")].map((stage) => ({
-      surfaces: stage.querySelectorAll("canvas[data-wallpaper-surface]").length,
-      visible: stage.querySelectorAll(
-        'canvas[data-wallpaper-surface-visible="true"]',
-      ).length,
-    })),
+    [...document.querySelectorAll('[data-wallpaper-kind="generative"]')].map(
+      (stage) => ({
+        surfaces: stage.querySelectorAll("canvas[data-wallpaper-surface]")
+          .length,
+        visible: stage.querySelectorAll(
+          'canvas[data-wallpaper-surface-visible="true"]',
+        ).length,
+      }),
+    ),
   )
   for (const stage of perStage) {
     expect(stage.surfaces).toBe(2)

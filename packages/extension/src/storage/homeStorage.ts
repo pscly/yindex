@@ -4,6 +4,7 @@ import {
   serializeHomeDocument,
 } from "@yindex/domain"
 import { createDefaultHome } from "../default/createDefaultHome"
+import { seedBundledWallpaper } from "../default/seedBundledWallpaper"
 
 const HOME_KEY = "yindex.home"
 
@@ -68,10 +69,17 @@ async function writeRaw(value: unknown): Promise<void> {
   memory.set(HOME_KEY, value)
 }
 
+async function freshDefaultHome(): Promise<HomeDocument> {
+  const bundled = await seedBundledWallpaper()
+  return createDefaultHome(
+    bundled ? { momentWallpaper: bundled } : {},
+  )
+}
+
 export async function loadHomeDocument(): Promise<HomeDocument> {
   const raw = await readRaw()
   if (raw === undefined) {
-    const fresh = createDefaultHome()
+    const fresh = await freshDefaultHome()
     await saveHomeDocument(fresh)
     return fresh
   }
@@ -81,7 +89,7 @@ export async function loadHomeDocument(): Promise<HomeDocument> {
       "yindex: home migrate failed, resetting to default",
       migrated.error,
     )
-    const fresh = createDefaultHome()
+    const fresh = await freshDefaultHome()
     await saveHomeDocument(fresh)
     return fresh
   }
@@ -100,7 +108,7 @@ export async function resetHomeDocument(
     if (local) await local.remove(HOME_KEY)
     else memory.delete(HOME_KEY)
   }
-  const fresh = createDefaultHome()
+  const fresh = await freshDefaultHome()
   await saveHomeDocument(fresh)
   return fresh
 }

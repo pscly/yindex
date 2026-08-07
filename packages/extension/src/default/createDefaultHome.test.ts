@@ -5,6 +5,7 @@ import {
   type HomeDocument,
   type Page,
   type WidgetInstance,
+  createImageWallpaper,
   migrateHomeDocument,
   pageId,
   serializeHomeDocument,
@@ -198,6 +199,21 @@ describe("createDefaultHome v2 scenes", () => {
         )
       }
     }
+  })
+
+  test("applies a bundled image Wallpaper override to 此刻 when provided", () => {
+    // Given
+    const bundled = createImageWallpaper({ mediaRef: "media_demo", dim: 0 })
+    if (!bundled.ok) throw new Error("fixture wallpaper invalid")
+
+    // When
+    const home = createDefaultHome({ momentWallpaper: bundled.value })
+
+    // Then — 此刻 uses the bundled image; other pages keep their presets
+    const moment = home.pages[pageId("page_moment")]
+    const muse = home.pages[pageId("page_muse")]
+    expect(moment?.style.wallpaper).toEqual(bundled.value)
+    expect(muse?.style.wallpaper.kind).toBe("generative")
   })
 
   test("serialized default home round-trips through migrate", () => {

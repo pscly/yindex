@@ -47,10 +47,15 @@ function page(
  * Default Home v2.1 — three Living Glass scenes (DESIGN.md Layout + v2.1 修订):
  * 此刻 (landing) / 灵感 / 流光
  */
-export function createDefaultHome(): HomeDocument {
+export function createDefaultHome(
+  options: { readonly momentWallpaper?: PageStyle["wallpaper"] } = {},
+): HomeDocument {
+  const momentStyle: PageStyle = options.momentWallpaper
+    ? { ...MOMENT.pageStyle, wallpaper: options.momentWallpaper }
+    : MOMENT.pageStyle
   // 此刻: top date+weather capsule, upper-center search lens,
   // central shortcut icon grid as the protagonist (no bottom shelf)
-  const moment = page("page_moment", "此刻", "时", MOMENT.pageStyle, [
+  const moment = page("page_moment", "此刻", "时", momentStyle, [
     w(
       "builtin.weather",
       { x: 53, y: 6, w: 22, h: 12, z: 3 },
