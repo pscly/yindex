@@ -13,7 +13,8 @@
     "test:e2e": "playwright test",
     "verify": "bun run test && bun run typecheck && bun run lint && bun run build && bun run test:e2e && bun run pack",
     "pack": "bash scripts/pack-extension.sh",
-    "release:zip": "bash scripts/pack-extension.sh"
+    "release:zip": "bash scripts/pack-extension.sh",
+    "preview": "bun run build && bun scripts/capture-previews.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
