@@ -132,13 +132,14 @@ async function expectMomentComposition(
     0,
   )
   expect(search.x + search.width / 2).toBeCloseTo(viewport.width / 2, 0)
-  expect(
-    (search.y + search.height / 2) / viewport.height,
-  ).toBeGreaterThanOrEqual(0.34)
-  expect((search.y + search.height / 2) / viewport.height).toBeLessThan(0.5)
+  expect(search.y / viewport.height).toBeGreaterThanOrEqual(0.18)
+  expect((search.y + search.height) / viewport.height).toBeLessThanOrEqual(0.32)
+  expect(shortcuts.x + shortcuts.width / 2).toBeCloseTo(viewport.width / 2, 0)
+  expect(shortcuts.y / viewport.height).toBeGreaterThanOrEqual(0.36)
   expect(
     (shortcuts.y + shortcuts.height) / viewport.height,
-  ).toBeGreaterThanOrEqual(0.92)
+  ).toBeLessThanOrEqual(0.72)
+  expect(shortcuts.y).toBeGreaterThanOrEqual(search.y + search.height)
 }
 
 async function expectMuseComposition(
@@ -150,12 +151,12 @@ async function expectMuseComposition(
 
   expect((quote.y + quote.height / 2) / viewport.height).toBeLessThan(0.45)
   expect(quote.width / viewport.width).toBeLessThanOrEqual(0.56)
-  expect(
-    (hexagram.x + hexagram.width / 2) / viewport.width,
-  ).toBeGreaterThanOrEqual(0.72)
+  expect(quote.x + quote.width / 2).toBeCloseTo(viewport.width / 2, 0)
+  expect(hexagram.x + hexagram.width / 2).toBeCloseTo(viewport.width / 2, 0)
   expect((hexagram.y + hexagram.height / 2) / viewport.height).toBeGreaterThan(
-    0.68,
+    0.55,
   )
+  expect(hexagram.y).toBeGreaterThanOrEqual(quote.y + quote.height)
 }
 
 async function expectFlowComposition(

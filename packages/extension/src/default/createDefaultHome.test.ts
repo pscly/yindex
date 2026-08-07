@@ -35,6 +35,25 @@ function builtinWidget(page: Page, type: BuiltinWidgetTypeId): WidgetInstance {
   return widget
 }
 
+function pairs<T>(items: readonly T[]): Array<readonly [T, T]> {
+  const out: Array<readonly [T, T]> = []
+  for (let i = 0; i < items.length; i += 1) {
+    for (let j = i + 1; j < items.length; j += 1) {
+      out.push([items[i] as T, items[j] as T])
+    }
+  }
+  return out
+}
+
+function rectsOverlap(a: WidgetInstance, b: WidgetInstance): boolean {
+  return (
+    a.layout.x < b.layout.x + b.layout.w &&
+    b.layout.x < a.layout.x + a.layout.w &&
+    a.layout.y < b.layout.y + b.layout.h &&
+    b.layout.y < a.layout.y + a.layout.h
+  )
+}
+
 describe("createDefaultHome v2 scenes", () => {
   test("uses the exact 此刻 / 灵感 / 流光 sequence and lands on 此刻", () => {
     // Given / When
@@ -84,7 +103,7 @@ describe("createDefaultHome v2 scenes", () => {
     expect(builtinTypes(flow)).toEqual(["builtin.clock"])
   })
 
-  test("composes 此刻 as a centered top companion, upper-center search, and bottom shelf", () => {
+  test("composes 此刻 as a centered top capsule, upper-center search, and central icon grid", () => {
     // Given / When
     const moment = homePage(createDefaultHome(), "page_moment")
     const weather = builtinWidget(moment, "builtin.weather")
@@ -103,34 +122,49 @@ describe("createDefaultHome v2 scenes", () => {
       (clock.layout.x + weather.layout.x + weather.layout.w) / 2,
     ).toBeCloseTo(50, 5)
 
-    // Then: the search is a centered 44–56vw × 8–10vh capsule in the upper center
+    // Then: the search is a centered 44–56vw capsule in the 18–32vh upper band
     expect(search.layout.w).toBeGreaterThanOrEqual(44)
     expect(search.layout.w).toBeLessThanOrEqual(56)
     expect(search.layout.h).toBeGreaterThanOrEqual(8)
     expect(search.layout.h).toBeLessThanOrEqual(10)
     expect(search.layout.x + search.layout.w / 2).toBe(50)
-    expect(search.layout.y + search.layout.h / 2).toBeGreaterThanOrEqual(34)
-    expect(search.layout.y + search.layout.h / 2).toBeLessThan(50)
+    expect(search.layout.y).toBeGreaterThanOrEqual(18)
+    expect(search.layout.y + search.layout.h).toBeLessThanOrEqual(32)
 
-    // Then: the shortcuts shelf occupies the bottom band without touching the edge
-    expect(shortcuts.layout.h).toBeGreaterThanOrEqual(14)
-    expect(shortcuts.layout.h).toBeLessThanOrEqual(18)
+    // Then: the shortcut icon grid is the central protagonist, not a bottom shelf
     expect(shortcuts.layout.x + shortcuts.layout.w / 2).toBe(50)
-    expect(shortcuts.layout.y + shortcuts.layout.h).toBeGreaterThanOrEqual(92)
-    expect(shortcuts.layout.y + shortcuts.layout.h).toBeLessThanOrEqual(97)
+    expect(shortcuts.layout.w).toBeGreaterThanOrEqual(56)
+    expect(shortcuts.layout.y).toBeGreaterThanOrEqual(36)
+    expect(shortcuts.layout.y + shortcuts.layout.h).toBeLessThanOrEqual(72)
+    expect(shortcuts.layout.y + shortcuts.layout.h / 2).toBeGreaterThanOrEqual(
+      48,
+    )
+    expect(shortcuts.layout.y + shortcuts.layout.h / 2).toBeLessThanOrEqual(62)
+    expect(shortcuts.layout.h).toBeGreaterThanOrEqual(24)
+
+    // Then: no Widget overlaps another on the page
+    for (const [a, b] of pairs([weather, clock, search, shortcuts])) {
+      expect(rectsOverlap(a, b)).toBe(false)
+    }
   })
 
-  test("composes 灵感 with an upper quote and a lower-right hexagram", () => {
+  test("composes 灵感 with an optical upper-center quote and a balanced lower hexagram", () => {
     // Given / When
     const muse = homePage(createDefaultHome(), "page_muse")
     const quote = builtinWidget(muse, "builtin.quote")
     const hexagram = builtinWidget(muse, "builtin.hexagram")
 
-    // Then
+    // Then: the quote sits at the optical upper-center, line width ~34ch
+    expect(quote.layout.x + quote.layout.w / 2).toBe(50)
     expect(quote.layout.y + quote.layout.h / 2).toBeLessThan(45)
     expect(quote.layout.w).toBeLessThanOrEqual(56)
-    expect(hexagram.layout.x).toBeGreaterThanOrEqual(55)
-    expect(hexagram.layout.y + hexagram.layout.h / 2).toBeGreaterThan(68)
+
+    // Then: the hexagram lens balances it lower-center, no diagonal dead zone
+    expect(hexagram.layout.x + hexagram.layout.w / 2).toBe(50)
+    expect(hexagram.layout.y + hexagram.layout.h / 2).toBeGreaterThan(55)
+    expect(hexagram.layout.y).toBeGreaterThanOrEqual(
+      quote.layout.y + quote.layout.h,
+    )
   })
 
   test("composes 流光 as one oversized clock optically above center", () => {

@@ -12,10 +12,6 @@ import {
 } from "@yindex/domain"
 import { FLOW, MOMENT, MUSE } from "@yindex/style-packs"
 
-function fav(domain: string): string {
-  return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
-}
-
 function w(
   type: string,
   layout: { x: number; y: number; w: number; h: number; z: number },
@@ -48,11 +44,12 @@ function page(
 }
 
 /**
- * Default Home v2 — three Living Glass scenes (DESIGN.md Layout):
+ * Default Home v2.1 — three Living Glass scenes (DESIGN.md Layout + v2.1 修订):
  * 此刻 (landing) / 灵感 / 流光
  */
 export function createDefaultHome(): HomeDocument {
-  // 此刻: top weather, mid search, bottom shortcuts (+ clock as date companion)
+  // 此刻: top date+weather capsule, upper-center search lens,
+  // central shortcut icon grid as the protagonist (no bottom shelf)
   const moment = page("page_moment", "此刻", "时", MOMENT.pageStyle, [
     w(
       "builtin.weather",
@@ -72,75 +69,67 @@ export function createDefaultHome(): HomeDocument {
     ),
     w(
       "builtin.search",
-      { x: 22, y: 36, w: 56, h: 9, z: 1 },
+      { x: 25, y: 20, w: 50, h: 9, z: 1 },
       { engine: "google" },
     ),
     w(
       "builtin.shortcuts",
-      { x: 18, y: 78, w: 64, h: 16, z: 2 },
+      { x: 18, y: 38, w: 64, h: 32, z: 2 },
       {
         items: [
           {
             id: "s1",
             title: "GitHub",
             url: "https://github.com",
-            favicon: fav("github.com"),
           },
           {
             id: "s2",
             title: "文档",
             url: "https://developer.mozilla.org",
-            favicon: fav("developer.mozilla.org"),
           },
           {
             id: "s3",
             title: "邮箱",
             url: "https://mail.google.com",
-            favicon: fav("mail.google.com"),
           },
           {
             id: "s4",
             title: "云盘",
             url: "https://drive.google.com",
-            favicon: fav("drive.google.com"),
           },
           {
             id: "s5",
             title: "日历",
             url: "https://calendar.google.com",
-            favicon: fav("calendar.google.com"),
           },
           {
             id: "s6",
             title: "翻译",
             url: "https://translate.google.com",
-            favicon: fav("translate.google.com"),
           },
           {
             id: "s7",
             title: "笔记",
             url: "https://www.notion.so",
-            favicon: fav("notion.so"),
           },
           {
             id: "s8",
             title: "B站",
             url: "https://www.bilibili.com",
-            favicon: fav("bilibili.com"),
           },
         ],
       },
     ),
   ])
 
-  // 灵感: quote + hexagram
+  // 灵感: quote at optical upper-center, hexagram lens balanced lower-center
   const muse = page("page_muse", "灵感", "灵", MUSE.pageStyle, [
     w(
       "builtin.quote",
-      { x: 14, y: 14, w: 54, h: 30, z: 1 },
+      { x: 28, y: 12, w: 44, h: 26, z: 1 },
       { source: "hitokoto" },
     ),
-    w("builtin.hexagram", { x: 60, y: 54, w: 34, h: 39, z: 2 }),
+    w("builtin.hexagram", { x: 30, y: 52, w: 40, h: 40, z: 2 }),
   ])
 
   // 流光: oversized clock only
