@@ -35,23 +35,25 @@ const DARK_SCRIM_L = 0.08
 const LIGHT_SCRIM_L = 0.98
 
 /**
- * Lens: deep tint + light text on bright Wallpaper; light tint + dark text on dark.
- * Tint L is inverted vs content-direct so glass can be a deep shell under light ink.
+ * Lens: glass polarity follows the Wallpaper — bright Wallpaper gets light
+ * glass + dark ink, dark Wallpaper gets dark glass + light ink. Same-polarity
+ * tint keeps the field close to the target contrast direction, so the safety
+ * scrim stays thin and the glass stays translucent (iOS-true liquid glass).
  */
 export const LENS_CANDIDATES: readonly PolarityCandidate[] = [
-  {
-    polarity: "light-on-dark",
-    fgL: LIGHT_FG_L,
-    mutedL: 0.9,
-    tintL: DARK_TINT_L,
-    scrimL: DARK_SCRIM_L,
-  },
   {
     polarity: "dark-on-light",
     fgL: DARK_FG_L,
     mutedL: 0.22,
     tintL: LIGHT_TINT_L,
     scrimL: LIGHT_SCRIM_L,
+  },
+  {
+    polarity: "light-on-dark",
+    fgL: LIGHT_FG_L,
+    mutedL: 0.9,
+    tintL: DARK_TINT_L,
+    scrimL: DARK_SCRIM_L,
   },
 ] as const
 
@@ -87,8 +89,8 @@ export function preferredPolarity(
   const bright = wallpaperL >= threshold
   switch (kind) {
     case "lens":
-      // DESIGN Adaptive Glass: bright → deep tint + light text
-      return bright ? "light-on-dark" : "dark-on-light"
+      // Glass follows the Wallpaper: bright → light glass + dark ink
+      return bright ? "dark-on-light" : "light-on-dark"
     case "content-direct":
       // DESIGN Content-direct: bright → dark text
       return bright ? "dark-on-light" : "light-on-dark"

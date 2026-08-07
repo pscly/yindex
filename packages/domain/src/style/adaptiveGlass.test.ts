@@ -196,7 +196,7 @@ describe("Surface-split Adaptive Glass (lens vs content-direct)", () => {
     expect(glass.blurPx).toBe(14)
   })
 
-  test("bright wallpaper: contentDirect dark text; lens deep tint + light text", () => {
+  test("bright wallpaper: contentDirect dark text; lens light glass + dark text, stays translucent", () => {
     // Given — bright flat field L=0.88
     const analysis = mustInput({ luminance: 0.88, chroma: 0.08, detail: 0.1 })
     // When
@@ -213,18 +213,15 @@ describe("Surface-split Adaptive Glass (lens vs content-direct)", () => {
     )
     assertTextFloors(glass.adaptive.contentDirect)
 
-    // Then — lens: light text over deep tint shell (DESIGN Adaptive Glass)
-    expect(glass.adaptive.lens.polarity).toBe("light-on-dark")
-    expect(glass.adaptive.lens.foregroundL).toBeGreaterThan(0.65)
+    // Then — lens: glass follows the wallpaper (light glass, dark ink)
+    expect(glass.adaptive.lens.polarity).toBe("dark-on-light")
+    expect(glass.adaptive.lens.foregroundL).toBeLessThan(0.35)
     expect(glass.adaptive.lens.tintOpacity).toBeGreaterThanOrEqual(0.12)
-    // Deep tint: tint L pulls field darker than wallpaper
-    expect(glass.adaptive.lens.effectiveBackgroundL).toBeLessThan(0.88)
+    // Translucency contract: the safety scrim must stay thin on a bright field
+    // so blur + tint read as real glass, not an opaque panel.
+    expect(glass.adaptive.lens.scrimOpacity).toBeLessThan(0.35)
+    expect(glass.adaptive.lens.effectiveBackgroundL).toBeGreaterThan(0.5)
     assertTextFloors(glass.adaptive.lens)
-
-    // Branches disagree on polarity — single-global polarity cannot satisfy both
-    expect(glass.adaptive.lens.polarity).not.toBe(
-      glass.adaptive.contentDirect.polarity,
-    )
 
     // CSS tokens present for WidgetSurface variants
     expect(glass.adaptive.lens.foreground.startsWith("oklch(")).toBe(true)
@@ -238,7 +235,7 @@ describe("Surface-split Adaptive Glass (lens vs content-direct)", () => {
     expect(glass.adaptive.tint).toBe(glass.adaptive.lens.tint)
   })
 
-  test("dark wallpaper: contentDirect light text; lens light tint + dark text", () => {
+  test("dark wallpaper: contentDirect light text; lens dark glass + light text, stays translucent", () => {
     // Given
     const analysis = mustInput({ luminance: 0.14, chroma: 0.05, detail: 0.12 })
     // When
@@ -252,12 +249,11 @@ describe("Surface-split Adaptive Glass (lens vs content-direct)", () => {
     expect(glass.adaptive.contentDirect.foregroundL).toBeGreaterThan(0.65)
     assertTextFloors(glass.adaptive.contentDirect)
 
-    expect(glass.adaptive.lens.polarity).toBe("dark-on-light")
-    expect(glass.adaptive.lens.foregroundL).toBeLessThan(0.35)
+    expect(glass.adaptive.lens.polarity).toBe("light-on-dark")
+    expect(glass.adaptive.lens.foregroundL).toBeGreaterThan(0.65)
+    // Translucency contract on dark fields too
+    expect(glass.adaptive.lens.scrimOpacity).toBeLessThan(0.35)
     assertTextFloors(glass.adaptive.lens)
-    expect(glass.adaptive.lens.polarity).not.toBe(
-      glass.adaptive.contentDirect.polarity,
-    )
   })
 
   test("muted foreground meets 4.5:1 on both branches (not decorative-only)", () => {

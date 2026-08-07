@@ -107,7 +107,7 @@ describe("PageCanvas Wallpaper analysis integration", () => {
     )
   })
 
-  test("Given bright and dark fixtures, When Page tokens resolve, Then lens and content-direct polarity flip independently", () => {
+  test("Given bright and dark fixtures, When Page tokens resolve, Then lens glass polarity follows the Wallpaper", () => {
     // Given
     const { page } = defaultPageFixture()
 
@@ -123,10 +123,10 @@ describe("PageCanvas Wallpaper analysis integration", () => {
       detail: 0.12,
     })
 
-    // Then
-    expect(bright.glass.adaptive.lens.polarity).toBe("light-on-dark")
+    // Then — light glass + dark ink on bright; dark glass + light ink on dark
+    expect(bright.glass.adaptive.lens.polarity).toBe("dark-on-light")
     expect(bright.glass.adaptive.contentDirect.polarity).toBe("dark-on-light")
-    expect(dark.glass.adaptive.lens.polarity).toBe("dark-on-light")
+    expect(dark.glass.adaptive.lens.polarity).toBe("light-on-dark")
     expect(dark.glass.adaptive.contentDirect.polarity).toBe("light-on-dark")
   })
 
