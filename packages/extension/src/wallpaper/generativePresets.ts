@@ -25,13 +25,21 @@ export type GenerativePresetDescriptor = {
   readonly chroma: number
   /** Extra aurora band hues (流光 only); empty otherwise */
   readonly auroraHues: readonly number[]
-  /** Precomputed field stop colors in linear-ish sRGB 0–1 */
+  /**
+   * Field stops in linear-ish sRGB 0–1, ordered by light role:
+   * [0] top light stop (brightest), [1] large soft blob A,
+   * [2] bottom deep stop (darkest), [3] large soft blob B.
+   */
   readonly colors: readonly Rgb01[]
-  /** Aurora band colors when present */
+  /** Aurora band colors when present (流光) */
   readonly auroraColors: readonly Rgb01[]
+  /** Warm ember glint colors (暖墨 朱砂/金); empty otherwise */
+  readonly glintColors: readonly Rgb01[]
+  /** Film grain amplitude (very light, 0–0.05) */
+  readonly grain: number
   /** Relative flow speed (shader u_speed scale) */
   readonly speed: number
-  /** Spatial noise scale */
+  /** Large-blob spatial scale (low frequency = soft, premium fields) */
   readonly noiseScale: number
 }
 
@@ -39,6 +47,8 @@ export type GenerativePresetDescriptor = {
 export type PresetUniformPack = {
   readonly colors: readonly Rgb01[]
   readonly aurora: readonly Rgb01[]
+  readonly glints: readonly Rgb01[]
+  readonly grain: number
   readonly speed: number
   readonly noiseScale: number
   readonly hueStart: number
@@ -78,10 +88,10 @@ function fieldColors(
 ): readonly Rgb01[] {
   const midH = (hueStart + hueEnd) / 2
   return [
-    oklchToRgb(Lmax, C * 0.55, hueStart),
-    oklchToRgb((Lmin + Lmax) / 2, C, midH),
-    oklchToRgb(Lmin, C * 0.7, hueEnd),
-    oklchToRgb(Lmax * 0.92, C * 0.4, hueEnd - 10),
+    oklchToRgb(Lmax, C * 0.6, hueStart),
+    oklchToRgb(Lmin + (Lmax - Lmin) * 0.62, C, midH),
+    oklchToRgb(Lmin, C * 0.75, hueEnd),
+    oklchToRgb(Lmax * 0.92, C * 0.5, hueEnd - 10),
   ]
 }
 
@@ -98,6 +108,8 @@ function buildMoment(): GenerativePresetDescriptor {
     auroraHues: [],
     colors: fieldColors(210, 260, 0.55, 0.88, 0.06),
     auroraColors: [],
+    glintColors: [],
+    grain: 0.022,
     speed: 0.35,
     noiseScale: 1.1,
   }
@@ -112,12 +124,14 @@ function buildMuse(): GenerativePresetDescriptor {
     hueEnd: 60,
     lightnessMin: 0.16,
     lightnessMax: 0.34,
-    chroma: 0.05,
+    chroma: 0.06,
     auroraHues: [],
-    colors: fieldColors(30, 60, 0.16, 0.34, 0.05),
+    colors: fieldColors(30, 60, 0.16, 0.34, 0.06),
     auroraColors: [],
+    glintColors: [oklchToRgb(0.55, 0.18, 28), oklchToRgb(0.72, 0.13, 85)],
+    grain: 0.03,
     speed: 0.28,
-    noiseScale: 1.25,
+    noiseScale: 1.2,
   }
 }
 
@@ -129,14 +143,16 @@ function buildFlow(): GenerativePresetDescriptor {
     label: "流光 · 深海夜光",
     hueStart: 240,
     hueEnd: 290,
-    lightnessMin: 0.1,
-    lightnessMax: 0.26,
-    chroma: 0.07,
+    lightnessMin: 0.14,
+    lightnessMax: 0.3,
+    chroma: 0.08,
     auroraHues,
-    colors: fieldColors(240, 290, 0.1, 0.26, 0.07),
-    auroraColors: [oklchToRgb(0.42, 0.1, 180), oklchToRgb(0.38, 0.12, 320)],
+    colors: fieldColors(240, 290, 0.14, 0.3, 0.08),
+    auroraColors: [oklchToRgb(0.62, 0.13, 180), oklchToRgb(0.55, 0.16, 320)],
+    glintColors: [],
+    grain: 0.026,
     speed: 0.42,
-    noiseScale: 1.4,
+    noiseScale: 1.3,
   }
 }
 
@@ -170,6 +186,8 @@ export function presetUniformPack(
   return {
     colors: desc.colors,
     aurora: desc.auroraColors,
+    glints: desc.glintColors,
+    grain: desc.grain,
     speed: desc.speed,
     noiseScale: desc.noiseScale,
     hueStart: desc.hueStart,

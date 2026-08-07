@@ -2,6 +2,14 @@
 export type GenerativeCanvas2D = {
   fillStyle: string | CanvasGradient | CanvasPattern
   fillRect(x: number, y: number, w: number, h: number): void
+  createLinearGradient(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+  ): {
+    addColorStop(offset: number, color: string): void
+  }
   createRadialGradient(
     x0: number,
     y0: number,

@@ -96,12 +96,21 @@ export class Fake2DContext implements GenerativeCanvas2D {
   fillStyle: string | CanvasGradient | CanvasPattern = ""
   fillRectCalls = 0
   drawImageCalls = 0
+  linearGradientCalls = 0
+  radialGradientCalls = 0
   fillRect(): void {
     this.fillRectCalls += 1
+  }
+  createLinearGradient(): {
+    addColorStop(offset: number, color: string): void
+  } {
+    this.linearGradientCalls += 1
+    return { addColorStop() {} }
   }
   createRadialGradient(): {
     addColorStop(offset: number, color: string): void
   } {
+    this.radialGradientCalls += 1
     return { addColorStop() {} }
   }
   drawImage(
@@ -130,11 +139,15 @@ export class FakeGLContext implements GenerativeGLContext {
   readonly TRIANGLES = 0x0004
   readonly FLOAT = 0x1406
   drawArraysCalls = 0
+  readonly shaderSources: string[] = []
+  readonly uniformNames: string[] = []
   constructor(private readonly loseContextCounter: { value: number }) {}
   createShader(): object {
     return {}
   }
-  shaderSource(): void {}
+  shaderSource(_shader: object, source: string): void {
+    this.shaderSources.push(source)
+  }
   compileShader(): void {}
   getShaderParameter(): unknown {
     return true
@@ -158,7 +171,8 @@ export class FakeGLContext implements GenerativeGLContext {
   getAttribLocation(): number {
     return 0
   }
-  getUniformLocation(): object {
+  getUniformLocation(_program: object, name: string): object {
+    this.uniformNames.push(name)
     return {}
   }
   useProgram(): void {}

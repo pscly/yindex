@@ -2,9 +2,14 @@ import { describe, expect, test } from "bun:test"
 import { GENERATIVE_PRESETS, type GenerativePreset } from "@yindex/domain"
 import {
   GENERATIVE_PRESET_MAP,
+  type Rgb01,
   getGenerativePreset,
   presetUniformPack,
 } from "./generativePresets"
+
+function luminance(c: Rgb01): number {
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+}
 
 describe("generative preset descriptors", () => {
   test("map is exhaustive over Domain GenerativePreset keys", () => {
@@ -66,6 +71,70 @@ describe("generative preset descriptors", () => {
     const id: GenerativePreset = "flow"
     // When / Then
     expect(getGenerativePreset(id)).toBe(GENERATIVE_PRESET_MAP[id])
+  })
+
+  test("every field has a directional light: top stop brighter than deep base stop", () => {
+    // Given / When / Then — colors[0] is the top light stop, colors[2] the base
+    for (const id of GENERATIVE_PRESETS) {
+      const d = getGenerativePreset(id)
+      expect(luminance(d.colors[0] ?? [0, 0, 0])).toBeGreaterThan(
+        luminance(d.colors[2] ?? [0, 0, 0]),
+      )
+    }
+  })
+
+  test("moment skylight spans a wide bright-to-deep lightness range", () => {
+    // Given the moment descriptor
+    const moment = getGenerativePreset("moment")
+    // When / Then — airy top, discernibly deeper bottom (not flat noise)
+    const top = luminance(moment.colors[0] ?? [0, 0, 0])
+    const bottom = luminance(moment.colors[2] ?? [0, 0, 0])
+    expect(top).toBeGreaterThan(0.5)
+    expect(top - bottom).toBeGreaterThan(0.3)
+  })
+
+  test("muse carries perceptible warm cinnabar/gold glints over the deep ink base", () => {
+    // Given the muse descriptor
+    const muse = getGenerativePreset("muse")
+    // Then — two warm glints (r > b), brighter than the deep base stop
+    expect(muse.glintColors).toHaveLength(2)
+    const base = luminance(muse.colors[2] ?? [0, 0, 0])
+    for (const glint of muse.glintColors) {
+      expect(glint[0]).toBeGreaterThan(glint[2])
+      expect(luminance(glint)).toBeGreaterThan(base)
+    }
+    expect(muse.auroraColors).toHaveLength(0)
+  })
+
+  test("flow aurora bands are brighter than the deep sea base so ribbons stay visible", () => {
+    // Given the flow descriptor
+    const flow = getGenerativePreset("flow")
+    // Then — each band outshines the brightest base stop (no near-black field)
+    const brightestBase = Math.max(...flow.colors.map(luminance))
+    for (const band of flow.auroraColors) {
+      expect(luminance(band)).toBeGreaterThan(brightestBase)
+    }
+    expect(flow.glintColors).toHaveLength(0)
+  })
+
+  test("grain stays a very light film layer on every preset", () => {
+    // Given / When / Then
+    for (const id of GENERATIVE_PRESETS) {
+      const grain = getGenerativePreset(id).grain
+      expect(grain).toBeGreaterThan(0)
+      expect(grain).toBeLessThanOrEqual(0.05)
+    }
+  })
+
+  test("uniform pack carries glints and grain for the backends", () => {
+    // Given / When
+    for (const id of GENERATIVE_PRESETS) {
+      const d = getGenerativePreset(id)
+      const pack = presetUniformPack(d)
+      // Then
+      expect(pack.glints).toEqual(d.glintColors)
+      expect(pack.grain).toBe(d.grain)
+    }
   })
 
   test("production modules import domain via @yindex/domain package boundary", async () => {
