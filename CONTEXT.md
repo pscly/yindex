@@ -111,3 +111,11 @@ _Avoid_: 应用商店（若未做在线市场则不要用 Store 作默认名）
 **Missing Widget（缺失小组件）**:
 某个 Widget Instance 引用的 Package 当前未安装时显示的占位状态；保留原实例配置与 Layout，重装同一 Package 后可恢复。
 _Avoid_: 已删除 Widget、损坏数据（Package 缺失不等于实例数据丢失）
+
+**Shortcut（快捷方式）**:
+Shortcuts Widget 网格中的一个网站入口：标题、URL 与图标；点击导航到目标站点。
+_Avoid_: 书签（与浏览器书签体系混淆）、应用、App 图标
+
+**Shortcut Folder（快捷方式文件夹）**:
+Shortcuts Widget 网格中与普通 Shortcut 同格并列的分组单元：内部只装 Shortcut，只有一层，不允许文件夹套文件夹；占用网格一格，点开就地展开其成员。
+_Avoid_: 目录、分组（过泛）、多级嵌套文件夹
