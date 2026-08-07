@@ -71,17 +71,15 @@ export function commitSearchNavigation(
 
 export function SearchWidget(props: SearchWidgetProps) {
   const [q, setQ] = useState("")
-  const canSubmit = q.trim().length > 0
   const engineLabel = ENGINE_LABEL[props.config.engine] ?? "搜索"
   const field: CSSProperties = {
     flex: 1,
     height: "100%",
     minHeight: 40,
-    borderRadius: 999,
-    border: "1px solid color-mix(in oklch, white 12%, transparent)",
+    border: "none",
     background: "transparent",
     color: "var(--yindex-widget-foreground)",
-    padding: "0 16px",
+    padding: 0,
     fontSize: 15,
     outline: "none",
   }
@@ -100,7 +98,12 @@ export function SearchWidget(props: SearchWidgetProps) {
       title={`搜索 · ${engineLabel}`}
       showTitle={props.showTitle}
     >
-      <style>{`input[data-yindex-search-input="true"]::placeholder { color: var(--yindex-widget-muted-foreground); opacity: 1; }`}</style>
+      <style>{`
+        input[data-yindex-search-input="true"]::placeholder { color: var(--yindex-widget-muted-foreground); opacity: 1; }
+        [data-widget-surface="lens"]:has(input[data-yindex-search-input="true"]:focus-visible) {
+          box-shadow: inset 0 1px 0 color-mix(in oklch, white 45%, transparent), inset 0 0 0 1px color-mix(in oklch, white 18%, transparent), 0 16px 36px color-mix(in oklch, black 22%, transparent), 0 0 0 3px color-mix(in oklch, var(--yindex-widget-foreground) 22%, transparent);
+        }
+      `}</style>
       <form
         onSubmit={onSubmit}
         style={{
@@ -108,40 +111,42 @@ export function SearchWidget(props: SearchWidgetProps) {
           display: "flex",
           alignItems: "center",
           gap: 10,
+          padding: "0 6px 0 16px",
         }}
       >
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          style={{ flex: "0 0 auto", color: "var(--yindex-widget-muted-foreground)" }}
+        >
+          <circle
+            cx="7"
+            cy="7"
+            r="5.2"
+            stroke="currentColor"
+            strokeWidth="1.6"
+          />
+          <path
+            d="M11 11l3.2 3.2"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+        </svg>
         <input
           data-yindex-search-input="true"
+          type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="搜索或输入关键词…"
+          placeholder={`用 ${engineLabel} 搜索…`}
           aria-label="搜索"
           autoComplete="off"
           spellCheck={false}
           style={field}
         />
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          style={{
-            height: "100%",
-            minHeight: 40,
-            minWidth: 72,
-            padding: "0 18px",
-            borderRadius: 999,
-            border:
-              "1px solid color-mix(in oklch, var(--yindex-widget-foreground) 24%, transparent)",
-            background: "transparent",
-            color: canSubmit
-              ? "var(--yindex-widget-foreground)"
-              : "var(--yindex-widget-muted-foreground)",
-            fontWeight: 600,
-            cursor: canSubmit ? "pointer" : "not-allowed",
-            letterSpacing: "0.02em",
-          }}
-        >
-          搜索
-        </button>
       </form>
     </LensSurface>
   )

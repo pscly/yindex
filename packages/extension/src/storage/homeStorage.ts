@@ -1,5 +1,6 @@
 import {
   type HomeDocument,
+  type Wallpaper,
   migrateHomeDocument,
   serializeHomeDocument,
 } from "@yindex/domain"
@@ -7,6 +8,7 @@ import { createDefaultHome } from "../default/createDefaultHome"
 import { seedBundledWallpaper } from "../default/seedBundledWallpaper"
 
 const HOME_KEY = "yindex.home"
+const BUNDLED_FLAG_KEY = "yindex.bundledWallpaperApplied"
 
 type StorageArea = {
   get: (
@@ -76,12 +78,78 @@ async function freshDefaultHome(): Promise<HomeDocument> {
   )
 }
 
+async function readBundledFlag(): Promise<boolean> {
+  const local = getLocal()
+  if (local) {
+    const result = await local.get(BUNDLED_FLAG_KEY)
+    return result[BUNDLED_FLAG_KEY] === true
+  }
+  return memory.get(BUNDLED_FLAG_KEY) === true
+}
+
+async function writeBundledFlag(): Promise<void> {
+  const local = getLocal()
+  if (local) {
+    await local.set({ [BUNDLED_FLAG_KEY]: true })
+    return
+  }
+  memory.set(BUNDLED_FLAG_KEY, true)
+}
+
+export type BundledWallpaperMigrationDependencies = {
+  readonly seed?: () => Promise<Wallpaper | null>
+  readonly readFlag?: () => Promise<boolean>
+  readonly writeFlag?: () => Promise<void>
+  readonly save?: (doc: HomeDocument) => Promise<void>
+}
+
+/**
+ * One-time migration: existing installs keep a stored Home, so the bundled
+ * 蓝天白云 Wallpaper never reaches them through the first-launch path. On the
+ * first load after upgrade, point the landing Page at the bundled image —
+ * unless the user already chose a media Wallpaper — then never touch it again.
+ */
+export async function applyBundledWallpaperOnce(
+  doc: HomeDocument,
+  dependencies: BundledWallpaperMigrationDependencies = {},
+): Promise<HomeDocument> {
+  const readFlag = dependencies.readFlag ?? readBundledFlag
+  const writeFlag = dependencies.writeFlag ?? writeBundledFlag
+  const save = dependencies.save ?? saveHomeDocument
+  if (await readFlag()) return doc
+
+  const landingId = doc.sequence.pageIds[0]
+  const landing = landingId === undefined ? undefined : doc.pages[landingId]
+  if (landing && landing.style.wallpaper.kind !== "generative") {
+    await writeFlag()
+    return doc
+  }
+
+  const seed = dependencies.seed ?? seedBundledWallpaper
+  const wallpaper = await seed()
+  if (!wallpaper || !landing) return doc
+
+  const next: HomeDocument = {
+    ...doc,
+    pages: {
+      ...doc.pages,
+      [landing.id]: {
+        ...landing,
+        style: { ...landing.style, wallpaper },
+      },
+    },
+  }
+  await save(next)
+  await writeFlag()
+  return next
+}
+
 export async function loadHomeDocument(): Promise<HomeDocument> {
   const raw = await readRaw()
   if (raw === undefined) {
     const fresh = await freshDefaultHome()
     await saveHomeDocument(fresh)
-    return fresh
+    return await applyBundledWallpaperOnce(fresh)
   }
   const migrated = migrateHomeDocument(raw)
   if (!migrated.ok) {
@@ -91,9 +159,9 @@ export async function loadHomeDocument(): Promise<HomeDocument> {
     )
     const fresh = await freshDefaultHome()
     await saveHomeDocument(fresh)
-    return fresh
+    return await applyBundledWallpaperOnce(fresh)
   }
-  return migrated.value
+  return await applyBundledWallpaperOnce(migrated.value)
 }
 
 export async function saveHomeDocument(doc: HomeDocument): Promise<void> {
@@ -110,5 +178,5 @@ export async function resetHomeDocument(
   }
   const fresh = await freshDefaultHome()
   await saveHomeDocument(fresh)
-  return fresh
+  return await applyBundledWallpaperOnce(fresh)
 }

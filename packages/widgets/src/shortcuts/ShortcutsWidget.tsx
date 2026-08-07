@@ -175,14 +175,29 @@ function ShortcutIcon(props: {
     )
   }
   return (
-    <img
-      src={icon}
-      alt=""
-      width={Math.round(props.size * 0.55)}
-      height={Math.round(props.size * 0.55)}
-      style={{ objectFit: "contain", position: "relative", zIndex: 1 }}
-      onError={() => setFailed(true)}
-    />
+    <span
+      style={{
+        width: Math.round(props.size * 0.72),
+        height: Math.round(props.size * 0.72),
+        borderRadius: Math.round(props.size * 0.2),
+        background: "color-mix(in oklch, white 94%, transparent)",
+        boxShadow:
+          "inset 0 0 0 1px color-mix(in oklch, black 5%, transparent), 0 1px 3px color-mix(in oklch, black 14%, transparent)",
+        display: "grid",
+        placeItems: "center",
+        position: "relative",
+        zIndex: 1,
+      }}
+    >
+      <img
+        src={icon}
+        alt=""
+        width={Math.round(props.size * 0.44)}
+        height={Math.round(props.size * 0.44)}
+        style={{ objectFit: "contain" }}
+        onError={() => setFailed(true)}
+      />
+    </span>
   )
 }
 
