@@ -173,7 +173,7 @@ describe("OS reduced-motion propagation across consumers", () => {
 })
 
 describe("extension version single source of truth", () => {
-  test("Given package and manifest contracts, When Settings About renders, Then UI version equals EXTENSION_VERSION and 0.2.0", () => {
+  test("Given package and manifest contracts, When Settings About renders, Then UI version equals EXTENSION_VERSION", () => {
     const packageJson = JSON.parse(
       readFileSync(resolve(import.meta.dir, "../../package.json"), "utf8"),
     ) as { readonly version?: unknown }
@@ -188,8 +188,8 @@ describe("extension version single source of truth", () => {
     const manifestVersion =
       typeof manifest.version === "string" ? manifest.version : ""
 
-    expect(packageVersion).toBe("0.2.0")
-    expect(manifestVersion).toBe("0.2.0")
+    expect(packageVersion.length).toBeGreaterThan(0)
+    expect(manifestVersion).toBe(packageVersion)
     expect(EXTENSION_VERSION).toBe(packageVersion)
     expect(EXTENSION_VERSION).toBe(manifestVersion)
 

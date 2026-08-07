@@ -1,8 +1,11 @@
 {
   "name": "yindex",
   "private": true,
-  "version": "0.2.0",
-  "workspaces": ["packages/*", "packages/examples/*"],
+  "version": "0.3.0",
+  "workspaces": [
+    "packages/*",
+    "packages/examples/*"
+  ],
   "scripts": {
     "dev": "bun run --filter @yindex/extension dev",
     "build": "bun run --filter @yindex/extension build",

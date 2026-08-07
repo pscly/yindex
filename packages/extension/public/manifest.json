@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "yindex",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "可上下循环翻页的可组装新标签页",
   "chrome_url_overrides": {
     "newtab": "newtab.html"

@@ -28,7 +28,7 @@ test("Given open Settings, When the modal renders, Then its sheet exposes the re
   expect(markup).toContain('data-settings-initial-focus="true"')
 })
 
-test("Given open Settings About, When the panel renders, Then it shows EXTENSION_VERSION from package.json 0.2.0", () => {
+test("Given open Settings About, When the panel renders, Then it shows EXTENSION_VERSION from package.json", () => {
   // Given: single UI source must track package.json, not a duplicated literal
   const packageVersion = (
     JSON.parse(
@@ -50,8 +50,7 @@ test("Given open Settings About, When the panel renders, Then it shows EXTENSION
   )
 
   // Then
-  expect(packageVersion).toBe("0.2.0")
+  expect(packageVersion.length).toBeGreaterThan(0)
   expect(EXTENSION_VERSION).toBe(packageVersion)
   expect(markup).toContain(`yindex v${EXTENSION_VERSION}`)
-  expect(markup).not.toContain("yindex v0.1.3")
 })
