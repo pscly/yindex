@@ -40,7 +40,7 @@ function parseCspDirectives(
 }
 
 describe("Task 6 release contract", () => {
-  test("keeps existing MV3 permissions and grants unlimited local storage", () => {
+  test("keeps existing MV3 permissions and grants unlimited local storage plus local favicons", () => {
     // Given: the installable Extension manifest
     const manifest = manifestSchema.parse(
       JSON.parse(readText("packages/extension/public/manifest.json")),
@@ -53,6 +53,7 @@ describe("Task 6 release contract", () => {
       "alarms",
       "notifications",
       "unlimitedStorage",
+      "favicon",
     ]
 
     // Then: Task 6 adds storage capacity without dropping the existing grants
@@ -76,6 +77,7 @@ describe("Task 6 release contract", () => {
     expect(directives["worker-src"]).toEqual(["'self'"])
     expect(directives["object-src"]).toEqual(["'none'"])
     expect(csp).toMatch(/img-src[^;]*'self'[^;]*blob:/)
+    expect(csp).not.toMatch(/img-src[^;]*https?:/)
     expect(csp).toMatch(/media-src[^;]*'self'[^;]*blob:/)
     expect(csp).toMatch(/frame-src[^;]*'self'[^;]*blob:/)
     expect(csp).not.toMatch(

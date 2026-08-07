@@ -15,15 +15,15 @@
     "bookmarks",
     "alarms",
     "notifications",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "favicon"
   ],
   "host_permissions": [
     "https://api.open-meteo.com/*",
-    "https://v1.hitokoto.cn/*",
-    "https://www.google.com/*"
+    "https://v1.hitokoto.cn/*"
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; worker-src 'self'; object-src 'none'; font-src 'self'; connect-src 'self' https://api.open-meteo.com https://v1.hitokoto.cn; img-src 'self' blob: https://www.google.com https://*.gstatic.com; media-src 'self' blob:; frame-src 'self' blob:; require-trusted-types-for 'script'; trusted-types yindex-packaged-workers;"
+    "extension_pages": "script-src 'self'; worker-src 'self'; object-src 'none'; font-src 'self'; connect-src 'self' https://api.open-meteo.com https://v1.hitokoto.cn; img-src 'self' blob:; media-src 'self' blob:; frame-src 'self' blob:; require-trusted-types-for 'script'; trusted-types yindex-packaged-workers;"
   },
   "icons": {
     "16": "icons/icon16.png",

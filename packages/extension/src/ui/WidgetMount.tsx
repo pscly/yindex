@@ -110,6 +110,7 @@ function WidgetContent(
           tokens={props.tokens}
           config={parsed.config}
           showTitle={showTitle}
+          reducedMotion={props.reducedMotion}
         />
       )
     case "builtin.weather":

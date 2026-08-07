@@ -12,6 +12,19 @@ const malformedCases = [
   ["builtin.search", { engine: "ask" }, { engine: "google" }],
   ["builtin.shortcuts", "links", { items: [] }],
   ["builtin.shortcuts", { items: "links" }, { items: [] }],
+  [
+    "builtin.shortcuts",
+    {
+      items: [
+        {
+          id: "nested-folder",
+          title: "嵌套",
+          items: [{ id: "f", title: "内层", items: [] }],
+        },
+      ],
+    },
+    { items: [] },
+  ],
   ["builtin.weather", false, { mode: "auto" }],
   ["builtin.weather", { mode: "gps" }, { mode: "auto" }],
   ["builtin.quote", 24, { source: "hitokoto" }],
@@ -38,6 +51,13 @@ const validCases = [
           title: "Docs",
           url: "https://example.com/docs",
           favicon: "https://example.com/favicon.ico",
+        },
+        {
+          id: "work",
+          title: "工作",
+          items: [
+            { id: "mail", title: "Mail", url: "https://mail.example.com" },
+          ],
         },
       ],
     },

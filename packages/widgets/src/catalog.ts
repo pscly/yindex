@@ -2,12 +2,12 @@ import type { BuiltinWidgetTypeId, WidgetTypeId } from "@yindex/domain"
 import { widgetTypeId } from "@yindex/domain"
 import type { LensShape, WidgetSurfaceVariant } from "./shell/surface"
 
-export type WidgetSurfaceMode = "content-direct" | "lens"
+export type WidgetSurfaceMode = "content-direct" | "lens" | "bare"
 
 export const SURFACE_VARIANT_BY_TYPE = {
   "builtin.clock": { kind: "content-direct" },
   "builtin.search": { kind: "lens", shape: "capsule" },
-  "builtin.shortcuts": { kind: "lens", shape: "shelf" },
+  "builtin.shortcuts": { kind: "bare" },
   "builtin.weather": { kind: "lens", shape: "capsule" },
   "builtin.quote": { kind: "content-direct" },
   "builtin.hexagram": { kind: "lens", shape: "panel" },
@@ -44,7 +44,6 @@ export const BUILTIN_CATALOG: readonly BuiltinCatalogEntry[] = [
     description: "独立启动台链接",
     defaultSize: { w: 48, h: 28 },
     surfaceMode: SURFACE_VARIANT_BY_TYPE["builtin.shortcuts"].kind,
-    lensShape: SURFACE_VARIANT_BY_TYPE["builtin.shortcuts"].shape,
   },
   {
     typeId: widgetTypeId("builtin.weather"),

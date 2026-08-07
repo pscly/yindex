@@ -5,10 +5,13 @@ import {
   pageStyleToTokens,
 } from "@yindex/domain"
 import {
+  BareSurface,
   ContentDirectSurface,
   LensSurface,
   WidgetSurface,
+  buildBareSurfaceStyle,
   buildContentDirectSurfaceStyle,
+  buildGlassTileStyle,
   buildLensSurfaceStyle,
 } from "./surface"
 
@@ -143,6 +146,66 @@ describe("Living Glass surface styles", () => {
       `0 1px 24px ${tokens.glass.adaptive.contentDirect.scrim}`,
     )
     expect(style.textShadow).not.toContain(tokens.glass.adaptive.lens.scrim)
+  })
+
+  test("Given a bare surface, When style is built, Then it is shell-free yet exposes lens glass and readable label vars", () => {
+    // Given
+    const tokens = clearGlassTokens()
+
+    // When
+    const style = buildBareSurfaceStyle(tokens)
+
+    // Then
+    expect(style.background).toBe("transparent")
+    expect(style.border).toBe("none")
+    expect(style.boxShadow).toBe("none")
+    expect(style.backdropFilter).toBeUndefined()
+    expect(style["--yindex-widget-foreground"]).toBe(
+      tokens.glass.adaptive.contentDirect.foreground,
+    )
+    expect(style["--yindex-widget-muted-foreground"]).toBe(
+      tokens.glass.adaptive.contentDirect.mutedForeground,
+    )
+    expect(style["--yindex-glass-tint"]).toBe(tokens.glass.adaptive.lens.tint)
+    expect(style["--yindex-glass-scrim"]).toBe(tokens.glass.adaptive.lens.scrim)
+    expect(style["--yindex-glass-blur"]).toBe(`${tokens.glass.blurPx}px`)
+    expect(style["--yindex-glass-saturation"]).toBe(tokens.glass.saturation)
+  })
+
+  test("Given a glass tile, When style is built, Then it shares LensSurface physics with a squircle radius", () => {
+    // Given
+    const tokens = clearGlassTokens()
+
+    // When
+    const tile = buildGlassTileStyle(tokens, 19)
+    const lens = buildLensSurfaceStyle(tokens, "panel")
+
+    // Then
+    expect(tile.borderRadius).toBe(19)
+    expect(tile.background).toBe(lens.background)
+    expect(tile.backdropFilter).toBe(lens.backdropFilter)
+    expect(tile.border).toContain("1px solid")
+    // Tiles carry icons, not body text: no readability scrim, only the
+    // top-light gradient that makes the glass read as lit from above.
+    expect(String(tile.backgroundImage)).toContain("linear-gradient")
+    expect(String(tile.backgroundImage)).not.toBe(String(lens.backgroundImage))
+    expect(String(tile.boxShadow)).toContain("inset 0 1px 0")
+    expect(String(tile.boxShadow)).toContain("0 8px 20px")
+  })
+
+  test("Given an explicit bare variant, When WidgetSurface renders, Then it selects BareSurface", () => {
+    // Given
+    const tokens = clearGlassTokens()
+
+    // When
+    const element = WidgetSurface({
+      tokens,
+      variant: { kind: "bare" },
+      children: "grid",
+    })
+
+    // Then
+    expect(element).toMatchObject({ type: BareSurface })
   })
 
   test("Given content-direct material, When ContentDirectSurface renders, Then readability stays text-only without a backdrop shell", () => {

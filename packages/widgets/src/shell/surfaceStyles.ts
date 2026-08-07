@@ -26,6 +26,8 @@ export type LivingGlassCssProperties = CSSProperties & {
 
 const LENS_BRIGHTNESS = 1.06
 const FLOAT_SHADOW = "0 16px 36px color-mix(in oklch, black 22%, transparent)"
+const TILE_FLOAT_SHADOW =
+  "0 8px 20px color-mix(in oklch, black 20%, transparent)"
 
 function lensRadius(tokens: StyleTokens, shape: LensShape): string {
   return shape === "capsule" ? "999px" : tokens.radius.md
@@ -119,5 +121,84 @@ export function buildContentDirectSurfaceStyle(
     "--yindex-content-direct-scrim-opacity": contentDirect.scrimOpacity,
     "--yindex-widget-foreground": contentDirect.foreground,
     "--yindex-widget-muted-foreground": contentDirect.mutedForeground,
+  }
+}
+
+/**
+ * A single Liquid Glass tile (e.g. a Shortcut squircle) floating directly on
+ * the Wallpaper: same physics as LensSurface, smaller float shadow, squircle
+ * radius instead of a shell radius. Tiles never paint the readability scrim —
+ * they carry icons/glyphs, not body text — so blur + tint + highlight stay
+ * fully visible and the tile reads as real translucent glass.
+ */
+export function buildGlassTileStyle(
+  tokens: StyleTokens,
+  radiusPx = 20,
+): LivingGlassCssProperties {
+  const { lens } = tokens.glass.adaptive
+  const highlightPct = Math.round(
+    Math.min(0.55, Math.max(0.3, tokens.glass.highlight + 0.08)) * 100,
+  )
+  const edgePct = Math.round(10 + tokens.glass.highlight * 12)
+  const glassOn = tokens.glass.enabled
+  const backdrop = glassOn
+    ? `blur(${tokens.glass.blurPx}px) saturate(var(--yindex-glass-saturation, 1)) brightness(${LENS_BRIGHTNESS})`
+    : undefined
+  return {
+    color: lens.foreground,
+    background: glassOn ? lens.tint : tokens.color.surface,
+    backgroundImage: glassOn
+      ? "linear-gradient(color-mix(in oklch, white 10%, transparent), transparent 55%)"
+      : undefined,
+    borderRadius: radiusPx,
+    border: glassOn
+      ? `1px solid color-mix(in oklch, white ${edgePct}%, transparent)`
+      : `1px solid color-mix(in oklch, ${tokens.color.ink} 10%, transparent)`,
+    backdropFilter: backdrop,
+    WebkitBackdropFilter: backdrop,
+    boxShadow: glassOn
+      ? `inset 0 1px 0 color-mix(in oklch, white ${highlightPct}%, transparent), inset 0 0 0 1px color-mix(in oklch, white ${edgePct}%, transparent), ${TILE_FLOAT_SHADOW}`
+      : tokens.elevation.mode === "tonal"
+        ? "0 4px 14px color-mix(in oklch, black 10%, transparent)"
+        : "none",
+  }
+}
+
+/**
+ * Bare grid surface: a fully transparent container straight on the Wallpaper
+ * (no shelf/bar shell). Exposes lens glass variables for child tiles and
+ * content-direct foreground variables for readable labels.
+ */
+export function buildBareSurfaceStyle(
+  tokens: StyleTokens,
+): LivingGlassCssProperties {
+  const { lens, contentDirect } = tokens.glass.adaptive
+  return {
+    ...baseChrome(tokens),
+    color: contentDirect.foreground,
+    background: "transparent",
+    border: "none",
+    borderRadius: 0,
+    boxShadow: "none",
+    textShadow:
+      contentDirect.scrimOpacity > 0
+        ? `0 1px 16px ${contentDirect.scrim}`
+        : "none",
+    backdropFilter: undefined,
+    WebkitBackdropFilter: undefined,
+    "--yindex-lens-ink": lens.foreground,
+    "--yindex-lens-muted-ink": lens.mutedForeground,
+    "--yindex-content-direct-ink": contentDirect.foreground,
+    "--yindex-content-direct-muted-ink": contentDirect.mutedForeground,
+    "--yindex-widget-foreground": contentDirect.foreground,
+    "--yindex-widget-muted-foreground": contentDirect.mutedForeground,
+    "--yindex-glass-tint": lens.tint,
+    "--yindex-glass-tint-opacity": lens.tintOpacity,
+    "--yindex-glass-scrim": lens.scrim,
+    "--yindex-glass-scrim-opacity": lens.scrimOpacity,
+    "--yindex-glass-blur": `${tokens.glass.blurPx}px`,
+    "--yindex-glass-opacity": tokens.glass.opacity,
+    "--yindex-glass-saturation": tokens.glass.saturation,
+    "--yindex-glass-highlight": tokens.glass.highlight,
   }
 }

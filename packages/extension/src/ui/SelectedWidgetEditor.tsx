@@ -1,5 +1,5 @@
 import { assertNever } from "@yindex/domain"
-import { ShortcutsEditor, shortcutItemsOf } from "./ShortcutsEditor"
+import { ShortcutsEditor, shortcutCellsOf } from "./ShortcutsEditor"
 import { inputStyle, labelStyle, rowCheck } from "./editChromeStyles"
 
 type ConfigField =
@@ -232,8 +232,8 @@ export function SelectedWidgetEditor(props: {
   if (props.typeId === "builtin.shortcuts") {
     return (
       <ShortcutsEditor
-        items={shortcutItemsOf(props.config)}
-        onChange={(items) => props.onConfig({ items })}
+        cells={shortcutCellsOf(props.config)}
+        onChange={(cells) => props.onConfig({ items: cells })}
       />
     )
   }

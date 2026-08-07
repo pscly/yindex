@@ -4,15 +4,26 @@ import { join } from "node:path"
 import {
   faviconForUrl,
   openShortcutIfSafe,
+  reduceFolderOverlay,
   safeShortcutHref,
 } from "./ShortcutsWidget"
 
 describe("faviconForUrl", () => {
-  test("parses host", () => {
-    expect(faviconForUrl("https://github.com/foo")).toContain("github.com")
+  test("uses the local Chrome _favicon subresource, never a remote service", () => {
+    // Given / When
+    const icon = faviconForUrl("https://github.com/foo")
+
+    // Then
+    expect(icon).toContain("chrome-extension://")
+    expect(icon).toContain("_favicon/?pageUrl=")
+    expect(icon).toContain(encodeURIComponent("https://github.com/foo"))
+    expect(icon).toContain("size=64")
+    expect(icon).not.toContain("google.com")
   })
-  test("invalid", () => {
+
+  test("invalid or unsafe urls never produce an icon", () => {
     expect(faviconForUrl("not a url")).toBeUndefined()
+    expect(faviconForUrl("javascript:alert(1)")).toBeUndefined()
   })
 })
 
@@ -35,6 +46,29 @@ describe("safeShortcutHref", () => {
     expect(safeShortcutHref("data:text/html,<h1>x")).toBeNull()
     expect(safeShortcutHref("file:///etc/passwd")).toBeNull()
     expect(safeShortcutHref("blob:https://example.com/uuid")).toBeNull()
+  })
+})
+
+describe("reduceFolderOverlay", () => {
+  test("toggle opens a closed folder and closes the open one", () => {
+    // Given / When / Then
+    expect(reduceFolderOverlay(null, { type: "toggle", folderId: "f1" })).toBe(
+      "f1",
+    )
+    expect(
+      reduceFolderOverlay("f1", { type: "toggle", folderId: "f1" }),
+    ).toBeNull()
+  })
+
+  test("toggle switches directly between folders", () => {
+    expect(reduceFolderOverlay("f1", { type: "toggle", folderId: "f2" })).toBe(
+      "f2",
+    )
+  })
+
+  test("close always settles to closed (Esc / click-outside path)", () => {
+    expect(reduceFolderOverlay("f1", { type: "close" })).toBeNull()
+    expect(reduceFolderOverlay(null, { type: "close" })).toBeNull()
   })
 })
 
@@ -80,5 +114,23 @@ describe("Shortcuts mounted navigation sink", () => {
     expect(source).not.toMatch(/href=\{item\.url\}/)
     expect(source).not.toMatch(/onOpen\(item\.url\)/)
     expect(source).toContain("parseSafeNavigationUrl")
+  })
+
+  test("ShortcutsWidget source renders a bare grid and never contacts a remote favicon service", () => {
+    // Given / When
+    const source = readFileSync(
+      join(import.meta.dir, "ShortcutsWidget.tsx"),
+      "utf8",
+    )
+    const model = readFileSync(
+      join(import.meta.dir, "shortcutsModel.ts"),
+      "utf8",
+    )
+
+    // Then
+    expect(source).toContain("BareSurface")
+    expect(source).not.toContain("google.com/s2/favicons")
+    expect(model).not.toContain("google.com/s2/favicons?domain")
+    expect(model).toContain("_favicon/")
   })
 })

@@ -17,8 +17,8 @@ describe("Builtin Widget catalog morphology", () => {
     expect(byId["builtin.search"]?.lensShape).toBe("capsule")
     expect(byId["builtin.weather"]?.surfaceMode).toBe("lens")
     expect(byId["builtin.weather"]?.lensShape).toBe("capsule")
-    expect(byId["builtin.shortcuts"]?.surfaceMode).toBe("lens")
-    expect(byId["builtin.shortcuts"]?.lensShape).toBe("shelf")
+    expect(byId["builtin.shortcuts"]?.surfaceMode).toBe("bare")
+    expect(byId["builtin.shortcuts"]?.lensShape).toBeUndefined()
     expect(byId["builtin.hexagram"]?.surfaceMode).toBe("lens")
     expect(byId["builtin.hexagram"]?.lensShape).toBe("panel")
   })
@@ -30,7 +30,7 @@ describe("Builtin Widget catalog morphology", () => {
       "builtin.quote": { kind: "content-direct" },
       "builtin.weather": { kind: "lens", shape: "capsule" },
       "builtin.search": { kind: "lens", shape: "capsule" },
-      "builtin.shortcuts": { kind: "lens", shape: "shelf" },
+      "builtin.shortcuts": { kind: "bare" },
       "builtin.hexagram": { kind: "lens", shape: "panel" },
     })
   })

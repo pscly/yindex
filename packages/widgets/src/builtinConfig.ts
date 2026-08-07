@@ -3,10 +3,10 @@ import type { ClockWidgetProps } from "./clock/ClockWidget"
 import type { HexagramBoardConfig } from "./hexagram/HexagramBoard"
 import type { QuoteWidgetConfig } from "./quote/QuoteWidget"
 import type { SearchWidgetConfig } from "./search/SearchWidget"
-import type {
-  ShortcutItem,
-  ShortcutsWidgetConfig,
-} from "./shortcuts/ShortcutsWidget"
+import {
+  type ShortcutsWidgetConfig,
+  isShortcutsWidgetConfig,
+} from "./shortcuts/shortcutsModel"
 import type { WeatherWidgetConfig } from "./weather/WeatherWidget"
 
 export type ClockWidgetConfig = Pick<
@@ -93,24 +93,6 @@ function isSearchConfig(value: unknown): value is SearchWidgetConfig {
   return validEngine && isOptionalString(value.customUrl)
 }
 
-function isShortcutItem(value: unknown): value is ShortcutItem {
-  return (
-    isRecord(value) &&
-    typeof value.id === "string" &&
-    typeof value.title === "string" &&
-    typeof value.url === "string" &&
-    isOptionalString(value.favicon)
-  )
-}
-
-function isShortcutsConfig(value: unknown): value is ShortcutsWidgetConfig {
-  return (
-    isRecord(value) &&
-    Array.isArray(value.items) &&
-    value.items.every(isShortcutItem)
-  )
-}
-
 function isWeatherConfig(value: unknown): value is WeatherWidgetConfig {
   return (
     isRecord(value) &&
@@ -185,7 +167,9 @@ export function parseBuiltinWidgetConfig(
     case "builtin.shortcuts":
       return {
         typeId,
-        config: isShortcutsConfig(input.config) ? input.config : { items: [] },
+        config: isShortcutsWidgetConfig(input.config)
+          ? input.config
+          : { items: [] },
       }
     case "builtin.weather":
       return {

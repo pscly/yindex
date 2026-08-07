@@ -9,6 +9,7 @@ import {
 } from "@yindex/domain"
 import { BUILTIN_CATALOG, SURFACE_VARIANT_BY_TYPE } from "./catalog"
 import {
+  BareSurface,
   ContentDirectSurface,
   LensSurface,
   WidgetSurface,
@@ -55,6 +56,8 @@ function renderSurfaceVariant(
       return LensSurface({ tokens, shape: variant.shape, children: "天气" })
     case "content-direct":
       return ContentDirectSurface({ tokens, children: "天气" })
+    case "bare":
+      return BareSurface({ tokens, children: "天气" })
     default:
       return assertNever(variant)
   }
@@ -81,10 +84,8 @@ describe("Builtin Widget fixed morphology", () => {
     expect(byId["builtin.weather"]?.surfaceMode).toBe("lens")
     expect(byId["builtin.weather"]?.lensShape).toBe("capsule")
 
-    expect(byId["builtin.shortcuts"]?.lensShape).toBe("shelf")
-    expect(buildLensSurfaceStyle(tokens, "shelf").borderRadius).toBe(
-      tokens.radius.md,
-    )
+    expect(byId["builtin.shortcuts"]?.surfaceMode).toBe("bare")
+    expect(byId["builtin.shortcuts"]?.lensShape).toBeUndefined()
     expect(byId["builtin.hexagram"]?.lensShape).toBe("panel")
     expect(buildLensSurfaceStyle(tokens, "panel").borderRadius).toBe(
       tokens.radius.md,
@@ -250,8 +251,9 @@ describe("Builtin Widget fixed morphology", () => {
     expect(weather).toContain("paddingInline: 6")
     expect(weather).toContain('textOverflow: "ellipsis"')
     expect(weather).toContain("clamp(1.25rem, 2.6vw, 1.55rem)")
-    expect(shortcuts).toContain("LensSurface")
-    expect(shortcuts).toContain('shape="shelf"')
+    expect(shortcuts).toContain("BareSurface")
+    expect(shortcuts).not.toContain("LensSurface")
+    expect(shortcuts).not.toContain('shape="shelf"')
     expect(shortcuts).not.toContain("WidgetSurface")
     expect(shortcuts).not.toContain("background: props.tokens.color.bg")
     expect(hexagram).toContain("LensSurface")
